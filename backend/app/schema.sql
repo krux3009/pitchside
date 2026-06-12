@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS matches (
   venue_country TEXT,                       -- drives host Elo bonus
   home_team_id  INTEGER REFERENCES teams(id),  -- NULL until knockout slot resolves
   away_team_id  INTEGER REFERENCES teams(id),
+  home_slot     TEXT,                       -- knockout feed: '1A', '2B', '3A/B/C/D/F', 'W73', 'L101'
+  away_slot     TEXT,
   status        TEXT DEFAULT 'SCHEDULED',   -- 'SCHEDULED','LIVE','FT'
   home_goals    INTEGER,                    -- final, incl. extra time
   away_goals    INTEGER,

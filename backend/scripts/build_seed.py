@@ -149,6 +149,8 @@ def main():
             sys.exit(f"FATAL: ground {ground!r} not in stadiums file")
         home_id = team_id_by_name.get(m["team1"])   # None for 'W101' placeholders
         away_id = team_id_by_name.get(m["team2"])
+        home_slot = m["team1"] if stage != "GROUP" else None
+        away_slot = m["team2"] if stage != "GROUP" else None
         score = m.get("score", {}).get("ft")
         played = score is not None
         winner = None
@@ -156,7 +158,7 @@ def main():
             winner = home_id if score[0] > score[1] else away_id
         matches.append((
             num, stage, group_letter, kickoff_to_utc(m["date"], m["time"]),
-            ground, venue_country, home_id, away_id,
+            ground, venue_country, home_id, away_id, home_slot, away_slot,
             "FT" if played else "SCHEDULED",
             score[0] if played else None, score[1] if played else None,
             score[0] if played else None, score[1] if played else None,  # *_90: group games have no ET
@@ -176,9 +178,9 @@ def main():
         " VALUES (?,?,?,?,?,?,?)", teams)
     conn.executemany(
         "INSERT INTO matches (id, stage, group_letter, kickoff_utc, venue, venue_country,"
-        " home_team_id, away_team_id, status, home_goals, away_goals,"
+        " home_team_id, away_team_id, home_slot, away_slot, status, home_goals, away_goals,"
         " home_goals_90, away_goals_90, winner_team_id)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", matches)
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", matches)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.executemany("INSERT INTO meta (key, value) VALUES (?,?)", [
         ("seed_built_at", now),

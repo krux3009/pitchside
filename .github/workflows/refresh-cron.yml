@@ -1,0 +1,22 @@
+name: refresh
+
+on:
+  schedule:
+    # matchday loop: every 10 min through the kickoff window (15:00-06:00 UTC).
+    # Also keeps the Render free instance awake while matches are on.
+    - cron: "*/10 15-23 * * *"
+    - cron: "*/10 0-5 * * *"
+    # morning consolidation sweep
+    - cron: "0 6 * * *"
+    - cron: "0 12 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping refresh endpoint
+        run: |
+          curl --silent --show-error --fail \
+            --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors \
+            "${{ secrets.API_URL }}/api/internal/refresh?key=${{ secrets.REFRESH_KEY }}"
