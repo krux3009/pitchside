@@ -87,7 +87,7 @@ export default function Home() {
       <h2 className="section-title">Who wins the World Cup?</h2>
       <div className="card">
         {sim.loading && <p style={{ color: "var(--text-mid)" }}>Crunching simulations…</p>}
-        {sim.data?.teams && (
+        {sim.data?.run && (
           <>
             <p style={{ color: "var(--text-low)", fontSize: 12, marginTop: 0 }}>
               {Number(sim.data.run.n_iterations).toLocaleString()} Monte Carlo simulations
