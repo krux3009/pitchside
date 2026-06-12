@@ -1,0 +1,22 @@
+/* Pitchside broadcast-dark design tokens */
+:root {
+  --bg-pitch: #0a0e14;
+  --bg-surface: #121826;
+  --bg-elevated: #1a2334;
+  --line: #243047;
+
+  --text-hi: #f2f5f9;
+  --text-mid: #9aa6ba;
+  --text-low: #5d6b82;
+
+  --live: #00e676;
+  --gold: #ffc233;
+  --danger: #ff5252;
+  --draw: #5d6b82;
+
+  --font-display: "Archivo Black", "Arial Black", system-ui, sans-serif;
+  --font-body: "Inter", -apple-system, system-ui, sans-serif;
+
+  --radius-card: 12px;
+  --radius-pill: 999px;
+}
