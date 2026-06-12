@@ -58,12 +58,15 @@ CREATE TABLE IF NOT EXISTS match_team_stats (
 );
 
 CREATE TABLE IF NOT EXISTS players (
-  id            INTEGER PRIMARY KEY,        -- API-Football player id
+  id            INTEGER PRIMARY KEY,        -- canonical: team_id*100 + shirt_number
+                                            -- (ESPN id only for late squad additions)
   team_id       INTEGER REFERENCES teams(id),
   name          TEXT NOT NULL,
-  position      TEXT,
+  position      TEXT,                       -- GK/DF/MF/FW from squads; refined by ESPN
   shirt_number  INTEGER,
-  photo_url     TEXT
+  date_of_birth TEXT,
+  photo_url     TEXT,
+  espn_id       TEXT                        -- ESPN athlete id, learned on first match ingest
 );
 
 CREATE TABLE IF NOT EXISTS player_match_stats (

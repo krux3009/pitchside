@@ -40,6 +40,7 @@ export default function PlayerDetail() {
           <p style={{ color: "var(--text-mid)", margin: "4px 0 0" }}>
             <TeamBadge code={p.team_code} name={p.team_name} />{" "}
             · {p.position} {p.shirt_number ? `· #${p.shirt_number}` : ""}
+            {p.date_of_birth ? ` · ${age(p.date_of_birth)} yrs` : ""}
           </p>
         </div>
       </div>
@@ -96,6 +97,11 @@ export default function PlayerDetail() {
       )}
     </>
   );
+}
+
+function age(dob) {
+  const ms = Date.now() - new Date(dob).getTime();
+  return Math.floor(ms / (365.25 * 24 * 3600 * 1000));
 }
 
 const styles = {

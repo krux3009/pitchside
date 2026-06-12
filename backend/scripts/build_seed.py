@@ -26,6 +26,7 @@ SOURCES = {
     "of_worldcup.json": "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
     "of_groups.json": "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.groups.json",
     "of_stadiums.json": "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.stadiums.json",
+    "of_squads.json": "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.squads.json",
     "elo_world.tsv": "https://www.eloratings.net/World.tsv",
     "elo_names.tsv": "https://www.eloratings.net/en.teams.tsv",
 }
@@ -111,6 +112,7 @@ def main():
     worldcup = json.loads(fetch("of_worldcup.json").read_text())
     groups = json.loads(fetch("of_groups.json").read_text())
     stadiums = json.loads(fetch("of_stadiums.json").read_text())["stadiums"]
+    squads = json.loads(fetch("of_squads.json").read_text())
     elo_codes = load_elo_codes(fetch("elo_names.tsv"))
     elo_ratings = load_elo_ratings(fetch("elo_world.tsv"))
 
@@ -167,6 +169,20 @@ def main():
     assert len(matches) == 104, f"expected 104 matches, got {len(matches)}"
     assert group_seq == 72, f"expected 72 group matches, got {group_seq}"
 
+    # --- players (full 26-man squads) --------------------------------------
+    team_id_by_fifa = {t[2]: t[0] for t in teams}
+    players = []
+    assert len(squads) == 48, f"expected 48 squads, got {len(squads)}"
+    for squad in squads:
+        tid = team_id_by_fifa[squad["fifa_code"]]
+        # squads register up to 26 players (a few federations name 25)
+        assert 23 <= len(squad["players"]) <= 26, \
+            f"{squad['fifa_code']}: suspicious squad size {len(squad['players'])}"
+        for p in squad["players"]:
+            # canonical id: stable across rebuilds, no external-source coupling
+            players.append((tid * 100 + p["number"], tid, p["name"], p["pos"],
+                            p["number"], p.get("date_of_birth")))
+
     # --- write ---------------------------------------------------------------
     DATA.mkdir(exist_ok=True)
     seed_path = DATA / "seed.db"
@@ -181,6 +197,9 @@ def main():
         " home_team_id, away_team_id, home_slot, away_slot, status, home_goals, away_goals,"
         " home_goals_90, away_goals_90, winner_team_id)"
         " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", matches)
+    conn.executemany(
+        "INSERT INTO players (id, team_id, name, position, shirt_number, date_of_birth)"
+        " VALUES (?,?,?,?,?,?)", players)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.executemany("INSERT INTO meta (key, value) VALUES (?,?)", [
         ("seed_built_at", now),
@@ -192,8 +211,9 @@ def main():
     ])
     conn.commit()
 
-    n_played = sum(1 for m in matches if m[8] == "FT")
-    print(f"seed.db: {len(teams)} teams, {len(matches)} matches ({n_played} played)")
+    n_played = sum(1 for m in matches if m[10] == "FT")
+    print(f"seed.db: {len(teams)} teams, {len(matches)} matches "
+          f"({n_played} played), {len(players)} players")
     top = sorted(teams, key=lambda t: -t[5])[:5]
     print("top Elo:", ", ".join(f"{t[1]} {t[5]:.0f}" for t in top))
     conn.close()

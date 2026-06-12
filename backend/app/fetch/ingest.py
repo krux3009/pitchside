@@ -1,5 +1,6 @@
 """Raw source JSON -> SQLite rows."""
 import json
+import unicodedata
 from datetime import datetime, timezone
 
 # ESPN team-stat name -> match_team_stats column
@@ -97,6 +98,67 @@ def _stat_value(stats: list, name: str):
     return None
 
 
+def _normalize_name(name: str) -> str:
+    """Accent-stripped casefold for cross-source name matching."""
+    decomposed = unicodedata.normalize("NFKD", name or "")
+    return "".join(c for c in decomposed if not unicodedata.combining(c)).casefold().strip()
+
+
+def _resolve_player(conn, team_id: int, entry: dict) -> int:
+    """Map an ESPN roster entry to the canonical squad-seeded player row.
+
+    Resolution order: known espn_id -> shirt number -> normalized name ->
+    insert new (late squad replacement). Learns espn_id / finer position /
+    photo on first sight.
+    """
+    athlete = entry.get("athlete", {})
+    espn_id = str(athlete["id"])
+    row = conn.execute(
+        "SELECT id FROM players WHERE team_id=? AND espn_id=?", (team_id, espn_id)
+    ).fetchone()
+    if row:
+        return row["id"]
+
+    jersey = int(entry["jersey"]) if entry.get("jersey") else None
+    row = None
+    if jersey is not None:
+        row = conn.execute(
+            "SELECT id FROM players WHERE team_id=? AND shirt_number=? AND espn_id IS NULL",
+            (team_id, jersey),
+        ).fetchone()
+    if not row:
+        target = _normalize_name(athlete.get("displayName", ""))
+        for cand in conn.execute(
+            "SELECT id, name FROM players WHERE team_id=? AND espn_id IS NULL", (team_id,)
+        ).fetchall():
+            if _normalize_name(cand["name"]) == target:
+                row = cand
+                break
+
+    photo = athlete.get("headshot", {})
+    photo_url = photo.get("href") if isinstance(photo, dict) else None
+    pos = entry.get("position", {}).get("abbreviation")
+    if row:
+        # keep the squad's coarse GK/DF/MF/FW position — squad grouping sorts
+        # on it; ESPN's finer position already lives in the lineups JSON
+        conn.execute(
+            "UPDATE players SET espn_id=?, photo_url=COALESCE(?, photo_url) WHERE id=?",
+            (espn_id, photo_url, row["id"]),
+        )
+        return row["id"]
+
+    # not in the seeded squad at all: insert under the ESPN id (>= 100000,
+    # so it can't collide with canonical team_id*100+number ids)
+    new_id = int(espn_id) + 100_000
+    conn.execute(
+        """INSERT OR IGNORE INTO players
+           (id, team_id, name, position, shirt_number, photo_url, espn_id)
+           VALUES (?,?,?,?,?,?,?)""",
+        (new_id, team_id, athlete.get("displayName", "?"), pos, jersey, photo_url, espn_id),
+    )
+    return new_id
+
+
 def espn_summary(conn, match_id: int, payload: dict):
     """Ingest team stats, lineups, and per-player stats from a summary feed."""
     m = conn.execute("SELECT * FROM matches WHERE id=?", (match_id,)).fetchone()
@@ -133,16 +195,8 @@ def espn_summary(conn, match_id: int, payload: dict):
         starters, bench = [], []
         for entry in roster.get("roster", []):
             athlete = entry.get("athlete", {})
-            pid = int(athlete["id"])
+            pid = _resolve_player(conn, team["id"], entry)
             pos = entry.get("position", {}).get("abbreviation")
-            conn.execute(
-                """INSERT INTO players (id, team_id, name, position, shirt_number, photo_url)
-                   VALUES (?,?,?,?,?,?)
-                   ON CONFLICT(id) DO UPDATE SET position=excluded.position""",
-                (pid, team["id"], athlete.get("displayName", "?"), pos,
-                 int(entry["jersey"]) if entry.get("jersey") else None,
-                 athlete.get("headshot", {}).get("href") if isinstance(athlete.get("headshot"), dict) else None),
-            )
             item = {"player_id": pid, "name": athlete.get("displayName"),
                     "number": entry.get("jersey"), "pos": pos,
                     "grid": entry.get("formationPlace")}

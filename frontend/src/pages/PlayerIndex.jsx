@@ -43,9 +43,7 @@ export default function PlayerIndex() {
         style={styles.search}
       />
       {rows.length === 0 && (
-        <p style={{ color: "var(--text-mid)" }}>
-          Player statistics appear once matches have been played.
-        </p>
+        <p style={{ color: "var(--text-mid)" }}>No players match that search.</p>
       )}
       {rows.length > 0 && (
         <div className="card" style={{ padding: 0, overflowX: "auto" }}>
@@ -67,7 +65,7 @@ export default function PlayerIndex() {
               </tr>
             </thead>
             <tbody>
-              {rows.slice(0, 100).map((p) => (
+              {rows.map((p) => (
                 <tr key={p.player_id}>
                   <td>
                     <Link to={`/players/${p.player_id}`} style={{ fontWeight: 600 }}>

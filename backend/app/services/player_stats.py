@@ -2,19 +2,29 @@
 
 
 def index(conn, team_id: int | None = None) -> list:
+    """Every participating player; tournament stats zeroed until they play."""
     where, args = "", []
     if team_id:
-        where, args = "WHERE pt.team_id = ?", [team_id]
+        where, args = "WHERE p.team_id = ?", [team_id]
     rows = conn.execute(
-        f"""SELECT pt.*, p.name, p.position, p.shirt_number, p.photo_url,
+        f"""SELECT p.id AS player_id, p.team_id, p.name, p.position,
+                  p.shirt_number, p.date_of_birth, p.photo_url,
                   t.name AS team_name, t.fifa_code AS team_code,
-                  (SELECT SUM(goals) FROM player_match_stats s WHERE s.team_id = pt.team_id)
+                  COALESCE(pt.apps, 0) AS apps,
+                  COALESCE(pt.minutes, 0) AS minutes,
+                  COALESCE(pt.goals, 0) AS goals,
+                  COALESCE(pt.assists, 0) AS assists,
+                  COALESCE(pt.yellows, 0) AS yellows,
+                  COALESCE(pt.reds, 0) AS reds,
+                  pt.goals_per_90,
+                  (SELECT SUM(goals) FROM player_match_stats s WHERE s.team_id = p.team_id)
                     AS team_goals
-           FROM player_totals pt
-           JOIN players p ON p.id = pt.player_id
-           JOIN teams t ON t.id = pt.team_id
+           FROM players p
+           JOIN teams t ON t.id = p.team_id
+           LEFT JOIN player_totals pt ON pt.player_id = p.id
            {where}
-           ORDER BY pt.goals DESC, pt.assists DESC, pt.minutes DESC""",
+           ORDER BY COALESCE(pt.goals, 0) DESC, COALESCE(pt.assists, 0) DESC,
+                    COALESCE(pt.minutes, 0) DESC, t.name, p.shirt_number""",
         args,
     ).fetchall()
     for r in rows:
@@ -22,6 +32,20 @@ def index(conn, team_id: int | None = None) -> list:
             round(r["goals"] / r["team_goals"], 3) if r["team_goals"] else 0.0
         )
     return rows
+
+
+POSITION_ORDER = {"GK": 0, "DF": 1, "MF": 2, "FW": 3}
+
+
+def squad(conn, team_id: int) -> list:
+    """Full seeded roster for one team, GK -> DF -> MF -> FW, number ascending."""
+    rows = conn.execute(
+        "SELECT id, name, position, shirt_number, date_of_birth FROM players"
+        " WHERE team_id = ? ORDER BY shirt_number",
+        (team_id,),
+    ).fetchall()
+    return sorted(rows, key=lambda r: (POSITION_ORDER.get(r["position"], 4),
+                                       r["shirt_number"] or 99))
 
 
 def detail(conn, player_id: int) -> dict | None:

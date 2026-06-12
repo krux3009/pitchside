@@ -120,10 +120,44 @@ export default function MatchDetail() {
         </>
       )}
 
-      {!played && !m.lineups?.length && (
-        <p style={{ color: "var(--text-low)", fontSize: 13 }}>
-          Lineups appear ~30 minutes before kickoff.
-        </p>
+      {!m.lineups?.length && m.squads && (
+        <>
+          <h2 className="section-title">Squads</h2>
+          {!played && (
+            <p style={{ color: "var(--text-low)", fontSize: 13, marginTop: -4 }}>
+              Official lineups appear ~30 minutes before kickoff — full 26-man squads below.
+            </p>
+          )}
+          <div style={styles.lineups}>
+            {["home", "away"].map((side) => {
+              const code = side === "home" ? m.home_code : m.away_code;
+              const name = side === "home" ? m.home_name : m.away_name;
+              return (
+                <div key={side} className="card">
+                  <p style={{ marginTop: 0, fontWeight: 700 }}>
+                    <TeamBadge code={code} name={name} />
+                  </p>
+                  {POSITION_GROUPS.map(([pos, label]) => {
+                    const group = m.squads[side].filter((p) => p.position === pos);
+                    if (!group.length) return null;
+                    return (
+                      <div key={pos}>
+                        <p style={styles.posLabel}>{label}</p>
+                        {group.map((p) => (
+                          <PlayerLine
+                            key={p.id}
+                            p={{ player_id: p.id, name: p.name,
+                                 number: p.shirt_number, pos: p.position }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </>
   );
@@ -145,7 +179,21 @@ function PlayerLine({ p, dim = false }) {
   );
 }
 
+const POSITION_GROUPS = [
+  ["GK", "Goalkeepers"],
+  ["DF", "Defenders"],
+  ["MF", "Midfielders"],
+  ["FW", "Forwards"],
+];
+
 const styles = {
+  posLabel: {
+    color: "var(--text-low)",
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    margin: "10px 0 4px",
+  },
   scoreRow: {
     display: "grid", gridTemplateColumns: "1fr auto 1fr",
     alignItems: "center", gap: 12, marginTop: 14,

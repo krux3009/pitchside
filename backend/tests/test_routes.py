@@ -50,14 +50,23 @@ def test_standings_ranked(client):
     assert table_a[0]["pts"] == 3
 
 
-def test_players_route(client):
-    # a committed results_archive.json is restored on bootstrap, so a fresh DB
-    # may already hold players from played matches
+def test_players_route_lists_full_squads(client):
     players = client.get("/api/players").json()
-    assert isinstance(players, list)
+    assert len(players) >= 1240          # every participating player, played or not
+    zero_stat = [p for p in players if p["apps"] == 0]
+    assert zero_stat                     # squad players without matches included
     for p in players[:3]:
-        assert {"name", "goals", "minutes", "team_goal_share"} <= set(p)
+        assert {"name", "goals", "minutes", "team_goal_share", "position"} <= set(p)
     assert client.get("/api/players/99999999").status_code == 404
+
+
+def test_match_detail_includes_squads_before_lineups(client):
+    m = client.get("/api/matches/10").json()   # group-stage match, not yet played
+    assert m["status"] == "SCHEDULED"
+    assert m["lineups"] == []
+    assert m["squads"] is not None
+    assert 23 <= len(m["squads"]["home"]) <= 26
+    assert m["squads"]["home"][0]["position"] == "GK"   # GK-first ordering
 
 
 def test_sim_empty_before_first_run(client):

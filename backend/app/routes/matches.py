@@ -3,6 +3,7 @@ import json
 from fastapi import APIRouter, HTTPException
 
 from .. import db
+from ..services import player_stats
 
 router = APIRouter()
 
@@ -65,6 +66,13 @@ def match_detail(match_id: int):
         ).fetchone()
         if prediction:
             prediction.pop("score_matrix_json", None)
+        squads = None
+        if not lineups and m["home_id"] and m["away_id"]:
+            squads = {
+                "home": player_stats.squad(conn, m["home_id"]),
+                "away": player_stats.squad(conn, m["away_id"]),
+            }
     finally:
         conn.close()
-    return {**m, "team_stats": stats, "lineups": lineups, "prediction": prediction}
+    return {**m, "team_stats": stats, "lineups": lineups,
+            "prediction": prediction, "squads": squads}
