@@ -1,0 +1,15 @@
+{
+  "b0": 0.11142540651043606,
+  "b1": 0.0018688404083265166,
+  "b_home": 0.2200973964283436,
+  "rho": -0.026017236709594778,
+  "fit_meta": {
+    "fitted_at": "2026-06-12T10:25:51Z",
+    "n_matches": 7841,
+    "effective_n": 2888.6,
+    "data_through": "2026-06-11",
+    "cutoff": "2015-01-01",
+    "include_friendlies": false,
+    "half_life_years": 3.0
+  }
+}
