@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: pitchside-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: REFRESH_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: API_FOOTBALL_KEY
+        sync: false
