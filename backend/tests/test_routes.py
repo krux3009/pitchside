@@ -50,9 +50,14 @@ def test_standings_ranked(client):
     assert table_a[0]["pts"] == 3
 
 
-def test_players_empty_before_ingest(client):
-    assert client.get("/api/players").json() == []
-    assert client.get("/api/players/12345").status_code == 404
+def test_players_route(client):
+    # a committed results_archive.json is restored on bootstrap, so a fresh DB
+    # may already hold players from played matches
+    players = client.get("/api/players").json()
+    assert isinstance(players, list)
+    for p in players[:3]:
+        assert {"name", "goals", "minutes", "team_goal_share"} <= set(p)
+    assert client.get("/api/players/99999999").status_code == 404
 
 
 def test_sim_empty_before_first_run(client):
