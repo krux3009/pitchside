@@ -1,0 +1,25 @@
+# env / secrets
+.env
+*.env.local
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# sqlite runtime artifacts (seed.db IS committed; runtime db + journals are not)
+backend/app/data/pitchside.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# downloaded raw data (rebuildable via scripts)
+backend/scripts/cache/
+
+# node
+node_modules/
+frontend/dist/
+
+# os
+.DS_Store
