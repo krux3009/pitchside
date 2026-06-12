@@ -1,7 +1,9 @@
+import { useLang } from "../lib/i18n";
 import { teamColor } from "../lib/teamColors";
 
 // Glowing three-segment win/draw/loss bar.
 export default function ProbBar({ pHome, pDraw, pAway, homeCode, awayCode, compact = false }) {
+  const { t, tTeam } = useLang();
   if (pHome == null) return null;
   const seg = (p, color, glow) => ({
     width: `${Math.max(p * 100, 2)}%`,
@@ -13,9 +15,9 @@ export default function ProbBar({ pHome, pDraw, pAway, homeCode, awayCode, compa
     <div>
       {!compact && (
         <div style={styles.labels}>
-          <span style={{ color: teamColor(homeCode) }}>{homeCode} {Math.round(pHome * 100)}%</span>
-          <span style={{ color: "var(--text-low)" }}>draw {Math.round(pDraw * 100)}%</span>
-          <span style={{ color: teamColor(awayCode) }}>{Math.round(pAway * 100)}% {awayCode}</span>
+          <span style={{ color: teamColor(homeCode) }}>{tTeam(homeCode)} {Math.round(pHome * 100)}%</span>
+          <span style={{ color: "var(--text-low)" }}>{t("prob.draw")} {Math.round(pDraw * 100)}%</span>
+          <span style={{ color: teamColor(awayCode) }}>{Math.round(pAway * 100)}% {tTeam(awayCode)}</span>
         </div>
       )}
       <div style={styles.track}>

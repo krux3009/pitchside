@@ -1,19 +1,25 @@
 import { Link } from "react-router-dom";
 
-import { localKickoff, STAGE_LABEL } from "../lib/format";
+import { localKickoff } from "../lib/format";
+import { useLang } from "../lib/i18n";
 import ProbBar from "./ProbBar";
 import TeamBadge from "./TeamBadge";
 
 export default function MatchCard({ m }) {
+  const { t, dateLocale } = useLang();
   const played = m.status !== "SCHEDULED";
-  const label = m.group_letter ? `Group ${m.group_letter}` : STAGE_LABEL[m.stage];
+  const label = m.group_letter
+    ? t("stage.group", { letter: m.group_letter })
+    : t("stage." + m.stage);
   return (
     <Link to={`/matches/${m.id}`} className="card" style={styles.card}>
       <div style={styles.meta}>
         <span>{label}</span>
         <span>
           {m.status === "LIVE" && <span className="live-dot" style={{ marginRight: 6 }} />}
-          {m.status === "LIVE" ? "LIVE" : m.status === "FT" ? "FT" : localKickoff(m.kickoff_utc)}
+          {m.status === "LIVE" ? t("match.live")
+            : m.status === "FT" ? t("match.ft")
+            : localKickoff(m.kickoff_utc, dateLocale)}
         </span>
       </div>
       <div style={styles.row}>

@@ -3,18 +3,13 @@ import { Link } from "react-router-dom";
 
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import TeamBadge from "../components/TeamBadge";
+import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
-const COLUMNS = [
-  ["goals", "G"],
-  ["assists", "A"],
-  ["goals_per_90", "G/90"],
-  ["team_goal_share", "Share"],
-  ["minutes", "Min"],
-  ["apps", "Apps"],
-];
+const COLUMNS = ["goals", "assists", "goals_per_90", "team_goal_share", "minutes", "apps"];
 
 export default function PlayerIndex() {
+  const { t } = useLang();
   const { data, loading, error } = useApi("/api/players");
   const [sort, setSort] = useState("goals");
   const [q, setQ] = useState("");
@@ -34,32 +29,32 @@ export default function PlayerIndex() {
   return (
     <>
       <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, margin: "28px 0 12px" }}>
-        Players
+        {t("players.title")}
       </h1>
       <input
-        placeholder="Search player or team…"
+        placeholder={t("players.search")}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         style={styles.search}
       />
       {rows.length === 0 && (
-        <p style={{ color: "var(--text-mid)" }}>No players match that search.</p>
+        <p style={{ color: "var(--text-mid)" }}>{t("players.none")}</p>
       )}
       {rows.length > 0 && (
         <div className="card" style={{ padding: 0, overflowX: "auto" }}>
           <table className="stat-table">
             <thead>
               <tr>
-                <th>Player</th>
-                <th>Team</th>
-                {COLUMNS.map(([key, label]) => (
+                <th>{t("players.player")}</th>
+                <th>{t("players.team")}</th>
+                {COLUMNS.map((key) => (
                   <th
                     key={key}
                     className="num"
                     style={{ cursor: "pointer", color: sort === key ? "var(--gold)" : undefined }}
                     onClick={() => setSort(key)}
                   >
-                    {label}{sort === key ? " ▾" : ""}
+                    {t("players.col." + key)}{sort === key ? " ▾" : ""}
                   </th>
                 ))}
               </tr>

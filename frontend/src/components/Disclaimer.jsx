@@ -1,11 +1,11 @@
+import { useLang } from "../lib/i18n";
+
 export default function Disclaimer({ expanded = false }) {
+  const { t } = useLang();
   return (
     <p style={styles.note}>
-      <strong>PS:</strong> This is a student statistics project. Probabilities are
-      model estimates and are frequently wrong — they are not betting advice.
-      {expanded &&
-        " Any gambling decision or bet made based on these predictions is your own responsibility; nothing on this site should inform it. The model exists for learning and for fun."}
-      {!expanded && " If you gamble, nothing here should inform it."}
+      <strong>{t("disclaimer.ps")}</strong> {t("disclaimer.base")}
+      {expanded ? t("disclaimer.expanded") : t("disclaimer.short")}
     </p>
   );
 }

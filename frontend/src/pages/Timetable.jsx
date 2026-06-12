@@ -2,13 +2,15 @@ import { useMemo, useState } from "react";
 
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
-import { localDateHeading, STAGE_LABEL } from "../lib/format";
+import { localDateHeading } from "../lib/format";
+import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
 const STAGES = ["ALL", "GROUP", "R32", "R16", "QF", "SF", "FINAL"];
 const GROUPS = ["ALL", ..."ABCDEFGHIJKL"];
 
 export default function Timetable() {
+  const { t, dateLocale } = useLang();
   const { data, loading, error } = useApi("/api/matches");
   const [stage, setStage] = useState("ALL");
   const [group, setGroup] = useState("ALL");
@@ -34,7 +36,7 @@ export default function Timetable() {
 
   return (
     <>
-      <h1 style={styles.h1}>Timetable</h1>
+      <h1 style={styles.h1}>{t("timetable.title")}</h1>
       <div style={styles.filters}>
         {STAGES.map((s) => (
           <span
@@ -42,7 +44,7 @@ export default function Timetable() {
             className={`pill ${stage === s ? "active" : ""}`}
             onClick={() => setStage(s)}
           >
-            {s === "ALL" ? "All stages" : STAGE_LABEL[s]}
+            {s === "ALL" ? t("timetable.allStages") : t("stage." + s)}
           </span>
         ))}
       </div>
@@ -54,7 +56,7 @@ export default function Timetable() {
               className={`pill ${group === g ? "active" : ""}`}
               onClick={() => setGroup(g)}
             >
-              {g === "ALL" ? "All groups" : `Group ${g}`}
+              {g === "ALL" ? t("timetable.allGroups") : t("stage.group", { letter: g })}
             </span>
           ))}
         </div>
@@ -62,7 +64,7 @@ export default function Timetable() {
 
       {byDate.map(([day, matches]) => (
         <section key={day}>
-          <h2 className="section-title">{localDateHeading(day)}</h2>
+          <h2 className="section-title">{localDateHeading(day, dateLocale)}</h2>
           <div style={styles.grid}>
             {matches.map((m) => (
               <MatchCard key={m.id} m={m} />

@@ -3,28 +3,30 @@ import { Link, useParams } from "react-router-dom";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import Sparkline from "../components/Sparkline";
 import TeamBadge from "../components/TeamBadge";
+import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
 export default function PlayerDetail() {
+  const { t } = useLang();
   const { id } = useParams();
   const { data: p, loading, error } = useApi(`/api/players/${id}`);
 
   if (loading) return <ColdStartLoader />;
   if (error) return <ErrorState error={error} />;
 
-  const t = p.totals;
+  const tot = p.totals;
   const clubs = (p.career || []).filter((c) => !c.is_national);
   const international = (p.career || []).filter((c) => c.is_national);
-  const statCards = t
+  const statCards = tot
     ? [
-        ["Goals", t.goals],
-        ["Assists", t.assists],
-        ["Goals / 90", t.goals_per_90 ?? "–"],
-        ["Share of team goals", Math.round(p.team_goal_share * 100) + "%"],
-        ["Minutes", t.minutes],
-        ["Appearances", t.apps],
-        ["Yellow cards", t.yellows],
-        ["Red cards", t.reds],
+        [t("player.goals"), tot.goals],
+        [t("player.assists"), tot.assists],
+        [t("player.goalsPer90"), tot.goals_per_90 ?? "–"],
+        [t("player.share"), Math.round(p.team_goal_share * 100) + "%"],
+        [t("player.minutes"), tot.minutes],
+        [t("player.apps"), tot.apps],
+        [t("player.yellows"), tot.yellows],
+        [t("player.reds"), tot.reds],
       ]
     : [];
 
@@ -43,14 +45,14 @@ export default function PlayerDetail() {
           <p style={{ color: "var(--text-mid)", margin: "4px 0 0" }}>
             <TeamBadge code={p.team_code} name={p.team_name} />{" "}
             · {p.position} {p.shirt_number ? `· #${p.shirt_number}` : ""}
-            {p.date_of_birth ? ` · ${age(p.date_of_birth)} yrs` : ""}
+            {p.date_of_birth ? <> · {t("player.age", { n: age(p.date_of_birth) })}</> : ""}
           </p>
         </div>
       </div>
 
-      {t ? (
+      {tot ? (
         <>
-          <h2 className="section-title">Tournament</h2>
+          <h2 className="section-title">{t("player.tournament")}</h2>
           <div style={styles.grid}>
             {statCards.map(([label, value]) => (
               <div key={label} className="card" style={{ textAlign: "center" }}>
@@ -60,18 +62,21 @@ export default function PlayerDetail() {
             ))}
           </div>
 
-          <h2 className="section-title">Form (goal contributions, last 5)</h2>
+          <h2 className="section-title">{t("player.form")}</h2>
           <div className="card">
             <Sparkline values={p.form} width={220} height={40} />
           </div>
 
-          <h2 className="section-title">Match Log</h2>
+          <h2 className="section-title">{t("player.matchLog")}</h2>
           <div className="card" style={{ padding: 0, overflowX: "auto" }}>
             <table className="stat-table">
               <thead>
                 <tr>
-                  <th>Match</th><th className="num">Min</th><th className="num">G</th>
-                  <th className="num">A</th><th className="num">Shots</th><th className="num">Cards</th>
+                  <th>{t("player.log.match")}</th><th className="num">{t("player.log.min")}</th>
+                  <th className="num">{t("players.col.goals")}</th>
+                  <th className="num">{t("players.col.assists")}</th>
+                  <th className="num">{t("player.log.shots")}</th>
+                  <th className="num">{t("player.log.cards")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,24 +102,23 @@ export default function PlayerDetail() {
         </>
       ) : (
         <p style={{ color: "var(--text-mid)", marginTop: 20 }}>
-          No World Cup 2026 minutes yet.
+          {t("player.noMinutes")}
         </p>
       )}
 
-      <CareerTable title="Club Career" rows={clubs} />
-      <CareerTable title="International" rows={international} />
+      <CareerTable title={t("player.clubCareer")} rows={clubs} />
+      <CareerTable title={t("player.international")} rows={international} localizeNames />
       {p.career?.length > 0 && (
         <p style={{ color: "var(--text-low)", fontSize: 12, marginTop: 8 }}>
-          Pre-tournament career via ESPN season totals (league and cup
-          competitions where tracked). ESPN counts starts, not substitute
-          appearances.
+          {t("player.careerNote")}
         </p>
       )}
     </>
   );
 }
 
-function CareerTable({ title, rows }) {
+function CareerTable({ title, rows, localizeNames = false }) {
+  const { t, tCountry } = useLang();
   if (!rows.length) return null;
   const hasCleanSheets = rows.some((c) => c.clean_sheets != null);
   return (
@@ -124,15 +128,18 @@ function CareerTable({ title, rows }) {
         <table className="stat-table">
           <thead>
             <tr>
-              <th>Team</th><th className="num">Years</th><th className="num">Starts</th>
-              <th className="num">G</th><th className="num">A</th>
-              {hasCleanSheets && <th className="num">CS</th>}
+              <th>{t("player.career.team")}</th>
+              <th className="num">{t("player.career.years")}</th>
+              <th className="num">{t("player.career.starts")}</th>
+              <th className="num">{t("players.col.goals")}</th>
+              <th className="num">{t("players.col.assists")}</th>
+              {hasCleanSheets && <th className="num">{t("player.career.cs")}</th>}
             </tr>
           </thead>
           <tbody>
             {rows.map((c) => (
               <tr key={`${c.team_name}-${c.from_year}`}>
-                <td>{c.team_name}</td>
+                <td>{localizeNames ? tCountry(c.team_name) : c.team_name}</td>
                 <td className="num">
                   {c.from_year === c.to_year ? c.from_year : `${c.from_year}–${c.to_year}`}
                 </td>

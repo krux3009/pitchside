@@ -1,10 +1,13 @@
-export function ColdStartLoader({ label = "Stadium lights warming up…" }) {
+import { useLang } from "../lib/i18n";
+
+export function ColdStartLoader({ label }) {
+  const { t } = useLang();
   return (
     <div style={styles.box}>
       <div style={styles.spinner} />
-      <p style={{ color: "var(--text-mid)" }}>{label}</p>
+      <p style={{ color: "var(--text-mid)" }}>{label ?? t("loader.warming")}</p>
       <p style={{ color: "var(--text-low)", fontSize: 12 }}>
-        The free server sleeps between matches — first load can take up to a minute.
+        {t("loader.coldStart")}
       </p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -12,10 +15,11 @@ export function ColdStartLoader({ label = "Stadium lights warming up…" }) {
 }
 
 export function ErrorState({ error }) {
+  const { t } = useLang();
   return (
     <div style={styles.box}>
       <p style={{ fontSize: 32, margin: 0 }}>🟥</p>
-      <p style={{ color: "var(--text-mid)" }}>Couldn’t reach the API.</p>
+      <p style={{ color: "var(--text-mid)" }}>{t("loader.apiError")}</p>
       <p style={{ color: "var(--text-low)", fontSize: 12 }}>{String(error)}</p>
     </div>
   );

@@ -1,13 +1,16 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { useLang } from "../lib/i18n";
+
 const links = [
-  { to: "/", label: "Home", end: true },
-  { to: "/matches", label: "Matches" },
-  { to: "/players", label: "Players" },
-  { to: "/methodology", label: "Methodology" },
+  { to: "/", key: "nav.home", end: true },
+  { to: "/matches", key: "nav.matches" },
+  { to: "/players", key: "nav.players" },
+  { to: "/methodology", key: "nav.methodology" },
 ];
 
 export default function Layout() {
+  const { lang, setLang, t } = useLang();
   return (
     <>
       <nav style={styles.nav}>
@@ -26,9 +29,16 @@ export default function Layout() {
                   color: isActive ? "var(--gold)" : "var(--text-mid)",
                 })}
               >
-                {l.label}
+                {t(l.key)}
               </NavLink>
             ))}
+            <button
+              onClick={() => setLang(lang === "en" ? "zh" : "en")}
+              aria-label="切换语言 / switch language"
+              style={styles.langToggle}
+            >
+              {lang === "en" ? "中文" : "EN"}
+            </button>
           </div>
         </div>
       </nav>
@@ -37,8 +47,8 @@ export default function Layout() {
       </main>
       <footer style={styles.footer}>
         <div className="container">
-          Predictions are statistical estimates for fun, not betting advice. ·{" "}
-          A student portfolio project — <a href="https://kruxqlyz.com" style={{ color: "var(--text-mid)" }}>kruxqlyz.com</a>
+          {t("footer.disclaimer")} ·{" "}
+          {t("footer.project")} <a href="https://kruxqlyz.com" style={{ color: "var(--text-mid)" }}>kruxqlyz.com</a>
         </div>
       </footer>
     </>
@@ -56,8 +66,18 @@ const styles = {
   navInner: { display: "flex", alignItems: "center", justifyContent: "space-between", height: 56 },
   brand: { fontFamily: "var(--font-display)", fontSize: 18, letterSpacing: 1 },
   brandYear: { color: "var(--gold)" },
-  links: { display: "flex", gap: 18 },
+  links: { display: "flex", gap: 18, alignItems: "center" },
   link: { fontSize: 14, fontWeight: 600 },
+  langToggle: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "var(--text-mid)",
+    background: "none",
+    border: "1px solid var(--line)",
+    borderRadius: 6,
+    padding: "3px 9px",
+    cursor: "pointer",
+  },
   footer: {
     borderTop: "1px solid var(--line)",
     padding: "16px 0 32px",

@@ -5,23 +5,27 @@ import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import ProbBar from "../components/ProbBar";
 import StatCompareRow from "../components/StatCompareRow";
 import TeamBadge from "../components/TeamBadge";
-import { localKickoff, STAGE_LABEL } from "../lib/format";
+import { localKickoff } from "../lib/format";
+import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
 const STAT_ROWS = [
-  ["possession", "Possession", "%"],
-  ["shots", "Shots", ""],
-  ["shots_on_target", "On target", ""],
-  ["corners", "Corners", ""],
-  ["fouls", "Fouls", ""],
-  ["offsides", "Offsides", ""],
-  ["passes", "Passes", ""],
-  ["pass_accuracy", "Pass accuracy", "%"],
-  ["yellows", "Yellow cards", ""],
-  ["reds", "Red cards", ""],
+  ["possession", "%"],
+  ["shots", ""],
+  ["shots_on_target", ""],
+  ["corners", ""],
+  ["fouls", ""],
+  ["offsides", ""],
+  ["passes", ""],
+  ["pass_accuracy", "%"],
+  ["yellows", ""],
+  ["reds", ""],
 ];
 
+const POSITION_GROUPS = ["GK", "DF", "MF", "FW"];
+
 export default function MatchDetail() {
+  const { t, dateLocale } = useLang();
   const { id } = useParams();
   const { data: m, loading, error } = useApi(`/api/matches/${id}`);
 
@@ -38,9 +42,9 @@ export default function MatchDetail() {
     <>
       <div className="card" style={{ marginTop: 24, textAlign: "center", padding: 24 }}>
         <p style={{ color: "var(--text-low)", fontSize: 13, margin: 0 }}>
-          {m.group_letter ? `Group ${m.group_letter}` : STAGE_LABEL[m.stage]} · {m.venue} ·{" "}
-          {m.status === "LIVE" ? <span><span className="live-dot" /> LIVE</span>
-            : m.status === "FT" ? "Full time" : localKickoff(m.kickoff_utc)}
+          {m.group_letter ? t("stage.group", { letter: m.group_letter }) : t("stage." + m.stage)} · {m.venue} ·{" "}
+          {m.status === "LIVE" ? <span><span className="live-dot" /> {t("match.live")}</span>
+            : m.status === "FT" ? t("match.fullTime") : localKickoff(m.kickoff_utc, dateLocale)}
         </p>
         <div style={styles.scoreRow}>
           <span style={styles.team}><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
@@ -53,17 +57,17 @@ export default function MatchDetail() {
 
       {m.prediction && !played && (
         <>
-          <h2 className="section-title">Model Prediction</h2>
+          <h2 className="section-title">{t("match.prediction")}</h2>
           <div className="card">
             <ProbBar
               pHome={m.prediction.p_home} pDraw={m.prediction.p_draw} pAway={m.prediction.p_away}
               homeCode={m.home_code} awayCode={m.away_code}
             />
             <p style={{ fontSize: 13, color: "var(--text-mid)", marginBottom: 0 }}>
-              Most likely score: <strong>{m.prediction.likely_score}</strong> · Elo{" "}
+              {t("match.likelyScore")} <strong>{m.prediction.likely_score}</strong> · Elo{" "}
               <span className="mono-num">{Math.round(m.prediction.home_elo)}</span> v{" "}
               <span className="mono-num">{Math.round(m.prediction.away_elo)}</span> ·{" "}
-              <Link to="/methodology" style={{ color: "var(--gold)" }}>how this works</Link>
+              <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
             </p>
             <Disclaimer />
           </div>
@@ -72,12 +76,12 @@ export default function MatchDetail() {
 
       {homeStats && awayStats && (
         <>
-          <h2 className="section-title">Team Statistics</h2>
+          <h2 className="section-title">{t("match.teamStats")}</h2>
           <div className="card">
-            {STAT_ROWS.map(([key, label, suffix]) =>
+            {STAT_ROWS.map(([key, suffix]) =>
               homeStats[key] != null || awayStats[key] != null ? (
                 <StatCompareRow
-                  key={key} label={label} suffix={suffix}
+                  key={key} label={t("stat." + key)} suffix={suffix}
                   home={homeStats[key]} away={awayStats[key]}
                   homeCode={m.home_code} awayCode={m.away_code}
                 />
@@ -89,7 +93,7 @@ export default function MatchDetail() {
 
       {m.lineups?.length > 0 && (
         <>
-          <h2 className="section-title">Lineups</h2>
+          <h2 className="section-title">{t("match.lineups")}</h2>
           <div style={styles.lineups}>
             {[m.home_id, m.away_id].map((tid) => {
               const lu = lineupBy[tid];
@@ -107,7 +111,7 @@ export default function MatchDetail() {
                   ))}
                   {lu.bench.length > 0 && (
                     <>
-                      <p style={{ color: "var(--text-low)", fontSize: 12, margin: "10px 0 4px" }}>BENCH</p>
+                      <p style={{ color: "var(--text-low)", fontSize: 12, margin: "10px 0 4px" }}>{t("match.bench")}</p>
                       {lu.bench.map((p) => (
                         <PlayerLine key={p.player_id} p={p} dim />
                       ))}
@@ -122,10 +126,10 @@ export default function MatchDetail() {
 
       {!m.lineups?.length && m.squads && (
         <>
-          <h2 className="section-title">Squads</h2>
+          <h2 className="section-title">{t("match.squads")}</h2>
           {!played && (
             <p style={{ color: "var(--text-low)", fontSize: 13, marginTop: -4 }}>
-              Official lineups appear ~30 minutes before kickoff — full 26-man squads below.
+              {t("match.squadNote")}
             </p>
           )}
           <div style={styles.lineups}>
@@ -137,12 +141,12 @@ export default function MatchDetail() {
                   <p style={{ marginTop: 0, fontWeight: 700 }}>
                     <TeamBadge code={code} name={name} />
                   </p>
-                  {POSITION_GROUPS.map(([pos, label]) => {
+                  {POSITION_GROUPS.map((pos) => {
                     const group = m.squads[side].filter((p) => p.position === pos);
                     if (!group.length) return null;
                     return (
                       <div key={pos}>
-                        <p style={styles.posLabel}>{label}</p>
+                        <p style={styles.posLabel}>{t("pos." + pos)}</p>
                         {group.map((p) => (
                           <PlayerLine
                             key={p.id}
@@ -178,13 +182,6 @@ function PlayerLine({ p, dim = false }) {
     </Link>
   );
 }
-
-const POSITION_GROUPS = [
-  ["GK", "Goalkeepers"],
-  ["DF", "Defenders"],
-  ["MF", "Midfielders"],
-  ["FW", "Forwards"],
-];
 
 const styles = {
   posLabel: {

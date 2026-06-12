@@ -40,17 +40,22 @@ def _yesterday_results(conn, day: str) -> list:
         if p and m["winner_team_id"]:
             p_winner = p["p_home"] if m["winner_team_id"] == m["home_team_id"] else p["p_away"]
             if p_winner < 0.25:
-                winner = _team(conn, m["winner_team_id"])["name"]
-                card["upset_note"] = (
-                    f"Upset: the model gave {winner} only a {p_winner:.0%} chance."
-                )
+                # structured, not a baked sentence — the frontend composes the
+                # line in the visitor's language
+                winner = _team(conn, m["winner_team_id"])
+                card["upset"] = {
+                    "winner": winner["name"],
+                    "winner_code": winner["fifa_code"],
+                    "p_winner": round(p_winner, 4),
+                }
         out.append(card)
     return out
 
 
 def _standouts(conn, day: str) -> list:
     rows = conn.execute(
-        """SELECT p.name, t.name AS team, s.goals, s.assists
+        """SELECT p.name, t.name AS team, t.fifa_code AS team_code,
+                  s.goals, s.assists
            FROM player_match_stats s
            JOIN players p ON p.id = s.player_id
            JOIN teams t ON t.id = s.team_id
@@ -59,15 +64,8 @@ def _standouts(conn, day: str) -> list:
            ORDER BY (s.goals + s.assists) DESC, s.goals DESC LIMIT 5""",
         (day,),
     ).fetchall()
-    out = []
-    for r in rows:
-        bits = []
-        if r["goals"]:
-            bits.append(f"{r['goals']} goal{'s' if r['goals'] > 1 else ''}")
-        if r["assists"]:
-            bits.append(f"{r['assists']} assist{'s' if r['assists'] > 1 else ''}")
-        out.append({"player": r["name"], "team": r["team"], "line": " + ".join(bits)})
-    return out
+    return [{"player": r["name"], "team": r["team"], "team_code": r["team_code"],
+             "goals": r["goals"], "assists": r["assists"]} for r in rows]
 
 
 def _odds_movers(conn) -> list:
@@ -78,7 +76,8 @@ def _odds_movers(conn) -> list:
         return []
     latest, previous = runs[0]["run_id"], runs[1]["run_id"]
     rows = conn.execute(
-        """SELECT t.name, a.p_champion - b.p_champion AS delta, a.p_champion
+        """SELECT t.name, t.fifa_code AS code,
+               a.p_champion - b.p_champion AS delta, a.p_champion
            FROM sim_results a JOIN sim_results b
              ON a.team_id = b.team_id AND a.run_id=? AND b.run_id=?
            JOIN teams t ON t.id = a.team_id
@@ -86,7 +85,7 @@ def _odds_movers(conn) -> list:
         (latest, previous),
     ).fetchall()
     return [
-        {"team": r["name"], "delta": round(r["delta"], 4),
+        {"team": r["name"], "code": r["code"], "delta": round(r["delta"], 4),
          "p_champion": round(r["p_champion"], 4)}
         for r in rows if abs(r["delta"]) >= 0.005
     ]
@@ -94,7 +93,9 @@ def _odds_movers(conn) -> list:
 
 def _injury_flags(conn) -> list:
     rows = conn.execute(
-        """SELECT i.player_name, i.reason, i.status, t.name AS team FROM injuries i
+        """SELECT i.player_name, i.reason, i.status, t.name AS team,
+                  t.fifa_code AS team_code
+           FROM injuries i
            JOIN teams t ON t.id = i.team_id
            WHERE i.reported_at >= datetime('now', '-1 day')
            ORDER BY i.reported_at DESC LIMIT 6"""

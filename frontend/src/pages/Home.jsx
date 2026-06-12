@@ -4,11 +4,13 @@ import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
 import TeamBadge from "../components/TeamBadge";
-import { localDateHeading, localTime, pct } from "../lib/format";
+import { localDateHeading, pct } from "../lib/format";
+import { useLang } from "../lib/i18n";
 import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 export default function Home() {
+  const { t, tTeam, tInjuryStatus, dateLocale } = useLang();
   const briefing = useApi("/api/briefing/today");
   const sim = useApi("/api/sim/championship");
 
@@ -16,16 +18,29 @@ export default function Home() {
   if (briefing.error) return <ErrorState error={briefing.error} />;
   const b = briefing.data;
 
+  // sentences are composed client-side so they localize; `upset_note` / `line`
+  // are the pre-i18n briefing shape, kept until the next refresh regenerates it
+  const upsetLine = (m) =>
+    m.upset
+      ? t("home.upset", { team: tTeam(m.upset.winner_code, m.upset.winner),
+                          pct: pct(m.upset.p_winner) })
+      : m.upset_note;
+  const standoutLine = (s) =>
+    s.line ?? [
+      s.goals ? t("home.goals", { n: s.goals }) : null,
+      s.assists ? t("home.assists", { n: s.assists }) : null,
+    ].filter(Boolean).join(" + ");
+
   return (
     <>
-      <h1 style={styles.h1}>Matchday Briefing</h1>
+      <h1 style={styles.h1}>{t("home.title")}</h1>
       <p style={{ color: "var(--text-low)", marginTop: -8 }}>
-        {localDateHeading(b.date)} · auto-generated from match data
+        {localDateHeading(b.date, dateLocale)} · {t("home.autogen")}
       </p>
 
       {b.yesterday.length > 0 && (
         <>
-          <h2 className="section-title">Yesterday</h2>
+          <h2 className="section-title">{t("home.yesterday")}</h2>
           <div className="card">
             {b.yesterday.map((m) => (
               <div key={m.match_id} style={styles.resultRow}>
@@ -34,14 +49,16 @@ export default function Home() {
                   <span className="score">{m.score[0]} – {m.score[1]}</span>{" "}
                   <TeamBadge code={m.away_code} name={m.away} />
                 </Link>
-                {m.upset_note && <div style={styles.upset}>⚡ {m.upset_note}</div>}
+                {(m.upset || m.upset_note) && (
+                  <div style={styles.upset}>⚡ {upsetLine(m)}</div>
+                )}
               </div>
             ))}
             {b.standouts.length > 0 && (
               <div style={styles.standouts}>
                 {b.standouts.map((s, i) => (
                   <span key={i} style={styles.standout}>
-                    ⭐ {s.player} ({s.team}) — {s.line}
+                    ⭐ {s.player} ({tTeam(s.team_code, s.team)}) — {standoutLine(s)}
                   </span>
                 ))}
               </div>
@@ -50,9 +67,9 @@ export default function Home() {
         </>
       )}
 
-      <h2 className="section-title">Today</h2>
+      <h2 className="section-title">{t("home.today")}</h2>
       {b.today.length === 0 && (
-        <p style={{ color: "var(--text-mid)" }}>No matches today.</p>
+        <p style={{ color: "var(--text-mid)" }}>{t("home.noMatches")}</p>
       )}
       <div style={styles.todayGrid}>
         {b.today.map((m) => (
@@ -72,45 +89,44 @@ export default function Home() {
 
       {b.injuries.length > 0 && (
         <>
-          <h2 className="section-title">Availability Watch</h2>
+          <h2 className="section-title">{t("home.injuries")}</h2>
           <div className="card">
             {b.injuries.map((inj, i) => (
               <div key={i} style={{ fontSize: 14, padding: "4px 0" }}>
-                🚑 <strong>{inj.player_name}</strong> ({inj.team}) — {inj.reason}{" "}
-                <span style={{ color: "var(--text-low)" }}>{inj.status}</span>
+                🚑 <strong>{inj.player_name}</strong> ({tTeam(inj.team_code, inj.team)}) — {inj.reason}{" "}
+                <span style={{ color: "var(--text-low)" }}>{tInjuryStatus(inj.status)}</span>
               </div>
             ))}
           </div>
         </>
       )}
 
-      <h2 className="section-title">Who wins the World Cup?</h2>
+      <h2 className="section-title">{t("home.whoWins")}</h2>
       <div className="card">
-        {sim.loading && <p style={{ color: "var(--text-mid)" }}>Crunching simulations…</p>}
+        {sim.loading && <p style={{ color: "var(--text-mid)" }}>{t("home.crunching")}</p>}
         {sim.data?.run && (
           <>
             <p style={{ color: "var(--text-low)", fontSize: 12, marginTop: 0 }}>
-              {Number(sim.data.run.n_iterations).toLocaleString()} Monte Carlo simulations
-              of the remaining tournament ·{" "}
-              <Link to="/methodology" style={{ color: "var(--gold)" }}>how this works</Link>
+              {t("home.simNote", { n: Number(sim.data.run.n_iterations).toLocaleString() })}
+              <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
             </p>
-            {sim.data.teams.slice(0, 12).map((t) => (
-              <div key={t.team_id} style={styles.oddsRow}>
+            {sim.data.teams.slice(0, 12).map((tm) => (
+              <div key={tm.team_id} style={styles.oddsRow}>
                 <span style={styles.oddsTeam}>
-                  <TeamBadge code={t.fifa_code} name={t.name} />
+                  <TeamBadge code={tm.fifa_code} name={tm.name} />
                 </span>
                 <div style={styles.oddsTrack}>
                   <div
                     style={{
-                      width: `${Math.max(t.p_champion * 100 * 2.5, 1)}%`,
-                      background: teamColor(t.fifa_code),
-                      boxShadow: `0 0 10px color-mix(in srgb, ${teamColor(t.fifa_code)} 50%, transparent)`,
+                      width: `${Math.max(tm.p_champion * 100 * 2.5, 1)}%`,
+                      background: teamColor(tm.fifa_code),
+                      boxShadow: `0 0 10px color-mix(in srgb, ${teamColor(tm.fifa_code)} 50%, transparent)`,
                       height: 10,
                       borderRadius: 5,
                     }}
                   />
                 </div>
-                <span className="mono-num" style={styles.oddsPct}>{pct(t.p_champion)}</span>
+                <span className="mono-num" style={styles.oddsPct}>{pct(tm.p_champion)}</span>
               </div>
             ))}
           </>
@@ -120,15 +136,15 @@ export default function Home() {
 
       {b.odds_movers.length > 0 && (
         <>
-          <h2 className="section-title">Odds Movers</h2>
+          <h2 className="section-title">{t("home.oddsMovers")}</h2>
           <div className="card" style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {b.odds_movers.map((mv, i) => (
               <span key={i} style={{ fontSize: 14 }}>
-                {mv.delta > 0 ? "📈" : "📉"} <strong>{mv.team}</strong>{" "}
+                {mv.delta > 0 ? "📈" : "📉"} <strong>{tTeam(mv.code, mv.team)}</strong>{" "}
                 <span className="mono-num" style={{ color: mv.delta > 0 ? "var(--live)" : "var(--danger)" }}>
                   {mv.delta > 0 ? "+" : ""}{(mv.delta * 100).toFixed(1)}pp
                 </span>{" "}
-                <span style={{ color: "var(--text-low)" }}>→ {pct(mv.p_champion)} champion</span>
+                <span style={{ color: "var(--text-low)" }}>{t("home.champTail", { pct: pct(mv.p_champion) })}</span>
               </span>
             ))}
           </div>
