@@ -58,9 +58,12 @@ npm run dev
 ## Status
 
 - [x] M1 — data sources verified, repo scaffolded
-- [ ] M2 — model core (Elo + Poisson + backtest)
-- [ ] M3 — simulation + fetch pipeline
-- [ ] M4 — frontend shell + Home
-- [ ] M5 — Timetable + Match breakdown
-- [ ] M6 — Players + Methodology
-- [ ] M7 — polish + launch
+- [x] M2 — model core (Elo + Poisson + backtest)
+- [x] M3 — simulation + fetch pipeline
+- [x] M4 — frontend shell + Home
+- [x] M5 — Timetable + Match breakdown
+- [x] M6 — Players + Methodology
+- [ ] M7 — polish + launch (deploy to Render + Vercel, mobile pass, README screenshots)
+
+Screenshots in `docs/`. v1.1 backlog: FBref xG layer, API-Football injuries
+(needs key), exact FIFA third-place allocation table, score-matrix heatmap.
