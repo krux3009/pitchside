@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
-from .config import ALLOWED_ORIGIN
+from .config import ALLOWED_ORIGINS
 from .routes import briefing, internal, matches, methodology, players, sim, standings
 
 
@@ -19,7 +19,7 @@ app = FastAPI(title="Pitchside API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET"],
     allow_headers=["*"],
 )
