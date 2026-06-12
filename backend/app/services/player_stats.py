@@ -74,6 +74,18 @@ def detail(conn, player_id: int) -> dict | None:
         "SELECT SUM(goals) AS g FROM player_match_stats WHERE team_id=?",
         (player["team_id"],),
     ).fetchone()["g"]
+    # pre-tournament career, one line per side played for (seed-baked ESPN data;
+    # SUM skips the NULL GK columns on outfield rows)
+    career = conn.execute(
+        """SELECT team_name, MAX(is_national) AS is_national,
+                  MIN(season_year) AS from_year, MAX(season_year) AS to_year,
+                  SUM(starts) AS starts, SUM(goals) AS goals,
+                  SUM(assists) AS assists, SUM(clean_sheets) AS clean_sheets
+           FROM player_career WHERE player_id=?
+           GROUP BY espn_team_id
+           ORDER BY MAX(is_national), MAX(season_year) DESC, MIN(season_year) DESC""",
+        (player_id,),
+    ).fetchall()
     goals = totals["goals"] if totals else 0
     return {
         **player,
@@ -81,4 +93,5 @@ def detail(conn, player_id: int) -> dict | None:
         "team_goal_share": round(goals / team_goals, 3) if team_goals else 0.0,
         "form": [ (r["goals"] or 0) + (r["assists"] or 0) for r in log[-5:] ],
         "match_log": log,
+        "career": career,
     }

@@ -13,6 +13,8 @@ export default function PlayerDetail() {
   if (error) return <ErrorState error={error} />;
 
   const t = p.totals;
+  const clubs = (p.career || []).filter((c) => !c.is_national);
+  const international = (p.career || []).filter((c) => c.is_national);
   const statCards = t
     ? [
         ["Goals", t.goals],
@@ -93,8 +95,55 @@ export default function PlayerDetail() {
           </div>
         </>
       ) : (
-        <p style={{ color: "var(--text-mid)", marginTop: 20 }}>No minutes played yet.</p>
+        <p style={{ color: "var(--text-mid)", marginTop: 20 }}>
+          No World Cup 2026 minutes yet.
+        </p>
       )}
+
+      <CareerTable title="Club Career" rows={clubs} />
+      <CareerTable title="International" rows={international} />
+      {p.career?.length > 0 && (
+        <p style={{ color: "var(--text-low)", fontSize: 12, marginTop: 8 }}>
+          Pre-tournament career via ESPN season totals (league and cup
+          competitions where tracked). ESPN counts starts, not substitute
+          appearances.
+        </p>
+      )}
+    </>
+  );
+}
+
+function CareerTable({ title, rows }) {
+  if (!rows.length) return null;
+  const hasCleanSheets = rows.some((c) => c.clean_sheets != null);
+  return (
+    <>
+      <h2 className="section-title">{title}</h2>
+      <div className="card" style={{ padding: 0, overflowX: "auto" }}>
+        <table className="stat-table">
+          <thead>
+            <tr>
+              <th>Team</th><th className="num">Years</th><th className="num">Starts</th>
+              <th className="num">G</th><th className="num">A</th>
+              {hasCleanSheets && <th className="num">CS</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((c) => (
+              <tr key={`${c.team_name}-${c.from_year}`}>
+                <td>{c.team_name}</td>
+                <td className="num">
+                  {c.from_year === c.to_year ? c.from_year : `${c.from_year}–${c.to_year}`}
+                </td>
+                <td className="num">{c.starts ?? "–"}</td>
+                <td className="num">{c.goals ?? "–"}</td>
+                <td className="num">{c.assists ?? "–"}</td>
+                {hasCleanSheets && <td className="num">{c.clean_sheets ?? "–"}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

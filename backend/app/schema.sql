@@ -100,6 +100,36 @@ CREATE VIEW IF NOT EXISTS player_totals AS
   FROM player_match_stats
   GROUP BY player_id;
 
+-- Pre-tournament career history, one row per season x team x competition.
+-- Bulk-fetched from ESPN's athlete-stats API into seed.db by
+-- scripts/fetch_careers.py (static during the tournament, so it ships in the
+-- seed and never touches the matchday refresh loop or the nightly archive).
+-- ESPN's soccer feed counts STARTS, not appearances — columns say what they mean.
+CREATE TABLE IF NOT EXISTS player_career (
+  player_id     INTEGER REFERENCES players(id),
+  espn_team_id  TEXT,
+  team_name     TEXT,
+  league_slug   TEXT,
+  league_name   TEXT,
+  season_year   INTEGER,
+  season_name   TEXT,                       -- '2025-26 Turkish Super Lig', 'Final', ...
+  is_national   INTEGER DEFAULT 0,          -- senior or youth national duty vs club
+  starts        INTEGER,
+  goals         INTEGER,
+  assists       INTEGER,
+  shots         INTEGER,
+  shots_on_target INTEGER,
+  yellows       INTEGER,
+  reds          INTEGER,
+  fouls_committed INTEGER,
+  fouls_suffered  INTEGER,
+  offsides      INTEGER,
+  clean_sheets  INTEGER,                    -- GK category; NULL for outfielders
+  saves         INTEGER,
+  goals_against INTEGER,
+  PRIMARY KEY (player_id, espn_team_id, league_slug, season_year, season_name)
+);
+
 CREATE TABLE IF NOT EXISTS lineups (
   match_id      INTEGER REFERENCES matches(id),
   team_id       INTEGER REFERENCES teams(id),

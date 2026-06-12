@@ -15,6 +15,10 @@ def conn(tmp_path):
     path = tmp_path / "test.db"
     shutil.copy(SEED, path)
     c = db.connect(path)
+    # the shipped seed has espn_ids baked in by scripts/fetch_careers.py;
+    # these tests exercise first-sight reconciliation, so start unmapped
+    c.execute("UPDATE players SET espn_id=NULL")
+    c.commit()
     yield c
     c.close()
 

@@ -12,7 +12,8 @@ Monte Carlo tournament simulation. Built as a portfolio project while the tourna
 - **Timetable** — all 104 matches, filterable by stage / group / team / date.
 - **Match breakdown** — team stats comparison, lineups, and a win/draw/loss prediction.
 - **Player breakdown** — tournament stats plus derived metrics (goals/90, share of team
-  goals, form trend).
+  goals, form trend), and pre-tournament career history (club + international season
+  totals via ESPN, bulk-baked into the seed by `scripts/fetch_careers.py`).
 - **Methodology** — every formula, fitted parameter, and citation behind the predictions,
   with a live backtest scorecard grading the model against real results.
 

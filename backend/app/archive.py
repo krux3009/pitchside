@@ -53,6 +53,21 @@ def restore(conn) -> int:
         for row in data.get(table, []):
             cols = ", ".join(row)
             marks = ", ".join("?" for _ in row)
+            if table == "players":
+                # The archive owns runtime-learned facts (espn_id, photo_url)
+                # and late squad additions; the seed owns everything else —
+                # a blind REPLACE would wipe seed-baked ids/photos whenever
+                # the committed archive predates the seed.
+                conn.execute(
+                    f"INSERT OR IGNORE INTO players ({cols}) VALUES ({marks})",
+                    list(row.values()),
+                )
+                conn.execute(
+                    "UPDATE players SET espn_id=COALESCE(espn_id, ?),"
+                    " photo_url=COALESCE(photo_url, ?) WHERE id=?",
+                    (row.get("espn_id"), row.get("photo_url"), row["id"]),
+                )
+                continue
             conn.execute(
                 f"INSERT OR REPLACE INTO {table} ({cols}) VALUES ({marks})",
                 list(row.values()),
