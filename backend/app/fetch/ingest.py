@@ -181,3 +181,35 @@ def espn_summary(conn, match_id: int, payload: dict):
         (f"ingested:espn_summary:{match_id}", now),
     )
     conn.commit()
+
+
+def espn_injuries(conn, payload: dict) -> int:
+    """Replace the injuries table from ESPN's injuries feed.
+
+    Parsed defensively — the feed has been empty so far this tournament, so
+    the item shape follows ESPN's standard injuries schema (per-team groups
+    of {athlete, status, details}); unknown fields are simply skipped.
+    """
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = []
+    for group in payload.get("injuries", []):
+        team = _team_by_espn(conn, group) if group.get("team") else None
+        for item in group.get("injuries", []):
+            athlete = item.get("athlete", {})
+            details = item.get("details", {}) or {}
+            reason = details.get("type") or item.get("longComment") or item.get("shortComment")
+            rows.append((
+                team["id"] if team else None,
+                athlete.get("displayName", "?"),
+                reason,
+                item.get("status"),
+                item.get("date") or now,
+            ))
+    conn.execute("DELETE FROM injuries")
+    conn.executemany(
+        "INSERT INTO injuries (team_id, player_name, reason, status, reported_at)"
+        " VALUES (?,?,?,?,?)",
+        rows,
+    )
+    conn.commit()
+    return len(rows)

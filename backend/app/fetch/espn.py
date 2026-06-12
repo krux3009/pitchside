@@ -40,3 +40,13 @@ def summary(conn, event_id: str) -> dict | None:
         return r.json()
     except httpx.HTTPError:
         return None
+
+
+def injuries(conn) -> dict | None:
+    try:
+        r = httpx.get(f"{BASE}/injuries", timeout=TIMEOUT)
+        _log(conn, "injuries", "", r.status_code)
+        r.raise_for_status()
+        return r.json()
+    except httpx.HTTPError:
+        return None

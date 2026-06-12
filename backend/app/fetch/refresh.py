@@ -6,7 +6,6 @@ Order of operations:
   2. summaries for any FT match not yet ingested -> stats, lineups, players
   3. if anything changed: Elo replay -> predictions -> Monte Carlo -> briefing
 """
-import json
 from datetime import date, datetime, timedelta, timezone
 
 from ..model import simulate
@@ -62,6 +61,22 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
         if payload:
             ingest.espn_summary(conn, m["id"], payload)
             report["summaries"] += 1
+
+    # injuries: cheap, quota-free, but slow-moving — refresh twice a day
+    last = conn.execute(
+        "SELECT value FROM meta WHERE key='last_fetch:injuries'"
+    ).fetchone()
+    if not last or last["value"] < (
+        datetime.now(timezone.utc) - timedelta(hours=12)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ"):
+        payload = espn.injuries(conn)
+        if payload is not None:
+            report["injuries"] = ingest.espn_injuries(conn, payload)
+            conn.execute(
+                "INSERT OR REPLACE INTO meta (key, value) VALUES ('last_fetch:injuries', ?)",
+                (_now(),),
+            )
+            conn.commit()
 
     needs_model_pass = bool(newly_finished or report["summaries"])
     no_sim_yet = conn.execute(
