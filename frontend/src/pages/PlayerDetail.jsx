@@ -33,7 +33,8 @@ export default function PlayerDetail() {
       <div className="card" style={{ marginTop: 24, display: "flex", gap: 16, alignItems: "center" }}>
         {p.photo_url && (
           <img src={p.photo_url} alt="" width="64" height="64"
-               style={{ borderRadius: "50%", background: "var(--bg-elevated)" }} />
+               style={{ borderRadius: "50%", background: "var(--bg-elevated)" }}
+               onError={(e) => { e.currentTarget.style.display = "none"; }} />
         )}
         <div>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: 24, margin: 0 }}>
