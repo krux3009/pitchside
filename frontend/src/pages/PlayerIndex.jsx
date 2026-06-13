@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import TeamBadge from "../components/TeamBadge";
+import { useFactBar } from "../lib/factBar";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
@@ -10,6 +11,7 @@ const COLUMNS = ["goals", "assists", "goals_per_90", "team_goal_share", "minutes
 
 export default function PlayerIndex() {
   const { t } = useLang();
+  const { showPlayer, clear } = useFactBar();
   const { data, loading, error } = useApi("/api/players");
   const [sort, setSort] = useState("goals");
   const [q, setQ] = useState("");
@@ -30,10 +32,11 @@ export default function PlayerIndex() {
     <>
       <h1 className="page-title">{t("players.title")}</h1>
       <input
+        className="search"
         placeholder={t("players.search")}
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        style={styles.search}
+        aria-label={t("players.search")}
       />
       {rows.length === 0 && (
         <p style={{ color: "var(--text-mid)" }}>{t("players.none")}</p>
@@ -63,7 +66,12 @@ export default function PlayerIndex() {
               {rows.map((p) => (
                 <tr key={p.player_id}>
                   <td>
-                    <Link to={`/players/${p.player_id}`} style={{ fontWeight: 600 }}>
+                    <Link
+                      to={`/players/${p.player_id}`}
+                      onMouseEnter={() => showPlayer(p.player_id, p.name)}
+                      onMouseLeave={clear}
+                      style={{ fontWeight: 600 }}
+                    >
                       {p.name}
                     </Link>{" "}
                     <span style={{ color: "var(--text-low)", fontSize: 12 }}>{p.position}</span>
@@ -84,11 +92,3 @@ export default function PlayerIndex() {
     </>
   );
 }
-
-const styles = {
-  search: {
-    width: "100%", maxWidth: 360, padding: "9px 12px", marginBottom: 14,
-    background: "var(--bg-surface)", border: "1px solid var(--line)",
-    borderRadius: 8, color: "var(--text-hi)", fontSize: 14, outline: "none",
-  },
-};

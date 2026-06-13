@@ -10,18 +10,30 @@ const STAGES = ["ALL", "GROUP", "R32", "R16", "QF", "SF", "FINAL"];
 const GROUPS = ["ALL", ..."ABCDEFGHIJKL"];
 
 export default function Timetable() {
-  const { t, dateLocale } = useLang();
+  const { t, tTeam, dateLocale } = useLang();
   const { data, loading, error } = useApi("/api/matches");
   const [stage, setStage] = useState("ALL");
   const [group, setGroup] = useState("ALL");
+  const [teamQ, setTeamQ] = useState("");
 
   const byDate = useMemo(() => {
     if (!data) return [];
-    const filtered = data.filter(
-      (m) =>
-        (stage === "ALL" || m.stage === stage) &&
-        (group === "ALL" || m.group_letter === group)
-    );
+    const q = teamQ.trim().toLowerCase();
+    const filtered = data.filter((m) => {
+      const stageOk = stage === "ALL" || m.stage === stage;
+      const groupOk = group === "ALL" || m.group_letter === group;
+      const teamOk =
+        !q ||
+        [
+          m.home_name, m.away_name, m.home_code, m.away_code, m.home_slot, m.away_slot,
+          tTeam(m.home_code, m.home_name), tTeam(m.away_code, m.away_name),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      return stageOk && groupOk && teamOk;
+    });
     const days = new Map();
     for (const m of filtered) {
       const day = m.kickoff_utc.slice(0, 10);
@@ -29,7 +41,7 @@ export default function Timetable() {
       days.get(day).push(m);
     }
     return [...days.entries()];
-  }, [data, stage, group]);
+  }, [data, stage, group, teamQ, tTeam]);
 
   if (loading) return <ColdStartLoader />;
   if (error) return <ErrorState error={error} />;
@@ -37,6 +49,13 @@ export default function Timetable() {
   return (
     <>
       <h1 className="page-title">{t("timetable.title")}</h1>
+      <input
+        className="search"
+        placeholder={t("timetable.search")}
+        value={teamQ}
+        onChange={(e) => setTeamQ(e.target.value)}
+        aria-label={t("timetable.search")}
+      />
       <div style={styles.filters}>
         {STAGES.map((s) => (
           <button
@@ -66,6 +85,9 @@ export default function Timetable() {
         </div>
       )}
 
+      {byDate.length === 0 && (
+        <p style={{ color: "var(--text-mid)", marginTop: 16 }}>{t("timetable.none")}</p>
+      )}
       {byDate.map(([day, matches]) => (
         <section key={day}>
           <h2 className="section-title">{localDateHeading(day, dateLocale)}</h2>

@@ -5,6 +5,7 @@ import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import ProbBar from "../components/ProbBar";
 import StatCompareRow from "../components/StatCompareRow";
 import TeamBadge from "../components/TeamBadge";
+import { useFactBar } from "../lib/factBar";
 import { localKickoff } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
@@ -168,9 +169,12 @@ export default function MatchDetail() {
 }
 
 function PlayerLine({ p, dim = false }) {
+  const { showPlayer, clear } = useFactBar();
   return (
     <Link
       to={`/players/${p.player_id}`}
+      onMouseEnter={() => showPlayer(p.player_id, p.name)}
+      onMouseLeave={clear}
       style={{
         display: "flex", gap: 8, padding: "3px 0", fontSize: 14,
         color: dim ? "var(--text-low)" : "var(--text-hi)",

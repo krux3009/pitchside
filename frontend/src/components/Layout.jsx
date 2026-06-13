@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 
 import { useLang } from "../lib/i18n";
+import FactBar from "./FactBar";
 
 const links = [
   { to: "/", key: "nav.home", end: true },
@@ -49,6 +50,7 @@ export default function Layout() {
           {t("footer.project")} <a href="https://kruxqlyz.com" style={{ color: "var(--text-mid)" }}>kruxqlyz.com</a>
         </div>
       </footer>
+      <FactBar />
     </>
   );
 }
