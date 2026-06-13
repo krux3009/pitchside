@@ -8,8 +8,11 @@ __pycache__/
 .venv/
 .pytest_cache/
 
-# sqlite runtime artifacts (seed.db IS committed; runtime db + journals are not)
+# sqlite runtime artifacts (canonical seed = backend/app/data/seed.db IS committed;
+# runtime db, journals, and stray empty seed.db in the wrong dirs are not)
 backend/app/data/pitchside.db
+backend/seed.db
+backend/app/seed.db
 *.db-journal
 *.db-wal
 *.db-shm
