@@ -65,6 +65,8 @@ export const ZH = {
 
   // timetable
   "timetable.title": "赛程表",
+  "timetable.search": "搜索球队…",
+  "timetable.none": "没有符合搜索条件的比赛。",
   "timetable.allStages": "所有阶段",
   "timetable.allGroups": "所有小组",
 
@@ -122,6 +124,74 @@ export const ZH = {
   "home.upset": ({ team, pct }) => `爆冷：模型赛前只给${team} ${pct}的胜率。`,
   "home.goals": ({ n }) => `${n}球`,
   "home.assists": ({ n }) => `${n}次助攻`,
+
+  // hover fun-fact bar (player line derived from live data; country facts below)
+  "fact.loading": "…",
+  "posOne.GK": "门将",
+  "posOne.DF": "后卫",
+  "posOne.MF": "中场",
+  "posOne.FW": "前锋",
+  "fact.player": ({ team, posLabel, age, club, g, a, apps, intlStarts }) => {
+    const id = [team, posLabel, age != null ? `${age}岁` : null, club]
+      .filter(Boolean)
+      .join(" · ");
+    const tail =
+      apps > 0
+        ? `本届世界杯：${g}球 ${a}助攻，出场${apps}次`
+        : intlStarts
+          ? `国家队首发${intlStarts}场`
+          : null;
+    return tail ? `${id} — ${tail}` : id;
+  },
+  // 球队趣闻 — 已核实、稳定（冠军 / 主办 / 历史战绩）
+  "fact.team.ALG": "1982 年世界杯 2-1 爆冷击败西德。",
+  "fact.team.ARG": "三夺世界杯冠军——1978、1986、2022。",
+  "fact.team.AUS": "2001 年 31-0 胜美属萨摩亚——国际足球史上最大比分。",
+  "fact.team.AUT": "1954 年 7-5 胜瑞士——世界杯单场进球最多的比赛。",
+  "fact.team.BEL": "2018 年世界杯季军——「黄金一代」最佳战绩。",
+  "fact.team.BIH": "2014 年首次以独立国家身份征战世界杯。",
+  "fact.team.BRA": "唯一参加过历届世界杯的球队，五夺冠军（纪录）。",
+  "fact.team.CAN": "2000 年中北美金杯冠军，先后淘汰墨西哥与美国。",
+  "fact.team.CIV": "三夺非洲杯冠军——1992、2015、2023。",
+  "fact.team.COD": "1974 年以扎伊尔之名，成首支征战世界杯的撒哈拉以南非洲球队。",
+  "fact.team.COL": "1993 年世预赛客场 5-0 大胜阿根廷，传世经典。",
+  "fact.team.CPV": "大西洋岛国，人口约 50 万，绰号「蓝鲨」。",
+  "fact.team.CRO": "2018 年闯入世界杯决赛，红白格球衣深入人心。",
+  "fact.team.CUW": "国际足联认定的前荷属安的列斯继承者。",
+  "fact.team.CZE": "「勺子点球」的故乡——帕年卡，1976 年欧洲杯。",
+  "fact.team.ECU": "2006 年闯入世界杯 16 强，队史最佳。",
+  "fact.team.EGY": "非洲杯夺冠次数最多——七度封王。",
+  "fact.team.ENG": "1966 年本土夺得世界杯——队史唯一冠军。",
+  "fact.team.ESP": "2010 年世界杯冠军，四夺欧洲杯。",
+  "fact.team.FRA": "两夺世界杯冠军——1998、2018。",
+  "fact.team.GER": "四夺世界杯冠军——1954、1974、1990、2014。",
+  "fact.team.GHA": "四夺非洲杯冠军；2010 年世界杯八强。",
+  "fact.team.HAI": "1974 年萨农攻破佐夫，终结其 1142 分钟不失球纪录。",
+  "fact.team.IRN": "唯一连续三届夺得亚洲杯的球队——1968、1972、1976。",
+  "fact.team.IRQ": "2007 年亚洲杯夺冠，战乱之中的黑马传奇。",
+  "fact.team.JOR": "2023 年亚洲杯亚军——队史首个大赛决赛。",
+  "fact.team.JPN": "亚洲杯夺冠次数最多——四度封王。",
+  "fact.team.KOR": "首支闯入世界杯四强的亚洲球队（2002 年）。",
+  "fact.team.KSA": "2022 年世界杯 2-1 爆冷击败亚军阿根廷。",
+  "fact.team.MAR": "首支闯入世界杯四强的非洲球队（2022 年）。",
+  "fact.team.MEX": "首个两次举办世界杯的国家——1970 与 1986 年。",
+  "fact.team.NED": "全攻全守足球的故乡；三获世界杯亚军（1974、1978、2010）。",
+  "fact.team.NOR": "对巴西保持不败——四次交锋两胜两平。",
+  "fact.team.NZL": "2010 年世界杯唯一保持不败的球队——三场平局。",
+  "fact.team.PAN": "2018 年首次晋级世界杯，举国放假庆祝。",
+  "fact.team.PAR": "2010 年闯入世界杯八强，队史最佳战绩。",
+  "fact.team.POR": "2016 年欧洲杯冠军——队史首座大赛奖杯。",
+  "fact.team.QAT": "首个举办世界杯的阿拉伯国家（2022 年）。",
+  "fact.team.RSA": "首个举办世界杯的非洲国家（2010 年）。",
+  "fact.team.SCO": "参加了世界首场正式国际比赛——1872 年对阵英格兰。",
+  "fact.team.SEN": "2002 年世界杯处子秀即闯入八强，并击败法国。",
+  "fact.team.SUI": "国际足联总部所在地（苏黎世）；曾主办 1954 年世界杯。",
+  "fact.team.SWE": "作为东道主获 1958 年世界杯亚军，决赛负于巴西。",
+  "fact.team.TUN": "首支在世界杯赢球的非洲球队——1978 年 3-1 胜墨西哥。",
+  "fact.team.TUR": "2002 年苏克约 11 秒入球——世界杯历史最快进球。",
+  "fact.team.URU": "1930 年作为东道主夺得首届世界杯；两夺冠军。",
+  "fact.team.USA": "1930 年首届世界杯闯入四强——队史最佳。",
+  "fact.team.UZB": "中亚球队（亚足联）；1994 年亚运会足球金牌。",
 
   // methodology
   "meth.title": "方法论",

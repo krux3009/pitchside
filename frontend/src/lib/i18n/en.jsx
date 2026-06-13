@@ -67,6 +67,8 @@ export const EN = {
 
   // timetable
   "timetable.title": "Timetable",
+  "timetable.search": "Search a team…",
+  "timetable.none": "No matches for that search.",
   "timetable.allStages": "All stages",
   "timetable.allGroups": "All groups",
 
@@ -124,6 +126,74 @@ export const EN = {
   "home.upset": ({ team, pct }) => `Upset: the model gave ${team} only a ${pct} chance.`,
   "home.goals": ({ n }) => `${n} goal${n > 1 ? "s" : ""}`,
   "home.assists": ({ n }) => `${n} assist${n > 1 ? "s" : ""}`,
+
+  // hover fun-fact bar (player line derived from live data; country facts below)
+  "fact.loading": "…",
+  "posOne.GK": "Goalkeeper",
+  "posOne.DF": "Defender",
+  "posOne.MF": "Midfielder",
+  "posOne.FW": "Forward",
+  "fact.player": ({ team, posLabel, age, club, g, a, apps, intlStarts }) => {
+    const id = [team, posLabel, age != null ? `age ${age}` : null, club]
+      .filter(Boolean)
+      .join(" · ");
+    const tail =
+      apps > 0
+        ? `WC26: ${g}G ${a}A in ${apps} app${apps === 1 ? "" : "s"}`
+        : intlStarts
+          ? `${intlStarts} international starts`
+          : null;
+    return tail ? `${id} — ${tail}` : id;
+  },
+  // country fun facts — verified, durable (titles / hosting / historic results)
+  "fact.team.ALG": "Stunned West Germany 2-1 at the 1982 World Cup.",
+  "fact.team.ARG": "Three-time World Cup champion — 1978, 1986 and 2022.",
+  "fact.team.AUS": "Beat American Samoa 31-0 in 2001 — the largest win in international football.",
+  "fact.team.AUT": "Austria 7-5 Switzerland (1954) is the highest-scoring World Cup match.",
+  "fact.team.BEL": "Finished third at the 2018 World Cup — the golden generation's best.",
+  "fact.team.BIH": "Made their World Cup debut in 2014 as an independent nation.",
+  "fact.team.BRA": "The only team to play in every World Cup, and a record five-time champion.",
+  "fact.team.CAN": "Won the 2000 CONCACAF Gold Cup, beating Mexico and the USA.",
+  "fact.team.CIV": "Three-time Africa Cup of Nations champion — 1992, 2015 and 2023.",
+  "fact.team.COD": "As Zaire in 1974, the first sub-Saharan African team at a World Cup.",
+  "fact.team.COL": "Won 5-0 away to Argentina in a famous 1993 World Cup qualifier.",
+  "fact.team.CPV": "An Atlantic archipelago of about 500,000, nicknamed the Blue Sharks.",
+  "fact.team.CRO": "Reached the 2018 World Cup final in their famous red-and-white checks.",
+  "fact.team.CUW": "FIFA's recognized successor to the former Netherlands Antilles.",
+  "fact.team.CZE": "Home of the “Panenka” penalty — Antonín Panenka, Euro 1976.",
+  "fact.team.ECU": "Reached the World Cup Round of 16 in 2006, their best result.",
+  "fact.team.EGY": "Record seven-time Africa Cup of Nations champion.",
+  "fact.team.ENG": "Won the 1966 World Cup on home soil — their only title.",
+  "fact.team.ESP": "2010 World Cup winners and four-time European champions.",
+  "fact.team.FRA": "Two-time World Cup champion — 1998 and 2018.",
+  "fact.team.GER": "Four-time World Cup champion — 1954, 1974, 1990 and 2014.",
+  "fact.team.GHA": "Four-time Africa Cup of Nations champion; 2010 World Cup quarter-finalists.",
+  "fact.team.HAI": "In 1974, Emmanuel Sanon ended Dino Zoff's record 1,142-minute shutout streak.",
+  "fact.team.IRN": "The only side to win three straight Asian Cups — 1968, 1972 and 1976.",
+  "fact.team.IRQ": "Won the 2007 Asian Cup as underdogs from a war-torn nation.",
+  "fact.team.JOR": "Runners-up at the 2023 Asian Cup — their first major final.",
+  "fact.team.JPN": "Record four-time AFC Asian Cup champion.",
+  "fact.team.KOR": "First Asian team to reach a World Cup semi-final, in 2002.",
+  "fact.team.KSA": "Beat eventual finalists Argentina 2-1 at the 2022 World Cup.",
+  "fact.team.MAR": "First African team to reach a World Cup semi-final, in 2022.",
+  "fact.team.MEX": "First nation to host two World Cups — 1970 and 1986.",
+  "fact.team.NED": "Home of Total Football; three-time World Cup runner-up (1974, 1978, 2010).",
+  "fact.team.NOR": "Have never lost to Brazil — two wins and two draws in four meetings.",
+  "fact.team.NZL": "The only unbeaten team at the 2010 World Cup — three draws.",
+  "fact.team.PAN": "Declared a national holiday when they reached their first World Cup, 2018.",
+  "fact.team.PAR": "Reached the World Cup quarter-finals in 2010, their best run.",
+  "fact.team.POR": "Won Euro 2016, their first major international trophy.",
+  "fact.team.QAT": "First Arab nation to host the World Cup, in 2022.",
+  "fact.team.RSA": "First African nation to host the World Cup, in 2010.",
+  "fact.team.SCO": "Played the world's first official international — vs England, 1872.",
+  "fact.team.SEN": "Reached the quarter-finals on their 2002 World Cup debut, beating France.",
+  "fact.team.SUI": "Home of FIFA, headquartered in Zürich; hosted the 1954 World Cup.",
+  "fact.team.SWE": "Runners-up as hosts of the 1958 World Cup, losing the final to Brazil.",
+  "fact.team.TUN": "First African team to win a World Cup match — beat Mexico 3-1 in 1978.",
+  "fact.team.TUR": "Hakan Şükür's 2002 strike (about 11 sec) is the fastest World Cup goal.",
+  "fact.team.URU": "Won the first World Cup in 1930 as hosts; two-time champion.",
+  "fact.team.USA": "Reached the semi-finals of the first World Cup in 1930 — their best finish.",
+  "fact.team.UZB": "A Central Asian side (AFC); won football gold at the 1994 Asian Games.",
 
   // methodology
   "meth.title": "Methodology",

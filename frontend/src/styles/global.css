@@ -212,6 +212,24 @@ a.card:active { transform: translateY(-1px); }
 .lang-toggle:hover { color: var(--text-hi); border-color: var(--gold-dim); }
 .lang-toggle:active { transform: scale(0.95); }
 
+/* ---- Search input (Players + Timetable) ---- */
+.search {
+  width: 100%;
+  max-width: 360px;
+  padding: 9px 12px;
+  margin-bottom: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-hi);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--t-fast);
+}
+.search::placeholder { color: var(--text-low); }
+.search:focus { border-color: var(--gold-dim); }
+
 /* ---- Odds row (Home title race) ---- */
 .odds-row {
   display: grid;
@@ -308,6 +326,53 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
+}
+
+/* ---- Hover fun-fact bar (broadcast lower-third) ---- */
+.fact-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line-strong);
+  box-shadow: 0 -10px 28px -16px rgba(0, 0, 0, 0.7);
+  transform: translateY(100%);
+  transition: transform var(--t-med);
+  pointer-events: none; /* never block clicks underneath */
+}
+.fact-bar--open { transform: translateY(0); }
+.fact-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  min-height: 30px;
+  font-size: 14px;
+}
+.fact-bar__inner::before {
+  content: "";
+  flex-shrink: 0;
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+.fact-bar__icon { flex-shrink: 0; font-size: 20px; line-height: 1; }
+.fact-bar__title { flex-shrink: 0; font-weight: 700; white-space: nowrap; }
+.fact-bar__body {
+  color: var(--text-mid);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Hover is a pointer interaction — never show or reserve space on touch. */
+@media (hover: none) {
+  .fact-bar { display: none; }
 }
 
 /* ============ Responsive ============ */
