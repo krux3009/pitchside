@@ -36,28 +36,32 @@ export default function Timetable() {
 
   return (
     <>
-      <h1 style={styles.h1}>{t("timetable.title")}</h1>
+      <h1 className="page-title">{t("timetable.title")}</h1>
       <div style={styles.filters}>
         {STAGES.map((s) => (
-          <span
+          <button
             key={s}
+            type="button"
             className={`pill ${stage === s ? "active" : ""}`}
             onClick={() => setStage(s)}
+            aria-pressed={stage === s}
           >
             {s === "ALL" ? t("timetable.allStages") : t("stage." + s)}
-          </span>
+          </button>
         ))}
       </div>
       {stage !== "R32" && stage !== "R16" && stage !== "QF" && stage !== "SF" && stage !== "FINAL" && (
         <div style={styles.filters}>
           {GROUPS.map((g) => (
-            <span
+            <button
               key={g}
+              type="button"
               className={`pill ${group === g ? "active" : ""}`}
               onClick={() => setGroup(g)}
+              aria-pressed={group === g}
             >
               {g === "ALL" ? t("timetable.allGroups") : t("stage.group", { letter: g })}
-            </span>
+            </button>
           ))}
         </div>
       )}
@@ -77,7 +81,6 @@ export default function Timetable() {
 }
 
 const styles = {
-  h1: { fontFamily: "var(--font-display)", fontSize: 28, margin: "28px 0 12px" },
   filters: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 },
 };

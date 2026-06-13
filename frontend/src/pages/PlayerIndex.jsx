@@ -28,9 +28,7 @@ export default function PlayerIndex() {
 
   return (
     <>
-      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, margin: "28px 0 12px" }}>
-        {t("players.title")}
-      </h1>
+      <h1 className="page-title">{t("players.title")}</h1>
       <input
         placeholder={t("players.search")}
         value={q}
@@ -48,13 +46,15 @@ export default function PlayerIndex() {
                 <th>{t("players.player")}</th>
                 <th>{t("players.team")}</th>
                 {COLUMNS.map((key) => (
-                  <th
-                    key={key}
-                    className="num"
-                    style={{ cursor: "pointer", color: sort === key ? "var(--gold)" : undefined }}
-                    onClick={() => setSort(key)}
-                  >
-                    {t("players.col." + key)}{sort === key ? " ▾" : ""}
+                  <th key={key} className="num" aria-sort={sort === key ? "descending" : "none"}>
+                    <button
+                      type="button"
+                      className={`th-sort${sort === key ? " th-sort--active" : ""}`}
+                      onClick={() => setSort(key)}
+                    >
+                      {t("players.col." + key)}
+                      <span className="th-sort__arrow" aria-hidden="true">▾</span>
+                    </button>
                   </th>
                 ))}
               </tr>

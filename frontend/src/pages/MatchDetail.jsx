@@ -46,12 +46,12 @@ export default function MatchDetail() {
           {m.status === "LIVE" ? <span><span className="live-dot" /> {t("match.live")}</span>
             : m.status === "FT" ? t("match.fullTime") : localKickoff(m.kickoff_utc, dateLocale)}
         </p>
-        <div style={styles.scoreRow}>
-          <span style={styles.team}><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
-          <span className="score" style={styles.bigScore}>
+        <div className="score-row">
+          <span className="score-team"><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
+          <span className="score big-score">
             {played ? `${m.home_goals} – ${m.away_goals}` : "vs"}
           </span>
-          <span style={styles.team}><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
+          <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
       </div>
 
@@ -191,11 +191,5 @@ const styles = {
     textTransform: "uppercase",
     margin: "10px 0 4px",
   },
-  scoreRow: {
-    display: "grid", gridTemplateColumns: "1fr auto 1fr",
-    alignItems: "center", gap: 12, marginTop: 14,
-  },
-  team: { fontWeight: 700, fontSize: 17 },
-  bigScore: { fontSize: 40 },
   lineups: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 },
 };

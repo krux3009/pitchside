@@ -14,7 +14,7 @@ export default function Methodology() {
 
   return (
     <div style={{ maxWidth: 760 }}>
-      <h1 style={styles.h1}>{t("meth.title")}</h1>
+      <h1 className="page-title">{t("meth.title")}</h1>
       <p style={styles.lead}>{t("meth.lead")}</p>
 
       <Section title={t("meth.s1.title")}>
@@ -114,7 +114,6 @@ const Note = ({ children }) => (
 );
 
 const styles = {
-  h1: { fontFamily: "var(--font-display)", fontSize: 28, margin: "28px 0 8px" },
   lead: { color: "var(--text-mid)", fontSize: 16 },
   a: { color: "var(--gold)" },
   formula: {

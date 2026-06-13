@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <>
-      <h1 style={styles.h1}>{t("home.title")}</h1>
+      <h1 className="page-title">{t("home.title")}</h1>
       <p style={{ color: "var(--text-low)", marginTop: -8 }}>
         {localDateHeading(b.date, dateLocale)} · {t("home.autogen")}
       </p>
@@ -111,7 +111,7 @@ export default function Home() {
               <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
             </p>
             {sim.data.teams.slice(0, 12).map((tm) => (
-              <div key={tm.team_id} style={styles.oddsRow}>
+              <div key={tm.team_id} className="odds-row">
                 <span style={styles.oddsTeam}>
                   <TeamBadge code={tm.fifa_code} name={tm.name} />
                 </span>
@@ -155,13 +155,11 @@ export default function Home() {
 }
 
 const styles = {
-  h1: { fontFamily: "var(--font-display)", fontSize: 28, margin: "28px 0 8px" },
   resultRow: { padding: "8px 0", borderBottom: "1px solid var(--line)" },
   upset: { color: "var(--gold)", fontSize: 13, marginTop: 4 },
   standouts: { display: "flex", flexDirection: "column", gap: 4, paddingTop: 10, fontSize: 13, color: "var(--text-mid)" },
   standout: {},
   todayGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 },
-  oddsRow: { display: "grid", gridTemplateColumns: "180px 1fr 52px", alignItems: "center", gap: 10, padding: "5px 0" },
   oddsTeam: { fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   oddsTrack: { background: "var(--bg-elevated)", borderRadius: 5 },
   oddsPct: { textAlign: "right", fontWeight: 700, fontSize: 14 },
