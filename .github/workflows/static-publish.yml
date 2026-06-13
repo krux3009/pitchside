@@ -1,0 +1,54 @@
+name: static-publish
+
+# Snapshots the live API to static JSON and uploads it to Hostinger, so the
+# frontend can be served entirely from a CDN (no Render cold start = fast mobile
+# first load). Manual-trigger only until the Hostinger FTP secrets are set; then
+# uncomment the schedule below so it republishes on the matchday cadence.
+on:
+  workflow_dispatch: {}
+  # schedule:
+  #   - cron: "*/10 15-23 * * *"   # matchday window
+  #   - cron: "*/10 0-5 * * *"     # matchday window
+  #   - cron: "0 6 * * *"          # morning sweep
+  #   - cron: "0 12 * * *"         # midday sweep
+
+# Required repo secrets:
+#   API_URL                 e.g. https://pitchside-api-atie.onrender.com  (already set)
+#   REFRESH_KEY             internal refresh key                          (already set)
+#   HOSTINGER_FTP_HOST      ftp host, e.g. ftp.kruxqlyz.com
+#   HOSTINGER_FTP_USER      ftp username
+#   HOSTINGER_FTP_PASSWORD  ftp password
+#   HOSTINGER_DATA_DIR      target dir on Hostinger, e.g. /public_html/data/   (trailing slash)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refresh source data on the API (also wakes a cold instance)
+        run: |
+          curl --silent --show-error --fail \
+            --max-time 180 --retry 3 --retry-delay 20 --retry-all-errors \
+            "${{ secrets.API_URL }}/api/internal/refresh?key=${{ secrets.REFRESH_KEY }}" || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Snapshot API into static JSON
+        run: |
+          python -m pip install --quiet httpx
+          python backend/scripts/build_static.py --base "${{ secrets.API_URL }}" --out ./static_out
+
+      - name: Add CORS header for the data dir
+        run: printf 'Header set Access-Control-Allow-Origin "*"\n' > ./static_out/.htaccess
+
+      - name: Upload to Hostinger over FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_HOST }}
+          username: ${{ secrets.HOSTINGER_FTP_USER }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./static_out/
+          server-dir: ${{ secrets.HOSTINGER_DATA_DIR }}

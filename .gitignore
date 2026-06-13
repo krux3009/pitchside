@@ -24,5 +24,8 @@ backend/scripts/cache/
 node_modules/
 frontend/dist/
 
+# generated static API snapshot (built in CI, uploaded to Hostinger)
+backend/static_out/
+
 # os
 .DS_Store
