@@ -4,6 +4,7 @@
   --bg-surface: #121826;
   --bg-elevated: #1a2334;
   --line: #243047;
+  --line-strong: #33425e; /* hairline that reads as interactive */
 
   --text-hi: #f2f5f9;
   --text-mid: #9aa6ba;
@@ -11,12 +12,23 @@
 
   --live: #00e676;
   --gold: #ffc233;
+  --gold-dim: #c79320; /* gold border/hover that doesn't scream */
   --danger: #ff5252;
   --draw: #5d6b82;
 
-  --font-display: "Archivo Black", "Arial Black", system-ui, sans-serif;
-  --font-body: "Inter", -apple-system, system-ui, sans-serif;
+  --font-display: "Oswald", "Arial Narrow", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-body: "Inter", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 
   --radius-card: 12px;
+  --radius-sm: 7px;
   --radius-pill: 999px;
+
+  /* Tinted, layered depth: lit-from-above inset hairline + soft dark drop */
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px -16px rgba(0, 0, 0, 0.7);
+  --shadow-card-hover: 0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 16px 38px -16px rgba(0, 0, 0, 0.82);
+
+  --t-fast: 140ms ease;
+  --t-med: 220ms ease;
 }
