@@ -10,6 +10,7 @@ export const EN = {
   "nav.methodology": "Methodology",
   "footer.disclaimer": "Predictions are statistical estimates for fun, not betting advice.",
   "footer.project": "A student portfolio project —",
+  "a11y.skip": "Skip to content",
 
   // loaders / errors
   "loader.warming": "Stadium lights warming up…",

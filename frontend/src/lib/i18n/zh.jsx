@@ -8,6 +8,7 @@ export const ZH = {
   "nav.methodology": "方法论",
   "footer.disclaimer": "预测仅为统计估计、供娱乐参考，不构成投注建议。",
   "footer.project": "学生作品集项目 —",
+  "a11y.skip": "跳到主要内容",
 
   // loaders / errors
   "loader.warming": "球场灯光预热中…",

@@ -2,70 +2,372 @@
 
 * { box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
   margin: 0;
+  min-height: 100dvh;
+  position: relative;
   background: var(--bg-pitch);
   color: var(--text-hi);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Broadcast depth: faint stadium-light glow + ultra-subtle grain.
+   Fixed, non-interactive, behind all content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 520px at 50% -10%, rgba(255, 194, 51, 0.07), transparent 60%),
+    radial-gradient(900px 600px at 88% -4%, rgba(0, 230, 118, 0.045), transparent 55%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+#root { position: relative; z-index: 1; }
 
 a { color: inherit; text-decoration: none; }
 
 .container { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 
+/* ---- Accessibility: focus ring + skip link ---- */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 100;
+  background: var(--gold);
+  color: var(--bg-pitch);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: top var(--t-fast);
+}
+.skip-link:focus { top: 10px; }
+
+/* ---- Cards ---- */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
   padding: 16px;
+  box-shadow: var(--shadow-card);
 }
+/* Cards that are links read as clickable */
+a.card {
+  transition: transform var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+}
+a.card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+a.card:active { transform: translateY(-1px); }
 
+/* ---- Section title: broadcast lower-third tick ---- */
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 15px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--text-mid);
-  margin: 28px 0 12px;
+  margin: 30px 0 12px;
+}
+.section-title::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+/* ---- Page headline ---- */
+.page-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(28px, 6vw, 36px);
+  letter-spacing: 0.5px;
+  line-height: 1.05;
+  margin: 28px 0 10px;
 }
 
 .score {
   font-family: var(--font-display);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-
 .mono-num { font-variant-numeric: tabular-nums; }
 
+/* ---- Pills (filters) ---- */
 .pill {
-  display: inline-block;
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   background: var(--bg-elevated);
+  font-family: inherit;
   font-size: 12px;
   color: var(--text-mid);
   cursor: pointer;
   user-select: none;
+  transition: color var(--t-fast), background var(--t-fast),
+    border-color var(--t-fast), transform var(--t-fast);
 }
-.pill.active { color: var(--bg-pitch); background: var(--gold); border-color: var(--gold); }
+.pill:hover { color: var(--text-hi); border-color: var(--line-strong); }
+.pill:active { transform: scale(0.96); }
+.pill.active {
+  color: var(--bg-pitch);
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+.pill.active:hover { color: var(--bg-pitch); }
 
+/* ---- Nav ---- */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+.site-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+}
+.brand {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.brand-year { color: var(--gold); }
+.site-nav__links { display: flex; align-items: center; gap: 18px; }
+.nav-link {
+  position: relative;
+  padding: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-mid);
+  white-space: nowrap;
+  transition: color var(--t-fast);
+}
+.nav-link:hover { color: var(--text-hi); }
+.nav-link.active { color: var(--gold); }
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--gold);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 60%, transparent);
+}
+.lang-toggle {
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.lang-toggle:hover { color: var(--text-hi); border-color: var(--gold-dim); }
+.lang-toggle:active { transform: scale(0.95); }
+
+/* ---- Odds row (Home title race) ---- */
+.odds-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+/* ---- Match score header (MatchDetail) ---- */
+.score-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.score-team { font-weight: 700; font-size: 17px; }
+.big-score { font-size: 40px; }
+
+/* ---- Live dot ---- */
 .live-dot {
   display: inline-block;
-  width: 8px; height: 8px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: var(--live);
   box-shadow: 0 0 8px var(--live);
   animation: pulse 1.4s ease-in-out infinite;
 }
 @keyframes pulse { 50% { opacity: 0.35; } }
-@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
 
+/* ---- Stat tables ---- */
 table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.stat-table th, .stat-table td {
-  text-align: left; padding: 8px 10px;
+.stat-table th,
+.stat-table td {
+  text-align: left;
+  padding: 9px 12px;
   border-bottom: 1px solid var(--line);
 }
-.stat-table th { color: var(--text-low); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
-.stat-table tr:hover td { background: var(--bg-elevated); }
+.stat-table th {
+  color: var(--text-low);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.stat-table tbody tr { transition: background var(--t-fast); }
+.stat-table tbody tr:hover td { background: var(--bg-elevated); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Sortable header button — affordance shows on every sortable column */
+.th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--t-fast);
+}
+.th-sort:hover { color: var(--text-mid); }
+.th-sort__arrow { font-size: 10px; opacity: 0.3; transition: opacity var(--t-fast); }
+.th-sort--active { color: var(--gold); }
+.th-sort--active .th-sort__arrow { opacity: 1; color: var(--gold); }
+
+/* ---- Skeleton loaders ---- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text-low) 14%, transparent),
+    transparent
+  );
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 560px) {
+  .container { padding: 0 12px; }
+  /* Two-row nav: brand on top, links + toggle spread as a sub-bar below.
+     Four links + brand + toggle never fit one line on a phone. */
+  .site-nav__inner {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 52px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    row-gap: 8px;
+  }
+  .brand { font-size: 18px; letter-spacing: 0.5px; }
+  .site-nav__links {
+    flex-basis: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .site-nav__links::-webkit-scrollbar { display: none; }
+  .nav-link { font-size: 13px; }
+  .lang-toggle { padding: 5px 9px; font-size: 12px; }
+
+  .section-title { font-size: 14px; margin: 24px 0 10px; }
+
+  .pill { min-height: 36px; padding: 7px 13px; } /* bigger tap target */
+
+  .odds-row { grid-template-columns: 92px 1fr 42px; gap: 8px; }
+
+  .score-team { font-size: 15px; }
+  .big-score { font-size: 30px; }
+  .score-row { gap: 8px; }
+
+  .stat-table { font-size: 13px; }
+  .stat-table th,
+  .stat-table td { padding: 11px 10px; } /* taller rows = bigger tap */
+  /* Keep the identity column visible while stats scroll horizontally */
+  .stat-table th:first-child,
+  .stat-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bg-surface);
+  }
+  .stat-table tbody tr:hover td:first-child { background: var(--bg-elevated); }
+}
+
+/* ---- Motion preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
