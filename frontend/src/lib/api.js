@@ -35,17 +35,24 @@ export async function apiGet(path, { retry = true } = {}) {
   if (hit && Date.now() - hit.at < TTL(path)) return hit.data;
 
   if (DATA_BASE) {
-    // static mode: a CDN file is there or it isn't — no server to wake, no retry
-    const res = await fetch(`${DATA_BASE}/${staticPath(path)}`, {
-      signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    cache.set(path, { at: Date.now(), data });
-    return data;
+    // static mode: read the CDN snapshot — no server to wake. On a miss (e.g. an
+    // id newer than the last snapshot) fall through to the live API once rather
+    // than hard-erroring; the happy path never touches Render. Requires
+    // VITE_API_URL to stay set so the fallback has somewhere to go.
+    try {
+      const res = await fetch(`${DATA_BASE}/${staticPath(path)}`, {
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      cache.set(path, { at: Date.now(), data });
+      return data;
+    } catch {
+      // CDN miss → fall through to the live-API path below
+    }
   }
 
-  // api mode (fallback): live backend, one cold-start retry (~30-60s to wake)
+  // api mode (also the static-miss fallback): live backend, one cold-start retry
   try {
     const res = await fetch(API_BASE + path, { signal: AbortSignal.timeout(25_000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

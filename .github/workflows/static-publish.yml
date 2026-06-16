@@ -2,15 +2,15 @@ name: static-publish
 
 # Snapshots the live API to static JSON and uploads it to Hostinger, so the
 # frontend can be served entirely from a CDN (no Render cold start = fast mobile
-# first load). Manual-trigger only until the Hostinger FTP secrets are set; then
-# uncomment the schedule below so it republishes on the matchday cadence.
+# first load). The schedule republishes on the matchday cadence; it is inert
+# until the Hostinger FTP secrets are set (the upload step just fails-soft).
 on:
   workflow_dispatch: {}
-  # schedule:
-  #   - cron: "*/10 15-23 * * *"   # matchday window
-  #   - cron: "*/10 0-5 * * *"     # matchday window
-  #   - cron: "0 6 * * *"          # morning sweep
-  #   - cron: "0 12 * * *"         # midday sweep
+  schedule:
+    - cron: "*/10 15-23 * * *"   # matchday window
+    - cron: "*/10 0-5 * * *"     # matchday window
+    - cron: "0 6 * * *"          # morning sweep
+    - cron: "0 12 * * *"         # midday sweep
 
 # Required repo secrets:
 #   API_URL                 e.g. https://pitchside-api-atie.onrender.com  (already set)

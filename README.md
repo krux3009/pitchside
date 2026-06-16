@@ -31,10 +31,20 @@ tie-breaking rules. Full details, formulas, and citations live on the Methodolog
 ## Architecture
 
 ```
-React (Vite) on Vercel  ──fetch──▶  FastAPI on Render  ──SQLite cache──▶  data sources
+React (Vite) on Vercel  ──fetch──▶  static-JSON CDN (Hostinger)   ← production read path
+                              └────▶  FastAPI on Render  ──SQLite cache──▶  data sources
                                           ▲
-                          GitHub Actions cron (refresh + keep-alive + nightly archive)
+                          GitHub Actions cron (refresh + keep-alive + nightly archive + static-publish)
 ```
+
+**Cold-start avoidance:** Render's free tier sleeps after 15 min idle (30–60s to
+wake). In production the frontend reads pre-generated JSON snapshots from a CDN
+instead of the live API, so users never wait on Render. Set `VITE_DATA_URL` in
+Vercel to turn this on (unset = talk straight to the API, the dev default); see
+`frontend/.env.example`. Snapshots are rebuilt by the `static-publish` GitHub
+Action (`backend/scripts/build_static.py` → Hostinger FTP) on the matchday
+cadence, or on demand via the workflow's manual trigger. On a snapshot miss the
+frontend falls back to the live API once (`frontend/src/lib/api.js`).
 
 Data sources: API-Football (lineups, player stats, injuries — 100 req/day free budget),
 ESPN public JSON (live scores, no quota), openfootball (fixtures/results, CC0),
