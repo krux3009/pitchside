@@ -16,7 +16,7 @@ export default function StatCompareRow({ label, home, away, homeCode, awayCode, 
         <div style={{ display: "flex", justifyContent: "flex-end", width: "50%" }}>
           <div style={{ width: `${(h / total) * 100}%`, background: teamColor(homeCode), borderRadius: "3px 0 0 3px" }} />
         </div>
-        <div style={{ width: "50%" }}>
+        <div style={{ display: "flex", width: "50%" }}>
           <div style={{ width: `${(a / total) * 100}%`, background: teamColor(awayCode), borderRadius: "0 3px 3px 0" }} />
         </div>
       </div>
