@@ -2,6 +2,8 @@ import { Link, useParams } from "react-router-dom";
 
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
+import MatchTimeline from "../components/MatchTimeline";
+import Pitch from "../components/Pitch";
 import ProbBar from "../components/ProbBar";
 import StatCompareRow from "../components/StatCompareRow";
 import TeamBadge from "../components/TeamBadge";
@@ -75,6 +77,10 @@ export default function MatchDetail() {
         </>
       )}
 
+      {m.events?.length > 0 && (
+        <MatchTimeline events={m.events} homeId={m.home_id} awayId={m.away_id} />
+      )}
+
       {homeStats && awayStats && (
         <>
           <h2 className="section-title">{t("match.teamStats")}</h2>
@@ -107,9 +113,7 @@ export default function MatchDetail() {
                     <TeamBadge code={code} name={name} />{" "}
                     {lu.formation && <span style={{ color: "var(--text-low)" }}>({lu.formation})</span>}
                   </p>
-                  {lu.starters.map((p) => (
-                    <PlayerLine key={p.player_id} p={p} />
-                  ))}
+                  <Pitch starters={lu.starters} formation={lu.formation} code={code} />
                   {lu.bench.length > 0 && (
                     <>
                       <p style={{ color: "var(--text-low)", fontSize: 12, margin: "10px 0 4px" }}>{t("match.bench")}</p>

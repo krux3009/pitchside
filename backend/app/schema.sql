@@ -140,6 +140,23 @@ CREATE TABLE IF NOT EXISTS lineups (
   PRIMARY KEY (match_id, team_id)
 );
 
+-- Timed match event log (goals/cards/subs) parsed from the ESPN summary feed's
+-- keyEvents array. Runtime-only like lineups; archived so it survives a redeploy.
+CREATE TABLE IF NOT EXISTS match_events (
+  match_id      INTEGER REFERENCES matches(id),
+  seq           INTEGER,                    -- order within the match (keyEvents index)
+  minute        INTEGER,                    -- match clock; NULL if unparseable
+  clock         TEXT,                       -- ESPN displayValue, e.g. "45+2'"
+  type          TEXT,                       -- goal/own-goal/penalty-goal/yellow-card/red-card/substitution
+  team_id       INTEGER REFERENCES teams(id),
+  player_id     INTEGER,                    -- canonical id when resolvable, else NULL
+  player_name   TEXT,                       -- scorer / carded / sub coming ON (always present)
+  assist_id     INTEGER,                    -- goal: assister; sub: player coming OFF
+  assist_name   TEXT,
+  text          TEXT,                       -- ESPN shortText for the row
+  PRIMARY KEY (match_id, seq)
+);
+
 CREATE TABLE IF NOT EXISTS injuries (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   team_id       INTEGER,

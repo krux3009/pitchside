@@ -1,5 +1,6 @@
 """Raw source JSON -> SQLite rows."""
 import json
+import re
 import unicodedata
 from datetime import datetime, timezone
 
@@ -24,6 +25,12 @@ ESPN_PLAYER_STATS = {
     "redCards": "red",
     "totalShots": "shots",
     "shotsOnTarget": "shots_on_target",
+}
+
+# keyEvents types worth showing on a timeline (the feed also carries kickoff,
+# halftime, start/end-delay noise we drop).
+TIMELINE_EVENT_TYPES = {
+    "goal", "own-goal", "penalty-goal", "yellow-card", "red-card", "substitution",
 }
 
 
@@ -159,6 +166,68 @@ def _resolve_player(conn, team_id: int, entry: dict) -> int:
     return new_id
 
 
+def _player_by_espn(conn, athlete_id) -> int | None:
+    """Canonical player id for an ESPN athlete id, or None if not yet seen.
+    Safe to call after the rosters loop, which learns espn_id for every starter
+    and used sub via _resolve_player."""
+    if not athlete_id:
+        return None
+    row = conn.execute(
+        "SELECT id FROM players WHERE espn_id=?", (str(athlete_id),)
+    ).fetchone()
+    return row["id"] if row else None
+
+
+def _event_minute(ev: dict) -> int | None:
+    """The match minute a keyEvent happened on, parsed from the board clock.
+
+    ESPN's ev["clock"]["displayValue"] is the authoritative board string — e.g.
+    "17'", "45'+1'", "90'+4'" — and already shows stoppage time the way a viewer
+    reads it. We fold stoppage into the integer by summing the numbers, so a row
+    sorts/labels sensibly: "17'" -> 17, "45'+1'" -> 46, "90'+4'" -> 94. Returns
+    None when there's no usable clock (the `clock` column keeps the raw string).
+    """
+    disp = (ev.get("clock", {}) or {}).get("displayValue") or ""
+    nums = re.findall(r"\d+", disp)
+    return sum(int(n) for n in nums) if nums else None
+
+
+def espn_events(conn, match_id: int, payload: dict) -> int:
+    """Parse the summary feed's keyEvents into match_events (goals/cards/subs).
+
+    Idempotent: clears the match's rows then re-inserts, so a re-ingest of a
+    corrected feed self-heals. Must run AFTER the rosters loop so player espn_ids
+    are known. Returns the number of events stored.
+    """
+    conn.execute("DELETE FROM match_events WHERE match_id=?", (match_id,))
+    rows = []
+    for seq, ev in enumerate(payload.get("keyEvents", [])):
+        etype = ev.get("type", {}).get("type")
+        if etype not in TIMELINE_EVENT_TYPES:
+            continue
+        team = _team_by_espn(conn, ev) if ev.get("team") else None
+        parts = ev.get("participants", []) or []
+        primary = parts[0].get("athlete", {}) if len(parts) > 0 else {}
+        second = parts[1].get("athlete", {}) if len(parts) > 1 else {}
+        clock = ev.get("clock", {}) or {}
+        rows.append((
+            match_id, seq, _event_minute(ev), clock.get("displayValue"), etype,
+            team["id"] if team else None,
+            _player_by_espn(conn, primary.get("id")), primary.get("displayName"),
+            _player_by_espn(conn, second.get("id")), second.get("displayName"),
+            ev.get("shortText") or ev.get("text"),
+        ))
+    conn.executemany(
+        """INSERT INTO match_events
+           (match_id, seq, minute, clock, type, team_id,
+            player_id, player_name, assist_id, assist_name, text)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+        rows,
+    )
+    conn.commit()
+    return len(rows)
+
+
 def espn_summary(conn, match_id: int, payload: dict):
     """Ingest team stats, lineups, and per-player stats from a summary feed."""
     m = conn.execute("SELECT * FROM matches WHERE id=?", (match_id,)).fetchone()
@@ -230,6 +299,10 @@ def espn_summary(conn, match_id: int, payload: dict):
             (match_id, team["id"], roster.get("formation"),
              json.dumps(starters), json.dumps(bench), None),
         )
+
+    # timed event log — after rosters so participant athletes resolve to player ids
+    espn_events(conn, match_id, payload)
+
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
         (f"ingested:espn_summary:{match_id}", now),

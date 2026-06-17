@@ -13,7 +13,8 @@ from .config import DATA_DIR
 ARCHIVE_PATH = DATA_DIR / "results_archive.json"
 
 # tables fully reconstructable from the archive (seed covers the rest)
-TABLES = ["players", "match_team_stats", "player_match_stats", "lineups", "injuries"]
+TABLES = ["players", "match_team_stats", "player_match_stats", "lineups",
+          "match_events", "injuries"]
 
 MATCH_FIELDS = [
     "id", "status", "home_goals", "away_goals", "home_goals_90", "away_goals_90",

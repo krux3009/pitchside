@@ -43,6 +43,10 @@ export const ZH = {
   "match.squads": "大名单",
   "match.bench": "替补",
   "match.squadNote": "官方首发阵容约在开球前30分钟公布——以下为26人完整大名单。",
+  "match.timeline": "比赛进程",
+  "event.own-goal": "乌龙球",
+  "event.penalty-goal": "点球",
+  "event.assist": ({ name }) => `助攻：${name}`,
   "prob.draw": "平局",
 
   // team stat rows

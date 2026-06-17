@@ -45,6 +45,10 @@ export const EN = {
   "match.squads": "Squads",
   "match.bench": "BENCH",
   "match.squadNote": "Official lineups appear ~30 minutes before kickoff — full 26-man squads below.",
+  "match.timeline": "Timeline",
+  "event.own-goal": "own goal",
+  "event.penalty-goal": "pen",
+  "event.assist": ({ name }) => `assist: ${name}`,
   "prob.draw": "draw",
 
   // team stat rows

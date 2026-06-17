@@ -15,6 +15,7 @@ def seeded(tmp_path, monkeypatch):
     shutil.copy(SEED, path)
     monkeypatch.setattr(config, "DB_PATH", path)
     monkeypatch.setattr(db, "DB_PATH", path)
+    db.bootstrap(path)  # apply schema.sql (creates match_events, etc.) as app startup does
     return path
 
 

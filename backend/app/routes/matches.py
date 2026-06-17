@@ -61,6 +61,9 @@ def match_detail(match_id: int):
         for lu in lineups:
             lu["starters"] = json.loads(lu.pop("starters_json") or "[]")
             lu["bench"] = json.loads(lu.pop("bench_json") or "[]")
+        events = conn.execute(
+            "SELECT * FROM match_events WHERE match_id = ? ORDER BY seq", (match_id,)
+        ).fetchall()
         prediction = conn.execute(
             "SELECT * FROM predictions WHERE match_id = ?", (match_id,)
         ).fetchone()
@@ -74,5 +77,5 @@ def match_detail(match_id: int):
             }
     finally:
         conn.close()
-    return {**m, "team_stats": stats, "lineups": lineups,
+    return {**m, "team_stats": stats, "lineups": lineups, "events": events,
             "prediction": prediction, "squads": squads}
