@@ -43,6 +43,14 @@ export default function Timetable() {
     return [...days.entries()];
   }, [data, stage, group, teamQ, tTeam]);
 
+  // groups only exist in the group stage; reset a stale group pick when the user
+  // moves to a knockout stage so the filter can't silently zero out the results.
+  const showGroups = stage === "ALL" || stage === "GROUP";
+  const onStageChange = (s) => {
+    setStage(s);
+    if (s !== "ALL" && s !== "GROUP") setGroup("ALL");
+  };
+
   if (loading) return <ColdStartLoader />;
   if (error) return <ErrorState error={error} />;
 
@@ -56,34 +64,34 @@ export default function Timetable() {
         onChange={(e) => setTeamQ(e.target.value)}
         aria-label={t("timetable.search")}
       />
-      <div style={styles.filters}>
-        {STAGES.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className={`pill ${stage === s ? "active" : ""}`}
-            onClick={() => setStage(s)}
-            aria-pressed={stage === s}
-          >
-            {s === "ALL" ? t("timetable.allStages") : t("stage." + s)}
-          </button>
-        ))}
-      </div>
-      {stage !== "R32" && stage !== "R16" && stage !== "QF" && stage !== "SF" && stage !== "FINAL" && (
-        <div style={styles.filters}>
-          {GROUPS.map((g) => (
-            <button
-              key={g}
-              type="button"
-              className={`pill ${group === g ? "active" : ""}`}
-              onClick={() => setGroup(g)}
-              aria-pressed={group === g}
-            >
-              {g === "ALL" ? t("timetable.allGroups") : t("stage.group", { letter: g })}
-            </button>
+      <div className="filter-row">
+        <select
+          className="select"
+          value={stage}
+          onChange={(e) => onStageChange(e.target.value)}
+          aria-label={t("timetable.allStages")}
+        >
+          {STAGES.map((s) => (
+            <option key={s} value={s}>
+              {s === "ALL" ? t("timetable.allStages") : t("stage." + s)}
+            </option>
           ))}
-        </div>
-      )}
+        </select>
+        {showGroups && (
+          <select
+            className="select"
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+            aria-label={t("timetable.allGroups")}
+          >
+            {GROUPS.map((g) => (
+              <option key={g} value={g}>
+                {g === "ALL" ? t("timetable.allGroups") : t("stage.group", { letter: g })}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {byDate.length === 0 && (
         <p style={{ color: "var(--text-mid)", marginTop: 16 }}>{t("timetable.none")}</p>
@@ -103,6 +111,5 @@ export default function Timetable() {
 }
 
 const styles = {
-  filters: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 },
 };

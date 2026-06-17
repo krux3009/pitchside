@@ -230,6 +230,23 @@ a.card:active { transform: translateY(-1px); }
 .search::placeholder { color: var(--text-low); }
 .search:focus { border-color: var(--gold-dim); }
 
+/* ---- Filter dropdowns (Timetable stage/group) ---- */
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.select {
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-hi);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--t-fast);
+}
+.select:hover { border-color: var(--line-strong); }
+.select:focus { border-color: var(--gold-dim); }
+
 /* ---- Odds row (Home title race) ---- */
 .odds-row {
   display: grid;
@@ -404,6 +421,7 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .section-title { font-size: 14px; margin: 24px 0 10px; }
 
   .pill { min-height: 36px; padding: 7px 13px; } /* bigger tap target */
+  .select { padding: 10px 12px; font-size: 14px; } /* bigger tap target */
 
   .odds-row { grid-template-columns: 92px 1fr 42px; gap: 8px; }
 
