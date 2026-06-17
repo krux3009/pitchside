@@ -30,6 +30,10 @@ HOSTINGER_FTP_PASSWORD = os.getenv("HOSTINGER_FTP_PASSWORD", "")
 HOSTINGER_DATA_DIR = os.getenv(
     "HOSTINGER_DATA_DIR", "domains/kruxqlyz.com/public_html/data/"
 )
+# Public CDN base for the same data dir — publish.py reseeds its hash manifest
+# from {PUBLISH_CDN_URL}/hashes.json after a redeploy wipes Render's meta table,
+# so a redeploy re-uploads only real changes instead of all ~1356 files.
+PUBLISH_CDN_URL = os.getenv("PUBLISH_CDN_URL", "https://kruxqlyz.com/data")
 
 # API-Football: free plan allows 100 requests/day. We stop at a soft cap so a
 # restart that wipes the ledger can never push the real total past 100.

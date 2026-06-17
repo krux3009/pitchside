@@ -17,6 +17,7 @@ import io
 import json
 import threading
 
+import httpx
 from fastapi import HTTPException
 
 from . import db
@@ -25,6 +26,7 @@ from .config import (
     HOSTINGER_FTP_HOST,
     HOSTINGER_FTP_PASSWORD,
     HOSTINGER_FTP_USER,
+    PUBLISH_CDN_URL,
 )
 from .routes import briefing, matches, methodology, players, sim, standings
 
@@ -115,6 +117,7 @@ def ftp_upload(files: dict[str, bytes]) -> dict:
 
     new_hashes = {rel: hashlib.sha1(data).hexdigest() for rel, data in files.items()}
     prior = _load_hashes()
+    merged = dict(prior)  # advance a file's hash only once it actually uploads
 
     ftp = _connect()
     mode = "ftps" if isinstance(ftp, ftplib.FTP_TLS) else "ftp"
@@ -136,22 +139,23 @@ def ftp_upload(files: dict[str, bytes]) -> dict:
             try:
                 ftp.storbinary(f"STOR {rel}", io.BytesIO(files[rel]))
                 uploaded += 1
+                if rel != "status.json":  # status.json's bytes change every run
+                    merged[rel] = new_hashes[rel]  # advance hash only on success
             except ftplib.all_errors as e:
-                failed.append({"file": rel, "error": str(e)})
+                failed.append({"file": rel, "error": str(e)})  # keep old hash -> retry
+
+        # stash the manifest on the CDN so a redeploy (which wipes meta) reseeds
+        # from it via _load_hashes and skips a full re-upload of unchanged files.
+        try:
+            ftp.storbinary("STOR hashes.json", io.BytesIO(json.dumps(merged).encode()))
+        except ftplib.all_errors:
+            pass
     finally:
         try:
             ftp.quit()
         except ftplib.all_errors:
             ftp.close()
 
-    # persist hashes only for files that actually uploaded; a failed file keeps its
-    # old hash so the next publish retries exactly it. status.json is never hashed
-    # (its timestamp changes every run), so it always re-uploads.
-    failed_names = {f["file"] for f in failed}
-    merged = dict(prior)
-    for rel, h in new_hashes.items():
-        if rel != "status.json" and rel not in failed_names:
-            merged[rel] = h
     _save_hashes(merged)
 
     report = {"mode": mode, "uploaded": uploaded, "skipped_unchanged": skipped}
@@ -166,7 +170,17 @@ def _load_hashes() -> dict:
         row = conn.execute("SELECT value FROM meta WHERE key=?", (_HASH_KEY,)).fetchone()
     finally:
         conn.close()
-    return json.loads(row["value"]) if row else {}
+    if row:
+        return json.loads(row["value"])
+    # cold start (a redeploy wiped meta): reseed from the manifest the last publish
+    # stashed on the CDN, so we re-upload only real changes, not all ~1356 files.
+    try:
+        r = httpx.get(f"{PUBLISH_CDN_URL.rstrip('/')}/hashes.json", timeout=15)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
+    return {}
 
 
 def _save_hashes(hashes: dict) -> None:
