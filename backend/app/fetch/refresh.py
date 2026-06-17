@@ -62,6 +62,24 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_summary(conn, m["id"], payload)
             report["summaries"] += 1
 
+    # one-shot events backfill: FT matches summary-ingested before the match_events
+    # table existed have stats/lineups but no timeline. Re-fetch each summary once to
+    # populate events; ingest.espn_events writes the 'ingested:events' marker, so the
+    # set drains over a single cron cycle and never re-fetches a finished match.
+    backfill = conn.execute(
+        """SELECT m.id, m.espn_event_id FROM matches m
+           WHERE m.status='FT' AND m.espn_event_id IS NOT NULL
+             AND EXISTS (SELECT 1 FROM meta
+                         WHERE key = 'ingested:espn_summary:' || m.id)
+             AND NOT EXISTS (SELECT 1 FROM meta
+                             WHERE key = 'ingested:events:' || m.id)"""
+    ).fetchall()
+    for m in backfill:
+        payload = espn.summary(conn, m["espn_event_id"])
+        if payload:
+            ingest.espn_events(conn, m["id"], payload)
+            report["events_backfilled"] = report.get("events_backfilled", 0) + 1
+
     # injuries: cheap, quota-free, but slow-moving — refresh twice a day
     last = conn.execute(
         "SELECT value FROM meta WHERE key='last_fetch:injuries'"

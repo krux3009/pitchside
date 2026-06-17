@@ -136,6 +136,11 @@ def test_espn_events_parses_and_filters(events_db):
         "SELECT COUNT(*) AS n FROM match_events WHERE match_id=1"
     ).fetchone()["n"] == 3
 
+    # marker written (drives refresh.run's one-shot backfill; archived via ingested:%)
+    assert conn.execute(
+        "SELECT 1 FROM meta WHERE key='ingested:events:1'"
+    ).fetchone()
+
 
 def test_event_minute_from_clock(events_db):
     """minute is parsed from the board clock displayValue; stoppage time folds in

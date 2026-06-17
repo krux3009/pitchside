@@ -224,6 +224,14 @@ def espn_events(conn, match_id: int, payload: dict) -> int:
            VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
         rows,
     )
+    # marker (archived via the ingested:% pattern) — lets refresh.run skip a match
+    # once its events are in, so the backfill pass is one-shot and self-terminating
+    # even for genuinely event-less matches (0-0, no cards/subs).
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+        (f"ingested:events:{match_id}", now),
+    )
     conn.commit()
     return len(rows)
 
