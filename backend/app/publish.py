@@ -45,9 +45,14 @@ def _dumps(payload) -> bytes:
 
 
 def snapshot(published_at: str) -> dict[str, bytes]:
-    """Build the whole static tree as {relative_path: json_bytes}, in memory.
+    """Build the static tree as {relative_path: json_bytes}, in memory.
 
-    No disk writes — Render's disk is ephemeral and the bytes go straight to FTP.
+    Only the HOT files: the six index endpoints + per-match detail (~110 files).
+    Per-PLAYER detail (~1250 files) is deliberately NOT published — that many tiny
+    files made every full FTP push a fragile 30-min marathon. The frontend already
+    falls back to the live Render API on a CDN 404 (frontend/src/lib/api.js), so
+    player-detail pages ride that fallback (Render is kept warm by the pinger).
+    No disk writes — the bytes go straight to FTP.
     """
     match_list = matches.list_matches()
     player_list = players.list_players()
@@ -62,10 +67,6 @@ def snapshot(published_at: str) -> dict[str, bytes]:
     }
     for m in match_list:
         files[f"matches/{m['id']}.json"] = _dumps(_detail(matches.match_detail, m["id"]))
-    for p in player_list:
-        files[f"players/{p['player_id']}.json"] = _dumps(
-            _detail(players.player_detail, p["player_id"])
-        )
 
     # CORS for the data dir (replaces the workflow's .htaccess step) and a freshness
     # beacon the frontend reads to show "updated HH:MM".
@@ -124,11 +125,10 @@ def ftp_upload(files: dict[str, bytes]) -> dict:
     uploaded, skipped, failed = 0, 0, []
     try:
         ftp.cwd(HOSTINGER_DATA_DIR.rstrip("/") or "/")
-        for sub in ("matches", "players"):
-            try:
-                ftp.mkd(sub)
-            except ftplib.error_perm:
-                pass  # already exists
+        try:
+            ftp.mkd("matches")
+        except ftplib.error_perm:
+            pass  # already exists
 
         for rel in sorted(files, key=_upload_order):
             if rel == "status.json" and failed:

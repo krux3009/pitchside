@@ -30,10 +30,11 @@ def test_snapshot_tree_and_bytes(seeded):
                  "methodology-params.json", ".htaccess", "status.json"):
         assert name in files
 
-    # one detail file per entity
-    ms, ps = matches.list_matches(), players.list_players()
+    # one detail file per match; per-PLAYER detail is intentionally NOT published
+    # (too many tiny files for FTP — the frontend uses the Render fallback instead)
+    ms = matches.list_matches()
     assert sum(k.startswith("matches/") for k in files) == len(ms)
-    assert sum(k.startswith("players/") for k in files) == len(ps)
+    assert sum(k.startswith("players/") for k in files) == 0
 
     # byte-identical to build_static.py's serialization — this is what lets the
     # incremental upload skip unchanged files (same bytes -> same sha1).
