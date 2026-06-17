@@ -30,9 +30,11 @@ function staticPath(path) {
   return clean.replace(/^\/api\//, "") + ".json"; // /api/matches/19 -> matches/19.json
 }
 
-export async function apiGet(path, { retry = true } = {}) {
-  const hit = cache.get(path);
-  if (hit && Date.now() - hit.at < TTL(path)) return hit.data;
+export async function apiGet(path, { retry = true, bypassCache = false } = {}) {
+  if (!bypassCache) {
+    const hit = cache.get(path);
+    if (hit && Date.now() - hit.at < TTL(path)) return hit.data;
+  }
 
   if (DATA_BASE) {
     // static mode: read the CDN snapshot — no server to wake. On a miss (e.g. an
@@ -65,5 +67,21 @@ export async function apiGet(path, { retry = true } = {}) {
       return apiGet(path, { retry: false });
     }
     throw err;
+  }
+}
+
+// Freshness beacon written by the server-side publisher (publish.py::snapshot).
+// Static (production) mode only — the live API has no status.json — so this
+// returns the ISO publish time, or null when there's nothing to show.
+export async function getPublishedAt() {
+  if (!DATA_BASE) return null;
+  try {
+    const res = await fetch(`${DATA_BASE}/status.json`, {
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return null;
+    return (await res.json()).published_at ?? null;
+  } catch {
+    return null;
   }
 }

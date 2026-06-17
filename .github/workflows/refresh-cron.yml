@@ -1,14 +1,9 @@
 name: refresh
 
 on:
-  schedule:
-    # matchday loop: every 10 min through the kickoff window (15:00-06:00 UTC).
-    # Also keeps the Render free instance awake while matches are on.
-    - cron: "*/10 15-23 * * *"
-    - cron: "*/10 0-5 * * *"
-    # morning consolidation sweep
-    - cron: "0 6 * * *"
-    - cron: "0 12 * * *"
+  # Manual / break-glass only. Refresh now runs via the external cron that hits
+  # /api/internal/refresh?...&publish=1 (refresh then publish, and keeps Render
+  # warm). GitHub's schedule: was throttled to ~1.5-2.5h, leaving data stale.
   workflow_dispatch: {}
 
 jobs:

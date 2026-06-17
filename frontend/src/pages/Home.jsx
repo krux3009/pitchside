@@ -1,18 +1,34 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
 import TeamBadge from "../components/TeamBadge";
-import { localDateHeading, pct } from "../lib/format";
+import { getPublishedAt } from "../lib/api";
+import { localDateHeading, localTime, pct } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 export default function Home() {
   const { t, tTeam, tInjuryStatus, dateLocale } = useLang();
-  const briefing = useApi("/api/briefing/today");
+  // poll so a live match flips to FT on its own, within ~1 min of each republish
+  const briefing = useApi("/api/briefing/today", { pollMs: 60_000 });
   const sim = useApi("/api/sim/championship");
+
+  // freshness beacon: when the CDN was last republished (production only)
+  const [updatedAt, setUpdatedAt] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    const load = () => getPublishedAt().then((iso) => alive && setUpdatedAt(iso));
+    load();
+    const id = setInterval(load, 60_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, []);
 
   if (briefing.loading) return <ColdStartLoader />;
   if (briefing.error) return <ErrorState error={briefing.error} />;
@@ -36,6 +52,7 @@ export default function Home() {
       <h1 className="page-title">{t("home.title")}</h1>
       <p style={{ color: "var(--text-low)", marginTop: -8 }}>
         {localDateHeading(b.date, dateLocale)} · {t("home.autogen")}
+        {updatedAt && <> · {t("home.updated", { time: localTime(updatedAt, dateLocale) })}</>}
       </p>
 
       {b.yesterday.length > 0 && (

@@ -15,3 +15,13 @@ services:
         sync: false
       - key: API_FOOTBALL_KEY
         sync: false
+      # Hostinger FTP — server-side CDN publish (publish.py). Set to the same
+      # values as the static-publish GitHub secrets.
+      - key: HOSTINGER_FTP_HOST
+        sync: false
+      - key: HOSTINGER_FTP_USER
+        sync: false
+      - key: HOSTINGER_FTP_PASSWORD
+        sync: false
+      - key: HOSTINGER_DATA_DIR
+        sync: false

@@ -20,6 +20,17 @@ ALLOWED_ORIGINS = [
     if o.strip()
 ]
 
+# Hostinger FTP target for the static-JSON CDN publish — the server-side twin of
+# the build_static GitHub Action (see publish.py). Empty creds => publish is inert.
+HOSTINGER_FTP_HOST = os.getenv("HOSTINGER_FTP_HOST", "")
+HOSTINGER_FTP_USER = os.getenv("HOSTINGER_FTP_USER", "")
+HOSTINGER_FTP_PASSWORD = os.getenv("HOSTINGER_FTP_PASSWORD", "")
+# FTP chroots to the home dir; the live docroot is domains/kruxqlyz.com/public_html/,
+# NOT the legacy ./public_html. Set this to the same value as the working GH secret.
+HOSTINGER_DATA_DIR = os.getenv(
+    "HOSTINGER_DATA_DIR", "domains/kruxqlyz.com/public_html/data/"
+)
+
 # API-Football: free plan allows 100 requests/day. We stop at a soft cap so a
 # restart that wipes the ledger can never push the real total past 100.
 API_FOOTBALL_DAILY_SOFT_CAP = 80

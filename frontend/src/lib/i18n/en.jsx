@@ -114,6 +114,7 @@ export const EN = {
   // home / briefing
   "home.title": "Matchday Briefing",
   "home.autogen": "auto-generated from match data",
+  "home.updated": ({ time }) => `updated ${time}`,
   "home.yesterday": "Yesterday",
   "home.today": "Today",
   "home.noMatches": "No matches today.",

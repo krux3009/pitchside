@@ -112,6 +112,7 @@ export const ZH = {
   // home / briefing
   "home.title": "比赛日简报",
   "home.autogen": "由比赛数据自动生成",
+  "home.updated": ({ time }) => `更新于 ${time}`,
   "home.yesterday": "昨日赛果",
   "home.today": "今日比赛",
   "home.noMatches": "今天没有比赛。",

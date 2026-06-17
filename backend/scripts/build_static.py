@@ -20,6 +20,10 @@ from pathlib import Path
 
 import httpx
 
+# NOTE: app/publish.py is the server-side twin of this script — it pushes the same
+# tree to the CDN from inside the API. Keep FIXED, the per-id loops, and the
+# json.dumps flags in sync with publish.py and frontend/src/lib/api.js::staticPath.
+
 # fixed (no path param) endpoints -> output filename
 FIXED = {
     "/api/matches": "matches.json",
