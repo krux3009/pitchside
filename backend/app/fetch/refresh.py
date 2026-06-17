@@ -80,6 +80,25 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_events(conn, m["id"], payload)
             report["events_backfilled"] = report.get("events_backfilled", 0) + 1
 
+    # shot map: FT matches summary-ingested but without shots yet. Heavier than the
+    # other passes (~5 core-feed pages each), so cap per cycle — the historical
+    # backlog drains over a few crons; new matches (<=2/day) clear at once. The
+    # 'ingested:shots' marker (set by espn_shots) makes it one-shot per match.
+    shots_pending = conn.execute(
+        """SELECT m.id, m.espn_event_id FROM matches m
+           WHERE m.status='FT' AND m.espn_event_id IS NOT NULL
+             AND EXISTS (SELECT 1 FROM meta
+                         WHERE key = 'ingested:espn_summary:' || m.id)
+             AND NOT EXISTS (SELECT 1 FROM meta
+                             WHERE key = 'ingested:shots:' || m.id)
+           LIMIT 5"""
+    ).fetchall()
+    for m in shots_pending:
+        plays = espn.plays(conn, m["espn_event_id"])
+        if plays:
+            ingest.espn_shots(conn, m["id"], plays)
+            report["shots_backfilled"] = report.get("shots_backfilled", 0) + 1
+
     # injuries: cheap, quota-free, but slow-moving — refresh twice a day
     last = conn.execute(
         "SELECT value FROM meta WHERE key='last_fetch:injuries'"

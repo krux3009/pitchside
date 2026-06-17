@@ -64,6 +64,9 @@ def match_detail(match_id: int):
         events = conn.execute(
             "SELECT * FROM match_events WHERE match_id = ? ORDER BY seq", (match_id,)
         ).fetchall()
+        shots = conn.execute(
+            "SELECT * FROM match_shots WHERE match_id = ? ORDER BY seq", (match_id,)
+        ).fetchall()
         prediction = conn.execute(
             "SELECT * FROM predictions WHERE match_id = ?", (match_id,)
         ).fetchone()
@@ -78,4 +81,4 @@ def match_detail(match_id: int):
     finally:
         conn.close()
     return {**m, "team_stats": stats, "lineups": lineups, "events": events,
-            "prediction": prediction, "squads": squads}
+            "shots": shots, "prediction": prediction, "squads": squads}

@@ -3,6 +3,7 @@ import json
 import re
 import unicodedata
 from datetime import datetime, timezone
+from math import hypot
 
 # ESPN team-stat name -> match_team_stats column
 ESPN_TEAM_STATS = {
@@ -31,6 +32,15 @@ ESPN_PLAYER_STATS = {
 # halftime, start/end-delay noise we drop).
 TIMELINE_EVENT_TYPES = {
     "goal", "own-goal", "penalty-goal", "yellow-card", "red-card", "substitution",
+}
+
+# core play type.text -> shot-map result. "Shot On Target" (non-goal) is a save;
+# the separate keeper-side "Save" plays and "Assists Shot" markers are dropped.
+SHOT_RESULT_BY_TYPE = {
+    "Goal": "goal",
+    "Shot On Target": "saved",
+    "Shot Off Target": "off-target",
+    "Shot Blocked": "blocked",
 }
 
 
@@ -231,6 +241,76 @@ def espn_events(conn, match_id: int, payload: dict) -> int:
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
         (f"ingested:events:{match_id}", now),
+    )
+    conn.commit()
+    return len(rows)
+
+
+def _espn_id_from_ref(ref: str | None, kind: str) -> str | None:
+    """Pull the numeric id out of a core-feed $ref URL, e.g.
+    '.../athletes/45843?lang=en' with kind='athletes' -> '45843'."""
+    if not ref:
+        return None
+    m = re.search(rf"/{kind}/(\d+)", ref)
+    return m.group(1) if m else None
+
+
+def _shot_player_name(conn, pid: int | None, play: dict) -> str | None:
+    """Prefer the canonical squad name; the core feed doesn't inline the athlete
+    name on a shot, so fall back to the leading name in the play text
+    ('Lionel Messi (Argentina) ...')."""
+    if pid:
+        row = conn.execute("SELECT name FROM players WHERE id=?", (pid,)).fetchone()
+        if row:
+            return row["name"]
+    m = re.match(r"^(.*?)\s+\(", play.get("text") or "")
+    return m.group(1) if m else (play.get("shortText") or None)
+
+
+def espn_shots(conn, match_id: int, plays: list) -> int:
+    """Parse the core feed's shot plays into match_shots (xG + location + outcome).
+
+    Idempotent (clear + reinsert). Resolves team/player from the $ref ids -> our
+    espn_id, so it must run after the match's roster ingest. Returns shots stored.
+    """
+    conn.execute("DELETE FROM match_shots WHERE match_id=?", (match_id,))
+    rows = []
+    for p in plays or []:
+        result = SHOT_RESULT_BY_TYPE.get((p.get("type") or {}).get("text"))
+        fx, fy = p.get("fieldPositionX"), p.get("fieldPositionY")
+        if not result or p.get("shootout") or fx is None or fy is None:
+            continue  # not a plottable open-play shot
+        parts = p.get("participants") or []
+        shooter_ref = (parts[0].get("athlete", {}) if parts else {}).get("$ref")
+        pid = _player_by_espn(conn, _espn_id_from_ref(shooter_ref, "athletes"))
+        team_espn = _espn_id_from_ref((p.get("team") or {}).get("$ref"), "teams")
+        team = conn.execute(
+            "SELECT id FROM teams WHERE espn_id=?", (team_espn,)
+        ).fetchone()
+        rows.append((
+            match_id, int(p["id"]), _event_minute(p),
+            (p.get("clock") or {}).get("displayValue"),
+            (p.get("period") or {}).get("number"),
+            team["id"] if team else None, pid, _shot_player_name(conn, pid, p), result,
+            p.get("expectedGoals"), p.get("expectedGoalsOnTarget"),
+            (p.get("contactType") or {}).get("text"),
+            (p.get("shotInfo") or {}).get("text"),
+            (p.get("targetZone") or {}).get("text"),
+            fx, fy, p.get("goalPositionY"), p.get("goalPositionZ"),
+            round(hypot((100 - fx) / 100 * 105, (50 - fy) / 100 * 68), 1),
+        ))
+    conn.executemany(
+        """INSERT INTO match_shots
+           (match_id, seq, minute, clock, period, team_id, player_id, player_name,
+            result, xg, xgot, body_part, situation, goal_zone,
+            field_x, field_y, goal_y, goal_z, distance)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        rows,
+    )
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+        (f"ingested:shots:{match_id}", now),
     )
     conn.commit()
     return len(rows)

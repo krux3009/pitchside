@@ -157,6 +157,33 @@ CREATE TABLE IF NOT EXISTS match_events (
   PRIMARY KEY (match_id, seq)
 );
 
+-- Per-shot data (xG, location, outcome) parsed from ESPN's core play-by-play
+-- feed. Powers the shot map. Runtime-only like lineups/events; archived so it
+-- survives a redeploy. xG/xGOT are third-party (ESPN/StatsPerform) display
+-- values — they do NOT feed the results-based prediction model.
+CREATE TABLE IF NOT EXISTS match_shots (
+  match_id      INTEGER REFERENCES matches(id),
+  seq           INTEGER,                    -- ESPN play id (monotonic -> chronological)
+  minute        INTEGER,
+  clock         TEXT,
+  period        INTEGER,
+  team_id       INTEGER REFERENCES teams(id),
+  player_id     INTEGER,                    -- canonical id when resolvable, else NULL
+  player_name   TEXT,
+  result        TEXT,                       -- goal | saved | off-target | blocked
+  xg            REAL,                       -- expectedGoals
+  xgot          REAL,                       -- expectedGoalsOnTarget
+  body_part     TEXT,                       -- contactType (Right Foot / Header / ...)
+  situation     TEXT,                       -- shotInfo (Regular Play / Set Piece / ...)
+  goal_zone     TEXT,                       -- targetZone (Low Left / High Centre / ...)
+  field_x       REAL,                       -- shooter pitch x, 0-100, attacking -> 100
+  field_y       REAL,                       -- shooter pitch y, 0-100
+  goal_y        REAL,                       -- net-mouth horizontal (for the mini diagram)
+  goal_z        REAL,                       -- net-mouth height
+  distance      REAL,                       -- derived metres to goal centre
+  PRIMARY KEY (match_id, seq)
+);
+
 CREATE TABLE IF NOT EXISTS injuries (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   team_id       INTEGER,

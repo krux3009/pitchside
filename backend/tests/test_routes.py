@@ -38,7 +38,7 @@ def test_match_detail_shape(client):
     m = client.get("/api/matches/1").json()
     assert m["home_name"] == "Mexico"
     assert m["status"] == "FT"
-    assert {"team_stats", "lineups", "events", "prediction"} <= set(m)
+    assert {"team_stats", "lineups", "events", "shots", "prediction"} <= set(m)
     assert client.get("/api/matches/9999").status_code == 404
 
 

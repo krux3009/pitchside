@@ -5,6 +5,7 @@ import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchTimeline from "../components/MatchTimeline";
 import Pitch from "../components/Pitch";
 import ProbBar from "../components/ProbBar";
+import ShotMap from "../components/ShotMap";
 import StatCompareRow from "../components/StatCompareRow";
 import TeamBadge from "../components/TeamBadge";
 import { useFactBar } from "../lib/factBar";
@@ -79,6 +80,13 @@ export default function MatchDetail() {
 
       {m.events?.length > 0 && (
         <MatchTimeline events={m.events} homeId={m.home_id} awayId={m.away_id} />
+      )}
+
+      {m.shots?.length > 0 && (
+        <ShotMap
+          shots={m.shots} homeId={m.home_id} awayId={m.away_id}
+          homeCode={m.home_code} awayCode={m.away_code}
+        />
       )}
 
       {homeStats && awayStats && (

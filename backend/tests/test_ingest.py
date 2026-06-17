@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from app import db
-from app.fetch.ingest import _normalize_name, _resolve_player, espn_events
+from app.fetch.ingest import _normalize_name, _resolve_player, espn_events, espn_shots
 
 SEED = Path(__file__).resolve().parent.parent / "app" / "data" / "seed.db"
 SCHEMA = Path(__file__).resolve().parent.parent / "app" / "schema.sql"
@@ -140,6 +140,58 @@ def test_espn_events_parses_and_filters(events_db):
     assert conn.execute(
         "SELECT 1 FROM meta WHERE key='ingested:events:1'"
     ).fetchone()
+
+
+def _play(pid, ptype, team_espn, athlete_espn, clock="20'", fx=85.0, fy=50.0, **extra):
+    p = {
+        "id": str(pid),
+        "type": {"text": ptype},
+        "team": {"$ref": f"http://x/seasons/2026/teams/{team_espn}?lang=en"},
+        "participants": [{"athlete": {"$ref": f"http://x/seasons/2026/athletes/{athlete_espn}?lang=en"}}],
+        "clock": {"displayValue": clock},
+        "period": {"number": 1},
+        "text": "Striker (Mexico) attempts a shot.",
+        "contactType": {"text": "Right Foot"}, "shotInfo": {"text": "Regular Play"},
+        "targetZone": {"text": "Low Left"},
+        "expectedGoals": 0.2, "expectedGoalsOnTarget": 0.3,
+        "goalPositionY": 48.0, "goalPositionZ": 10.0,
+    }
+    if fx is not None:
+        p["fieldPositionX"], p["fieldPositionY"] = fx, fy
+    p.update(extra)
+    return p
+
+
+def test_espn_shots_parses_filters_and_resolves(events_db):
+    conn, mex, scorer, _ = events_db
+    # real ESPN athlete refs are numeric (/athletes/45843); the fixture's 'AA'
+    # placeholder wouldn't match the $ref id regex, so give the scorer a number.
+    conn.execute("UPDATE players SET espn_id='45843' WHERE id=?", (scorer,))
+    plays = [
+        _play(1, "Goal", "202", "45843", fx=90.0, fy=50.0),
+        _play(2, "Shot On Target", "202", "45843"),
+        _play(3, "Shot Off Target", "202", "45843"),
+        _play(4, "Shot Blocked", "202", "45843"),
+        _play(5, "Save", "202", "45843"),                 # keeper-side dup -> dropped
+        _play(6, "Assists Shot", "202", "45843"),          # assist marker -> dropped
+        _play(7, "Goal", "202", "45843", shootout=True),   # shootout -> dropped
+        _play(8, "Shot Off Target", "202", "45843", fx=None),  # no location -> dropped
+    ]
+    n = espn_shots(conn, 1, plays)
+    assert n == 4
+
+    rows = conn.execute("SELECT * FROM match_shots WHERE match_id=1 ORDER BY seq").fetchall()
+    assert [r["result"] for r in rows] == ["goal", "saved", "off-target", "blocked"]
+    goal = rows[0]
+    assert goal["team_id"] == mex and goal["player_id"] == scorer
+    assert goal["xg"] == 0.2 and goal["body_part"] == "Right Foot"
+    # distance: shooter at x=90,y=50 -> (10% of 105m) = 10.5m to goal centre
+    assert goal["distance"] == 10.5
+
+    # marker set (one-shot backfill guard) + idempotent
+    assert conn.execute("SELECT 1 FROM meta WHERE key='ingested:shots:1'").fetchone()
+    assert espn_shots(conn, 1, plays) == 4
+    assert conn.execute("SELECT COUNT(*) AS n FROM match_shots WHERE match_id=1").fetchone()["n"] == 4
 
 
 def test_event_minute_from_clock(events_db):

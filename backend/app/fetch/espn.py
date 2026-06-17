@@ -15,6 +15,8 @@ import httpx
 
 BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world"
 ATHLETES_BASE = "https://site.web.api.espn.com/apis/common/v3/sports/soccer/athletes"
+# core feed: full play-by-play incl. per-shot xG/location (powers the shot map)
+CORE = "https://sports.core.api.espn.com/v2/sports/soccer/leagues/fifa.world"
 TIMEOUT = 25.0
 
 
@@ -56,6 +58,26 @@ def injuries(conn) -> dict | None:
         return r.json()
     except httpx.HTTPError:
         return None
+
+
+def plays(conn, event_id: str) -> list | None:
+    """Full play-by-play from the core feed (paginated). Returns the combined
+    items list, or None if the first page fails. Heavy (~1600 plays / ~5 pages),
+    so callers must guard it to once per match — never per refresh tick."""
+    url = f"{CORE}/events/{event_id}/competitions/{event_id}/plays"
+    items, page, pages = [], 1, 1
+    while page <= pages:
+        try:
+            r = httpx.get(url, params={"limit": 400, "page": page}, timeout=TIMEOUT)
+            _log(conn, "plays", f"{event_id}:{page}", r.status_code)
+            r.raise_for_status()
+            data = r.json()
+        except httpx.HTTPError:
+            return items or None  # partial is still usable; None only if nothing came back
+        items += data.get("items", [])
+        pages = data.get("pageCount", 1)
+        page += 1
+    return items
 
 
 # Pooled client for the bulk career fetch: the TLS handshake is ~1.3s against
