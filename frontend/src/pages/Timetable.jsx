@@ -40,7 +40,11 @@ export default function Timetable() {
       if (!days.has(day)) days.set(day, []);
       days.get(day).push(m);
     }
-    return [...days.entries()];
+    // the API lists matches by FIFA match number, not date — so order the day
+    // groups chronologically (ISO yyyy-mm-dd sorts correctly as a string) and
+    // each day's matches by kickoff
+    for (const list of days.values()) list.sort((a, b) => a.kickoff_utc.localeCompare(b.kickoff_utc));
+    return [...days.entries()].sort(([a], [b]) => a.localeCompare(b));
   }, [data, stage, group, teamQ, tTeam]);
 
   // groups only exist in the group stage; reset a stale group pick when the user
