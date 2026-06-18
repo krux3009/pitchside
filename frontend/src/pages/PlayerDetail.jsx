@@ -22,7 +22,7 @@ export default function PlayerDetail() {
         [t("player.goals"), tot.goals],
         [t("player.assists"), tot.assists],
         [t("player.goalsPer90"), tot.goals_per_90 ?? "–"],
-        [t("player.share"), Math.round(p.team_goal_share * 100) + "%"],
+        [t("player.share"), Math.round((p.team_goal_share ?? 0) * 100) + "%"],
         [t("player.minutes"), tot.minutes],
         [t("player.apps"), tot.apps],
         [t("player.yellows"), tot.yellows],
@@ -80,7 +80,7 @@ export default function PlayerDetail() {
                 </tr>
               </thead>
               <tbody>
-                {p.match_log.map((r) => (
+                {(p.match_log ?? []).map((r) => (
                   <tr key={r.match_id}>
                     <td>
                       <Link to={`/matches/${r.match_id}`}>

@@ -53,3 +53,17 @@ def test_wdl_sums_to_one_and_favourite_wins_more():
 
 def test_most_likely_format():
     assert most_likely(score_matrix(0.5, 0.4, rho=0.0)) == "0-0"
+
+
+def test_score_matrix_zero_rate_stays_finite():
+    """A remaining rate that floors to 0 (momentum at t=90, or a degenerate
+    param) must not poison the matrix with NaN via 0*log(0); the zero side
+    collapses onto 0 goals and the matrix still normalises."""
+    m = score_matrix(0.0, 1.2, rho=-0.05)
+    assert np.isfinite(m).all()
+    assert m.sum() == pytest.approx(1.0)
+    assert m[1:, :].sum() == pytest.approx(0.0, abs=1e-9)  # home ~never scores
+    # symmetric: a zero away rate keeps the away side on 0
+    m2 = score_matrix(1.2, 0.0, rho=-0.05)
+    assert np.isfinite(m2).all()
+    assert m2[:, 1:].sum() == pytest.approx(0.0, abs=1e-9)

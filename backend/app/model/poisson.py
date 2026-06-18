@@ -52,6 +52,11 @@ def score_matrix(
     """P(home=i, away=j) for i,j in 0..max_goals, Dixon-Coles corrected."""
     if rho is None:
         rho = load_params()["rho"]
+    # A zero rate makes np.log(lam) == -inf and 0*-inf == nan, poisoning every cell
+    # (callers like momentum can pass a remaining rate that floors to 0). Clamp to a
+    # tiny positive so the side collapses onto 0 goals instead of NaN.
+    lam = max(lam, 1e-12)
+    mu = max(mu, 1e-12)
     goals = np.arange(max_goals + 1)
     # Poisson pmf vectors via cumulative products (no scipy at runtime)
     log_fact = np.cumsum(np.log(np.maximum(goals, 1)))

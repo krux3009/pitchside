@@ -22,6 +22,10 @@ def championship():
         ).fetchall()
     finally:
         conn.close()
+    # latest_sim_run_id can outlive its rows (a partial/cleared run); without this
+    # guard rows[0] would IndexError into a 500 instead of an empty payload.
+    if not rows:
+        return {"run": None, "teams": []}
     return {
         "run": {"run_id": run_id["value"], "n_iterations": rows[0]["n_iterations"]},
         "teams": rows,

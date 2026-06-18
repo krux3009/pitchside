@@ -1,3 +1,4 @@
+import hmac
 import threading
 from datetime import datetime, timezone
 
@@ -16,9 +17,16 @@ router = APIRouter()
 # FTP) can outlast the interval, so collapse overlaps instead of stacking them.
 _cycle_lock = threading.Lock()
 
+# Fail closed: if REFRESH_KEY is unset or still the documented placeholder, every
+# privileged /api/internal/* route stays locked rather than authorizing on the
+# default everyone can read in config.py. A real deploy MUST set REFRESH_KEY.
+_KEY_IS_SECURE = bool(REFRESH_KEY) and REFRESH_KEY != "change-me"
+
 
 def _check(key: str):
-    if key != REFRESH_KEY:
+    # compare_digest avoids leaking the key length/prefix via timing on the only
+    # auth gate in the app.
+    if not _KEY_IS_SECURE or not hmac.compare_digest(key, REFRESH_KEY):
         raise HTTPException(403, "bad key")
 
 

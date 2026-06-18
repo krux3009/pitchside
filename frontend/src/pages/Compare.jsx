@@ -74,7 +74,8 @@ function TeamCompare() {
   }, [sim.data]);
 
   if (standings.loading || matches.loading) return <ColdStartLoader />;
-  if (standings.error) return <ErrorState error={standings.error} />;
+  if (standings.error || matches.error)
+    return <ErrorState error={standings.error || matches.error} />;
 
   const ta = teams.find((x) => String(x.id) === a);
   const tb = teams.find((x) => String(x.id) === b);

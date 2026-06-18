@@ -46,7 +46,13 @@ def _canonical_event_type(ev: dict) -> str | None:
     text 'Goal - Header'), so an exact 'goal' match drops most of them. Detect a
     goal by its scoringPlay flag or a 'goal' in the slug, then fold the variants
     back to goal / own-goal / penalty-goal. Cards and subs match exactly.
+
+    Shootout attempts also carry scoringPlay metadata, so drop them first — the
+    shot importer skips p.get('shootout') the same way; counting a shootout
+    conversion as a timeline penalty-goal would inflate the match's goal tally.
     """
+    if ev.get("shootout"):
+        return None
     t = ev.get("type", {}) or {}
     slug = (t.get("type") or "").lower()
     blob = slug + " " + (t.get("text") or "").lower()
@@ -121,10 +127,19 @@ def espn_scoreboard(conn, payload: dict) -> list[int]:
                          (event["id"], m["id"]))
             continue
         winner = None
-        if status == "FT" and hg != ag:
-            winner = home["id"] if hg > ag else away["id"]
-        # NOTE: knockout extra-time/penalty splits need the summary feed; the
-        # scoreboard score is treated as the 90' score during the group stage.
+        if status == "FT":
+            # ESPN flags the advancing side on the competitor even when a knockout
+            # is level after 90'/120' and decided on penalties, so trust the flag
+            # first; fall back to the score for group games that don't carry it.
+            if sides["home"].get("winner"):
+                winner = home["id"]
+            elif sides["away"].get("winner"):
+                winner = away["id"]
+            elif hg != ag:
+                winner = home["id"] if hg > ag else away["id"]
+        # NOTE: the scoreboard score is the only source of *_goals_90 (simulate +
+        # standings read it), so we still write it here; knockout extra-time/penalty
+        # splits would need the summary feed and are a documented limitation.
         conn.execute(
             """UPDATE matches SET espn_event_id=?, status=?, home_goals=?, away_goals=?,
                home_goals_90=?, away_goals_90=?, winner_team_id=? WHERE id=?""",

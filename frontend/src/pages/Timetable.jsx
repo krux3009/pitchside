@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 
+import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
 import { localDateHeading } from "../lib/format";
@@ -110,6 +111,8 @@ export default function Timetable() {
           </div>
         </section>
       ))}
+      {/* cards show win/draw/away probabilities — disclaimer required on this surface */}
+      {byDate.length > 0 && <Disclaimer />}
     </>
   );
 }

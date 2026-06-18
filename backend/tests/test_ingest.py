@@ -11,6 +11,7 @@ from app.fetch.ingest import (
     _resolve_player,
     _shot_result,
     espn_events,
+    espn_scoreboard,
     espn_shots,
 )
 
@@ -220,6 +221,18 @@ def test_goal_subtypes_classified_as_goals():
     assert _canonical_event_type(ev("substitution", "Substitution")) == "substitution"
 
 
+def test_shootout_conversions_dropped_from_timeline():
+    """Shootout attempts carry scoringPlay metadata; counting them as timeline
+    penalty-goals would inflate the match tally, so drop them like the shot
+    importer drops p.get('shootout')."""
+    made = {"type": {"type": "penalty-goal", "text": "Penalty - Scored"},
+            "scoringPlay": True, "shootout": True}
+    missed = {"type": {"type": "penalty-miss", "text": "Penalty - Missed"},
+              "shootout": True}
+    assert _canonical_event_type(made) is None
+    assert _canonical_event_type(missed) is None
+
+
 def test_shot_result_goal_variants_but_not_goal_kick():
     assert _shot_result("Goal") == "goal"
     assert _shot_result("Goal - Header") == "goal"
@@ -246,3 +259,65 @@ def test_event_minute_from_clock(events_db):
         "SELECT minute FROM match_events WHERE match_id=1 ORDER BY seq"
     ).fetchall()]
     assert minutes == [17, 46]
+
+
+# --- scoreboard winner resolution ---------------------------------------
+
+def _competitor(home_away, team, score, winner=False):
+    return {
+        "homeAway": home_away,
+        "score": str(score),
+        "winner": winner,
+        # a bogus espn id forces the fifa_code/name fallback in _team_by_espn
+        "team": {"id": f"espn-{team['id']}", "abbreviation": team["fifa_code"],
+                 "displayName": team["name"]},
+    }
+
+
+def _scoreboard(match, home, away, state, hs, as_, home_win=False, away_win=False):
+    return {"events": [{
+        "id": "EVT1",
+        "date": match["kickoff_utc"],
+        "competitions": [{
+            "competitors": [
+                _competitor("home", home, hs, home_win),
+                _competitor("away", away, as_, away_win),
+            ],
+            "status": {"type": {"state": state}},
+        }],
+    }]}
+
+
+@pytest.fixture()
+def scoreboard_match(conn):
+    """A seed match plus its two team rows, ready for a scoreboard update."""
+    match = conn.execute(
+        """SELECT * FROM matches
+           WHERE home_team_id IS NOT NULL AND away_team_id IS NOT NULL LIMIT 1"""
+    ).fetchone()
+    home = conn.execute("SELECT * FROM teams WHERE id=?", (match["home_team_id"],)).fetchone()
+    away = conn.execute("SELECT * FROM teams WHERE id=?", (match["away_team_id"],)).fetchone()
+    return conn, match, home, away
+
+
+def test_scoreboard_penalty_knockout_winner_from_flag(scoreboard_match):
+    """A knockout level after 120' and decided on penalties carries equal scores,
+    so winner can't come from the score — ESPN flags the advancing competitor,
+    and that flag must populate winner_team_id instead of leaving it NULL."""
+    conn, match, home, away = scoreboard_match
+    espn_scoreboard(conn, _scoreboard(match, home, away, "post", 1, 1, away_win=True))
+    row = conn.execute(
+        "SELECT status, winner_team_id FROM matches WHERE id=?", (match["id"],)
+    ).fetchone()
+    assert row["status"] == "FT"
+    assert row["winner_team_id"] == away["id"]   # not None despite the 1-1 draw
+
+
+def test_scoreboard_decisive_score_still_wins_without_flag(scoreboard_match):
+    """Group games don't carry the winner flag; the score decides as before."""
+    conn, match, home, away = scoreboard_match
+    espn_scoreboard(conn, _scoreboard(match, home, away, "post", 2, 0))
+    row = conn.execute(
+        "SELECT winner_team_id FROM matches WHERE id=?", (match["id"],)
+    ).fetchone()
+    assert row["winner_team_id"] == home["id"]

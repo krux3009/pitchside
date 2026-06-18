@@ -131,7 +131,7 @@ export default function MatchDetail() {
                     {lu.formation && <span style={{ color: "var(--text-low)" }}>({lu.formation})</span>}
                   </p>
                   <Pitch starters={lu.starters} formation={lu.formation} code={code} />
-                  {lu.bench.length > 0 && (
+                  {lu.bench?.length > 0 && (
                     <>
                       <p style={{ color: "var(--text-low)", fontSize: 12, margin: "10px 0 4px" }}>{t("match.bench")}</p>
                       {lu.bench.map((p) => (
@@ -164,7 +164,7 @@ export default function MatchDetail() {
                     <TeamBadge code={code} name={name} />
                   </p>
                   {POSITION_GROUPS.map((pos) => {
-                    const group = m.squads[side].filter((p) => p.position === pos);
+                    const group = (m.squads[side] ?? []).filter((p) => p.position === pos);
                     if (!group.length) return null;
                     return (
                       <div key={pos}>
