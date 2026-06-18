@@ -62,6 +62,29 @@ def test_briefing_emits_structured_fields_not_sentences(conn):
     assert standout["team_code"]
 
 
+def test_yesterday_results_most_recent_first(conn):
+    """The recap leads with the latest kickoff, so a later game sits above an
+    earlier one."""
+    day = conn.execute(
+        "SELECT date(kickoff_utc) d FROM matches WHERE home_team_id IS NOT NULL"
+        " GROUP BY d HAVING COUNT(*) >= 2 ORDER BY d LIMIT 1"
+    ).fetchone()["d"]
+    conn.execute(
+        "UPDATE matches SET status='FT', home_goals=1, away_goals=0,"
+        " home_goals_90=1, away_goals_90=0, winner_team_id=home_team_id"
+        " WHERE date(kickoff_utc)=?", (day,))
+    conn.commit()
+    next_day = (date.fromisoformat(day) + timedelta(days=1)).isoformat()
+    content = briefing.rebuild(conn, for_date=next_day)
+    ids = [c["match_id"] for c in content["yesterday"]]
+    assert len(ids) >= 2
+    kickoffs = [
+        conn.execute("SELECT kickoff_utc FROM matches WHERE id=?", (i,)).fetchone()["kickoff_utc"]
+        for i in ids
+    ]
+    assert kickoffs == sorted(kickoffs, reverse=True)
+
+
 def test_briefing_no_upset_for_expected_results(conn):
     match = conn.execute(
         "SELECT * FROM matches WHERE status='FT' AND winner_team_id IS NOT NULL"

@@ -29,8 +29,9 @@ def _match_card(conn, m, prediction=True):
 
 
 def _yesterday_results(conn, day: str) -> list:
+    # most recent kickoff first, so the latest result leads the recap
     rows = conn.execute(
-        "SELECT * FROM matches WHERE status='FT' AND date(kickoff_utc)=? ORDER BY kickoff_utc",
+        "SELECT * FROM matches WHERE status='FT' AND date(kickoff_utc)=? ORDER BY kickoff_utc DESC",
         (day,),
     ).fetchall()
     out = []
