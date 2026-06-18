@@ -6,7 +6,9 @@ export const EN = {
   // navigation + footer
   "nav.home": "Home",
   "nav.matches": "Matches",
+  "nav.bracket": "Bracket",
   "nav.players": "Players",
+  "nav.compare": "Compare",
   "nav.methodology": "Methodology",
   "footer.disclaimer": "Predictions are statistical estimates for fun, not betting advice.",
   "footer.project": "A student portfolio project —",
@@ -46,6 +48,9 @@ export const EN = {
   "match.bench": "BENCH",
   "match.squadNote": "Official lineups appear ~30 minutes before kickoff — full 26-man squads below.",
   "match.timeline": "Timeline",
+  "momentum.title": "Win Probability",
+  "momentum.higher": "higher = more likely to win",
+  "momentum.note": "A live proxy: the score so far plus the model's expectation for the minutes remaining. Not a trained in-match model — it ignores who has the ball.",
   "event.own-goal": "own goal",
   "event.penalty-goal": "pen",
   "event.assist": ({ name }) => `assist: ${name}`,
@@ -129,6 +134,30 @@ export const EN = {
   "player.career.starts": "Starts",
   "player.career.cs": "CS",
   "player.careerNote": "Pre-tournament career via ESPN season totals (league and cup competitions where tracked). ESPN counts starts, not substitute appearances.",
+
+  // bracket
+  "bracket.title": "Knockout Bracket",
+  "bracket.lead": ({ n }) => `Round of 32 through the final · champion odds from ${n} Monte Carlo simulations · `,
+  "bracket.leadNoSim": "Round of 32 through the final · ",
+  "bracket.caveat": "Slots show the FIFA seeding (group winner 1A, runner-up 2B, a best third 3rd) until results resolve them. The eight best third-placed teams are assigned by a deterministic rule that can differ from FIFA's published allocation in rare combinations. Percentages are each team's simulated chance of winning the tournament.",
+
+  // compare
+  "compare.title": "Compare",
+  "compare.lead": "Put two teams or two players side by side.",
+  "compare.teams": "Teams",
+  "compare.players": "Players",
+  "compare.selectTeam": "Select a team…",
+  "compare.selectPlayer": "Select a player…",
+  "compare.empty": "Pick two to compare.",
+  "compare.played": "Played",
+  "compare.won": "Won",
+  "compare.drawn": "Drawn",
+  "compare.lost": "Lost",
+  "compare.gf": "Goals for",
+  "compare.ga": "Goals against",
+  "compare.pts": "Points",
+  "compare.champ": "Champion odds",
+  "compare.form": "Form (last 5)",
 
   // home / briefing
   "home.title": "Matchday Briefing",

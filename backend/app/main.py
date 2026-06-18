@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
 from .config import ALLOWED_ORIGINS
-from .routes import briefing, internal, matches, methodology, players, sim, standings
+from .routes import bracket, briefing, internal, matches, methodology, players, sim, standings
 
 
 def _catch_up():
@@ -41,7 +41,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (briefing, internal, matches, methodology, players, sim, standings):
+for module in (bracket, briefing, internal, matches, methodology, players, sim, standings):
     app.include_router(module.router)
 
 

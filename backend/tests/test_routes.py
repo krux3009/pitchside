@@ -38,7 +38,9 @@ def test_match_detail_shape(client):
     m = client.get("/api/matches/1").json()
     assert m["home_name"] == "Mexico"
     assert m["status"] == "FT"
-    assert {"team_stats", "lineups", "events", "shots", "prediction"} <= set(m)
+    assert {"team_stats", "lineups", "events", "shots", "prediction", "momentum"} <= set(m)
+    # runtime-only events/shots are empty in the seed, so the proxy yields no series
+    assert m["momentum"] == []
     assert client.get("/api/matches/9999").status_code == 404
 
 
@@ -71,6 +73,18 @@ def test_match_detail_includes_squads_before_lineups(client):
 
 def test_sim_empty_before_first_run(client):
     assert client.get("/api/sim/championship").json()["run"] is None
+
+
+def test_bracket_shape(client):
+    b = client.get("/api/bracket").json()
+    assert {"rounds", "odds", "n_iterations"} <= set(b)
+    assert [r["stage"] for r in b["rounds"]] == ["R32", "R16", "QF", "SF", "FINAL", "THIRD"]
+    r32 = next(r for r in b["rounds"] if r["stage"] == "R32")
+    assert len(r32["matches"]) == 16
+    side = r32["matches"][0]["home"]
+    assert {"team_id", "name", "code", "slot"} <= set(side)
+    # seed ships without a sim run, so odds are empty until one is computed
+    assert b["n_iterations"] is None and b["odds"] == {}
 
 
 def test_methodology_params(client):

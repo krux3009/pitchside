@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchTimeline from "../components/MatchTimeline";
+import Momentum from "../components/Momentum";
 import Pitch from "../components/Pitch";
 import ProbBar from "../components/ProbBar";
 import ShotMap from "../components/ShotMap";
@@ -80,6 +81,14 @@ export default function MatchDetail() {
 
       {m.events?.length > 0 && (
         <MatchTimeline events={m.events} homeId={m.home_id} awayId={m.away_id} />
+      )}
+
+      {m.momentum?.length > 0 && (
+        <Momentum
+          points={m.momentum}
+          homeCode={m.home_code} awayCode={m.away_code}
+          homeName={m.home_name} awayName={m.away_name}
+        />
       )}
 
       {m.shots?.length > 0 && (

@@ -4,7 +4,9 @@ export const ZH = {
   // navigation + footer
   "nav.home": "主页",
   "nav.matches": "赛程",
+  "nav.bracket": "淘汰赛",
   "nav.players": "球员",
+  "nav.compare": "对比",
   "nav.methodology": "方法论",
   "footer.disclaimer": "预测仅为统计估计、供娱乐参考，不构成投注建议。",
   "footer.project": "学生作品集项目 —",
@@ -44,6 +46,9 @@ export const ZH = {
   "match.bench": "替补",
   "match.squadNote": "官方首发阵容约在开球前30分钟公布——以下为26人完整大名单。",
   "match.timeline": "比赛进程",
+  "momentum.title": "胜率走势",
+  "momentum.higher": "越高 = 越可能获胜",
+  "momentum.note": "实时近似值：当前比分加上模型对剩余时间的预期。并非训练过的临场模型——不考虑控球。",
   "event.own-goal": "乌龙球",
   "event.penalty-goal": "点球",
   "event.assist": ({ name }) => `助攻：${name}`,
@@ -127,6 +132,30 @@ export const ZH = {
   "player.career.starts": "首发",
   "player.career.cs": "零封",
   "player.careerNote": "生涯数据来自 ESPN 赛季统计（覆盖有记录的联赛与杯赛）。ESPN 统计首发场次，不含替补出场。",
+
+  // bracket
+  "bracket.title": "淘汰赛对阵图",
+  "bracket.lead": ({ n }) => `32强直到决赛 · 夺冠概率来自 ${n} 次蒙特卡洛模拟 · `,
+  "bracket.leadNoSim": "32强直到决赛 · ",
+  "bracket.caveat": "在结果确定前，席位显示 FIFA 的种子规则（小组头名 1A、第二 2B、最佳第三 3rd）。八支最佳第三名球队由确定性规则分配，在少数组合下可能与 FIFA 公布的分配不同。百分比为各队模拟夺冠的概率。",
+
+  // compare
+  "compare.title": "对比",
+  "compare.lead": "把两支球队或两名球员并排比较。",
+  "compare.teams": "球队",
+  "compare.players": "球员",
+  "compare.selectTeam": "选择球队…",
+  "compare.selectPlayer": "选择球员…",
+  "compare.empty": "选择两项进行对比。",
+  "compare.played": "场次",
+  "compare.won": "胜",
+  "compare.drawn": "平",
+  "compare.lost": "负",
+  "compare.gf": "进球",
+  "compare.ga": "失球",
+  "compare.pts": "积分",
+  "compare.champ": "夺冠概率",
+  "compare.form": "状态（近5场）",
 
   // home / briefing
   "home.title": "比赛日简报",

@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, HTTPException
 
 from .. import db
-from ..services import player_stats
+from ..services import momentum, player_stats
 
 router = APIRouter()
 
@@ -72,6 +72,13 @@ def match_detail(match_id: int):
         ).fetchone()
         if prediction:
             prediction.pop("score_matrix_json", None)
+        # in-match win-probability proxy (empty for unplayed matches); rides the
+        # existing matches/{id}.json payload to the CDN — no new endpoint/contract
+        momentum_series = momentum.series(
+            events, shots, m["home_id"], m["away_id"],
+            prediction["lambda_home"] if prediction else None,
+            prediction["mu_away"] if prediction else None,
+        )
         squads = None
         if not lineups and m["home_id"] and m["away_id"]:
             squads = {
@@ -81,4 +88,5 @@ def match_detail(match_id: int):
     finally:
         conn.close()
     return {**m, "team_stats": stats, "lineups": lineups, "events": events,
-            "shots": shots, "prediction": prediction, "squads": squads}
+            "shots": shots, "prediction": prediction, "momentum": momentum_series,
+            "squads": squads}
