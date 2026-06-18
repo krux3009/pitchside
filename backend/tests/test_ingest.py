@@ -5,7 +5,14 @@ from pathlib import Path
 import pytest
 
 from app import db
-from app.fetch.ingest import _normalize_name, _resolve_player, espn_events, espn_shots
+from app.fetch.ingest import (
+    _canonical_event_type,
+    _normalize_name,
+    _resolve_player,
+    _shot_result,
+    espn_events,
+    espn_shots,
+)
 
 SEED = Path(__file__).resolve().parent.parent / "app" / "data" / "seed.db"
 SCHEMA = Path(__file__).resolve().parent.parent / "app" / "schema.sql"
@@ -138,7 +145,7 @@ def test_espn_events_parses_and_filters(events_db):
 
     # marker written (drives refresh.run's one-shot backfill; archived via ingested:%)
     assert conn.execute(
-        "SELECT 1 FROM meta WHERE key='ingested:events:1'"
+        "SELECT 1 FROM meta WHERE key='ingested:events:v2:1'"
     ).fetchone()
 
 
@@ -189,9 +196,41 @@ def test_espn_shots_parses_filters_and_resolves(events_db):
     assert goal["distance"] == 10.5
 
     # marker set (one-shot backfill guard) + idempotent
-    assert conn.execute("SELECT 1 FROM meta WHERE key='ingested:shots:1'").fetchone()
+    assert conn.execute("SELECT 1 FROM meta WHERE key='ingested:shots:v2:1'").fetchone()
     assert espn_shots(conn, 1, plays) == 4
     assert conn.execute("SELECT COUNT(*) AS n FROM match_shots WHERE match_id=1").fetchone()["n"] == 4
+
+
+def test_goal_subtypes_classified_as_goals():
+    """ESPN suffixes the technique onto the goal type ('goal---header'); these
+    must fold back to a plain goal, while non-goal keyEvents are dropped."""
+    def ev(slug, text="", scoring=False):
+        return {"type": {"type": slug, "text": text}, "scoringPlay": scoring}
+
+    assert _canonical_event_type(ev("goal", "Goal")) == "goal"
+    assert _canonical_event_type(ev("goal---header", "Goal - Header", True)) == "goal"
+    assert _canonical_event_type(ev("goal---volley", "Goal - Volley", True)) == "goal"
+    assert _canonical_event_type(ev("own-goal", "Own Goal", True)) == "own-goal"
+    assert _canonical_event_type(ev("penalty-goal", "Penalty - Scored", True)) == "penalty-goal"
+    # scoringPlay alone carries a goal even when the slug is unexpected
+    assert _canonical_event_type({"type": {}, "scoringPlay": True}) == "goal"
+    # noise + non-goal highlights
+    assert _canonical_event_type(ev("kickoff", "Kickoff")) is None
+    assert _canonical_event_type(ev("yellow-card", "Yellow Card")) == "yellow-card"
+    assert _canonical_event_type(ev("substitution", "Substitution")) == "substitution"
+
+
+def test_shot_result_goal_variants_but_not_goal_kick():
+    assert _shot_result("Goal") == "goal"
+    assert _shot_result("Goal - Header") == "goal"
+    assert _shot_result("Goal - Volley") == "goal"
+    assert _shot_result("Goal - Penalty") == "goal"
+    assert _shot_result("Goal Kick") is None          # restart, not a goal
+    assert _shot_result("Shot On Target") == "saved"
+    assert _shot_result("Shot Off Target") == "off-target"
+    assert _shot_result("Shot Blocked") == "blocked"
+    assert _shot_result("Foul") is None
+    assert _shot_result(None) is None
 
 
 def test_event_minute_from_clock(events_db):

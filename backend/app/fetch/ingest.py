@@ -28,20 +28,48 @@ ESPN_PLAYER_STATS = {
     "shotsOnTarget": "shots_on_target",
 }
 
-# keyEvents types worth showing on a timeline (the feed also carries kickoff,
-# halftime, start/end-delay noise we drop).
-TIMELINE_EVENT_TYPES = {
-    "goal", "own-goal", "penalty-goal", "yellow-card", "red-card", "substitution",
-}
-
-# core play type.text -> shot-map result. "Shot On Target" (non-goal) is a save;
-# the separate keeper-side "Save" plays and "Assists Shot" markers are dropped.
-SHOT_RESULT_BY_TYPE = {
-    "Goal": "goal",
+# Non-goal play type.text -> shot-map result. "Shot On Target" (non-goal) is a
+# save; the separate keeper-side "Save" plays and "Assists Shot" markers drop.
+# Goals are matched separately by prefix — ESPN suffixes the technique
+# ("Goal - Header", "Goal - Volley", ...), so an exact "Goal" lookup misses most.
+SHOT_RESULT_BY_TEXT = {
     "Shot On Target": "saved",
     "Shot Off Target": "off-target",
     "Shot Blocked": "blocked",
 }
+
+
+def _canonical_event_type(ev: dict) -> str | None:
+    """Map an ESPN keyEvent to one of our timeline types, or None to drop it.
+
+    ESPN labels goals by technique (type.type 'goal---header'/'goal---volley',
+    text 'Goal - Header'), so an exact 'goal' match drops most of them. Detect a
+    goal by its scoringPlay flag or a 'goal' in the slug, then fold the variants
+    back to goal / own-goal / penalty-goal. Cards and subs match exactly.
+    """
+    t = ev.get("type", {}) or {}
+    slug = (t.get("type") or "").lower()
+    blob = slug + " " + (t.get("text") or "").lower()
+    if ev.get("scoringPlay") or "goal" in slug:
+        if "own" in blob:
+            return "own-goal"
+        if "penalt" in blob:
+            return "penalty-goal"
+        return "goal"
+    if slug in ("yellow-card", "red-card", "substitution"):
+        return slug
+    return None
+
+
+def _shot_result(text: str | None) -> str | None:
+    """Core-feed play text -> shot-map result. A scored goal is 'Goal' or
+    'Goal - <technique>' (Header/Volley/Penalty/...); the dash is what separates
+    it from the 'Goal Kick' restart, which must NOT count as a goal."""
+    if not text:
+        return None
+    if text == "Goal" or text.startswith("Goal -"):
+        return "goal"
+    return SHOT_RESULT_BY_TEXT.get(text)
 
 
 def _team_by_espn(conn, competitor: dict) -> dict | None:
@@ -212,8 +240,8 @@ def espn_events(conn, match_id: int, payload: dict) -> int:
     conn.execute("DELETE FROM match_events WHERE match_id=?", (match_id,))
     rows = []
     for seq, ev in enumerate(payload.get("keyEvents", [])):
-        etype = ev.get("type", {}).get("type")
-        if etype not in TIMELINE_EVENT_TYPES:
+        etype = _canonical_event_type(ev)
+        if etype is None:
             continue
         team = _team_by_espn(conn, ev) if ev.get("team") else None
         parts = ev.get("participants", []) or []
@@ -240,7 +268,7 @@ def espn_events(conn, match_id: int, payload: dict) -> int:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-        (f"ingested:events:{match_id}", now),
+        (f"ingested:events:v2:{match_id}", now),
     )
     conn.commit()
     return len(rows)
@@ -276,7 +304,7 @@ def espn_shots(conn, match_id: int, plays: list) -> int:
     conn.execute("DELETE FROM match_shots WHERE match_id=?", (match_id,))
     rows = []
     for p in plays or []:
-        result = SHOT_RESULT_BY_TYPE.get((p.get("type") or {}).get("text"))
+        result = _shot_result((p.get("type") or {}).get("text"))
         fx, fy = p.get("fieldPositionX"), p.get("fieldPositionY")
         if not result or p.get("shootout") or fx is None or fy is None:
             continue  # not a plottable open-play shot
@@ -310,7 +338,7 @@ def espn_shots(conn, match_id: int, plays: list) -> int:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.execute(
         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-        (f"ingested:shots:{match_id}", now),
+        (f"ingested:shots:v2:{match_id}", now),
     )
     conn.commit()
     return len(rows)

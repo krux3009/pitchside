@@ -62,17 +62,18 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_summary(conn, m["id"], payload)
             report["summaries"] += 1
 
-    # one-shot events backfill: FT matches summary-ingested before the match_events
-    # table existed have stats/lineups but no timeline. Re-fetch each summary once to
-    # populate events; ingest.espn_events writes the 'ingested:events' marker, so the
-    # set drains over a single cron cycle and never re-fetches a finished match.
+    # one-shot events backfill: FT matches that lack a current-version timeline.
+    # Re-fetch each summary once to (re)populate events; ingest.espn_events writes
+    # the 'ingested:events:v2' marker, so the set drains over a single cron cycle and
+    # never re-fetches again. The v2 bump re-ingests matches stored by the earlier
+    # parser that dropped technique-suffixed goals ('Goal - Header', etc.).
     backfill = conn.execute(
         """SELECT m.id, m.espn_event_id FROM matches m
            WHERE m.status='FT' AND m.espn_event_id IS NOT NULL
              AND EXISTS (SELECT 1 FROM meta
                          WHERE key = 'ingested:espn_summary:' || m.id)
              AND NOT EXISTS (SELECT 1 FROM meta
-                             WHERE key = 'ingested:events:' || m.id)"""
+                             WHERE key = 'ingested:events:v2:' || m.id)"""
     ).fetchall()
     for m in backfill:
         payload = espn.summary(conn, m["espn_event_id"])
@@ -80,17 +81,18 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_events(conn, m["id"], payload)
             report["events_backfilled"] = report.get("events_backfilled", 0) + 1
 
-    # shot map: FT matches summary-ingested but without shots yet. Heavier than the
-    # other passes (~5 core-feed pages each), so cap per cycle — the historical
-    # backlog drains over a few crons; new matches (<=2/day) clear at once. The
-    # 'ingested:shots' marker (set by espn_shots) makes it one-shot per match.
+    # shot map: FT matches that lack a current-version shot set. Heavier than the
+    # other passes (~5 core-feed pages each), so cap per cycle — the backlog drains
+    # over a few crons; new matches (<=2/day) clear at once. The 'ingested:shots:v2'
+    # marker (set by espn_shots) makes it one-shot; the v2 bump re-ingests matches
+    # whose goals the earlier exact-match parser dropped.
     shots_pending = conn.execute(
         """SELECT m.id, m.espn_event_id FROM matches m
            WHERE m.status='FT' AND m.espn_event_id IS NOT NULL
              AND EXISTS (SELECT 1 FROM meta
                          WHERE key = 'ingested:espn_summary:' || m.id)
              AND NOT EXISTS (SELECT 1 FROM meta
-                             WHERE key = 'ingested:shots:' || m.id)
+                             WHERE key = 'ingested:shots:v2:' || m.id)
            LIMIT 5"""
     ).fetchall()
     for m in shots_pending:
