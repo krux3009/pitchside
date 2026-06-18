@@ -3,14 +3,31 @@ import { Link } from "react-router-dom";
 import { useFactBar } from "../lib/factBar";
 import { useLang } from "../lib/i18n";
 
-const ICON = {
+const EMOJI = {
   goal: "⚽",
   "own-goal": "⚽",
   "penalty-goal": "⚽",
-  "yellow-card": "🟨",
-  "red-card": "🟥",
   substitution: "🔄",
 };
+
+// Bookings render as a small CSS card rather than an emoji — crisper, and it
+// reads as an actual yellow/red card at this size.
+function CardGlyph({ color }) {
+  return (
+    <span
+      style={{
+        display: "inline-block", width: 9, height: 12, borderRadius: 2,
+        background: color, boxShadow: "0 1px 2px rgba(0,0,0,0.45)", verticalAlign: "-1px",
+      }}
+    />
+  );
+}
+
+function EventIcon({ type }) {
+  if (type === "yellow-card") return <CardGlyph color="#f7c948" />;
+  if (type === "red-card") return <CardGlyph color="#e5484d" />;
+  return <span>{EMOJI[type] ?? "•"}</span>;
+}
 
 // A player name that links to the player page when we resolved a canonical id.
 function PlayerName({ id, name, bold }) {
@@ -34,18 +51,24 @@ function EventCell({ ev, align, t }) {
   const isGoal = ev.type === "goal" || ev.type === "own-goal" || ev.type === "penalty-goal";
   const isSub = ev.type === "substitution";
   return (
-    <div style={{ textAlign: align, fontSize: 14, lineHeight: 1.3 }}>
-      <span style={{ marginRight: align === "right" ? 0 : 6, marginLeft: align === "right" ? 6 : 0 }}>
-        {ICON[ev.type] ?? "•"}
-      </span>
-      <PlayerName id={ev.player_id} name={ev.player_name} bold />
-      {ev.type === "own-goal" && (
-        <span style={{ color: "var(--text-low)", fontSize: 12 }}> ({t("event.own-goal")})</span>
-      )}
-      {ev.type === "penalty-goal" && (
-        <span style={{ color: "var(--text-low)", fontSize: 12 }}> ({t("event.penalty-goal")})</span>
-      )}
-      <div style={{ fontSize: 12, color: "var(--text-low)" }}>
+    <div style={{ fontSize: 14, lineHeight: 1.3 }}>
+      {/* flex with a single gap keeps the icon-to-name spacing identical on both sides */}
+      <div style={{
+        display: "flex", gap: 6, alignItems: "center",
+        justifyContent: align === "right" ? "flex-end" : "flex-start",
+      }}>
+        <EventIcon type={ev.type} />
+        <span>
+          <PlayerName id={ev.player_id} name={ev.player_name} bold />
+          {ev.type === "own-goal" && (
+            <span style={{ color: "var(--text-low)", fontSize: 12 }}> ({t("event.own-goal")})</span>
+          )}
+          {ev.type === "penalty-goal" && (
+            <span style={{ color: "var(--text-low)", fontSize: 12 }}> ({t("event.penalty-goal")})</span>
+          )}
+        </span>
+      </div>
+      <div style={{ fontSize: 12, color: "var(--text-low)", textAlign: align }}>
         {isGoal && ev.assist_name && t("event.assist", { name: ev.assist_name })}
         {isSub && ev.assist_name && (
           <>
