@@ -359,8 +359,14 @@ def espn_shots(conn, match_id: int, plays: list) -> int:
     return len(rows)
 
 
-def espn_summary(conn, match_id: int, payload: dict):
-    """Ingest team stats, lineups, and per-player stats from a summary feed."""
+def espn_summary(conn, match_id: int, payload: dict, mark_done: bool = True):
+    """Ingest team stats, lineups, and per-player stats from a summary feed.
+
+    mark_done writes the one-shot 'ingested:espn_summary' marker that gates the
+    FT pass. A LIVE re-pull passes mark_done=False so the authoritative final
+    ingest still runs once the match ends — all writes are INSERT OR REPLACE, so
+    repeated live calls just overwrite with the latest snapshot.
+    """
     m = conn.execute("SELECT * FROM matches WHERE id=?", (match_id,)).fetchone()
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -434,10 +440,11 @@ def espn_summary(conn, match_id: int, payload: dict):
     # timed event log — after rosters so participant athletes resolve to player ids
     espn_events(conn, match_id, payload)
 
-    conn.execute(
-        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-        (f"ingested:espn_summary:{match_id}", now),
-    )
+    if mark_done:
+        conn.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+            (f"ingested:espn_summary:{match_id}", now),
+        )
     conn.commit()
 
 

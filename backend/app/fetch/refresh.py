@@ -62,6 +62,22 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_summary(conn, m["id"], payload)
             report["summaries"] += 1
 
+    # live matches: re-pull the summary every cycle for lineups (else the match
+    # page is stuck on the squad fallback once a game kicks off), plus live team/
+    # player stats and the running event timeline. mark_done=False keeps the FT
+    # pass's authoritative one-shot ingest intact. Deliberately NOT counted toward
+    # needs_model_pass — a live match is not a result; Elo/predictions must not
+    # replay on it. The briefing still refreshes via live_today below.
+    live = conn.execute(
+        "SELECT id, espn_event_id FROM matches"
+        " WHERE status='LIVE' AND espn_event_id IS NOT NULL"
+    ).fetchall()
+    for m in live:
+        payload = espn.summary(conn, m["espn_event_id"])
+        if payload:
+            ingest.espn_summary(conn, m["id"], payload, mark_done=False)
+            report["live_summaries"] = report.get("live_summaries", 0) + 1
+
     # one-shot events backfill: FT matches that lack a current-version timeline.
     # Re-fetch each summary once to (re)populate events; ingest.espn_events writes
     # the 'ingested:events:v2' marker, so the set drains over a single cron cycle and
@@ -129,11 +145,18 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
         report["sim_run"] = _store_sim(conn, probs, sim_iterations)
         backtest.run(conn)
 
-    # briefing regenerates daily and after any new result
+    # briefing regenerates daily, after any new result, and on every cycle while a
+    # match is in play — a LIVE score change doesn't trip needs_model_pass (no FT,
+    # no summary), so without this the home read model stays frozen at the pre-match
+    # card until the first final. Rebuild is read-only SQL, cheap in the cron loop.
+    live_today = conn.execute(
+        "SELECT 1 FROM matches WHERE status='LIVE' AND date(kickoff_utc)=?",
+        (today.isoformat(),),
+    ).fetchone()
     existing = conn.execute(
         "SELECT 1 FROM briefings WHERE briefing_date=?", (today.isoformat(),)
     ).fetchone()
-    if needs_model_pass or not existing:
+    if needs_model_pass or live_today or not existing:
         briefing.rebuild(conn, today.isoformat())
         report["briefing"] = today.isoformat()
 

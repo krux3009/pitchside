@@ -1,4 +1,5 @@
 """ESPN roster -> canonical squad-player reconciliation."""
+import json
 import shutil
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from app.fetch.ingest import (
     espn_events,
     espn_scoreboard,
     espn_shots,
+    espn_summary,
 )
 
 SEED = Path(__file__).resolve().parent.parent / "app" / "data" / "seed.db"
@@ -200,6 +202,44 @@ def test_espn_shots_parses_filters_and_resolves(events_db):
     assert conn.execute("SELECT 1 FROM meta WHERE key='ingested:shots:v2:1'").fetchone()
     assert espn_shots(conn, 1, plays) == 4
     assert conn.execute("SELECT COUNT(*) AS n FROM match_shots WHERE match_id=1").fetchone()["n"] == 4
+
+
+def test_live_summary_ingests_lineups_without_marking_done(events_db):
+    """A LIVE re-pull must populate lineups (so the match page leaves the squad
+    fallback) yet leave the one-shot FT marker unset, so the authoritative final
+    ingest still runs when the game ends."""
+    conn, mex, scorer, assister = events_db
+    payload = {"rosters": [{
+        "team": {"id": "202"}, "formation": "4-3-3",
+        "roster": [
+            {"athlete": {"id": "AA", "displayName": "Striker"}, "jersey": "9",
+             "starter": True, "position": {"abbreviation": "F"},
+             "formationPlace": "11", "stats": []},
+            {"athlete": {"id": "BB", "displayName": "Maker"}, "jersey": "10",
+             "starter": False, "position": {"abbreviation": "M"},
+             "formationPlace": "0", "stats": []},
+        ],
+    }]}
+
+    espn_summary(conn, 1, payload, mark_done=False)
+
+    lu = conn.execute(
+        "SELECT * FROM lineups WHERE match_id=1 AND team_id=?", (mex,)
+    ).fetchone()
+    assert lu["formation"] == "4-3-3"
+    starters = json.loads(lu["starters_json"])
+    assert [s["player_id"] for s in starters] == [scorer]
+    assert json.loads(lu["bench_json"])[0]["player_id"] == assister
+    # FT pass must still see this match as un-ingested
+    assert conn.execute(
+        "SELECT 1 FROM meta WHERE key='ingested:espn_summary:1'"
+    ).fetchone() is None
+
+    # the FT pass (default mark_done=True) writes the marker
+    espn_summary(conn, 1, payload)
+    assert conn.execute(
+        "SELECT 1 FROM meta WHERE key='ingested:espn_summary:1'"
+    ).fetchone()
 
 
 def test_goal_subtypes_classified_as_goals():
