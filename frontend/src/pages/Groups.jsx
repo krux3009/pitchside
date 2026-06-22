@@ -7,6 +7,15 @@ import { useApi } from "../lib/useApi";
 const COLUMNS = ["played", "won", "drawn", "lost", "gf", "ga", "gd", "pts"];
 const signed = (n) => (n > 0 ? `+${n}` : `${n}`);
 
+// Tolerate a CDN snapshot published before won/drawn/lost/ga existed: GA is
+// always derivable (gf - gd); w/d/l can't be, so show an en-dash until the
+// next republish carries them, rather than a blank cell that looks misaligned.
+const cell = (r, key) => {
+  if (key === "gd") return signed(r.gd);
+  if (key === "ga") return r.ga ?? r.gf - r.gd;
+  return r[key] ?? "–";
+};
+
 export default function Groups() {
   const { t } = useLang();
   const { data, loading, error } = useApi("/api/standings");
@@ -60,7 +69,7 @@ export default function Groups() {
                           ...(key === "pts" ? { fontWeight: 700 } : {}),
                         }}
                       >
-                        {key === "gd" ? signed(r.gd) : r[key]}
+                        {cell(r, key)}
                       </td>
                     ))}
                   </tr>
