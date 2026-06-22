@@ -6,6 +6,7 @@ import FactBar from "./FactBar";
 const links = [
   { to: "/", key: "nav.home", end: true },
   { to: "/matches", key: "nav.matches" },
+  { to: "/groups", key: "nav.groups" },
   { to: "/bracket", key: "nav.bracket" },
   { to: "/players", key: "nav.players" },
   { to: "/compare", key: "nav.compare" },

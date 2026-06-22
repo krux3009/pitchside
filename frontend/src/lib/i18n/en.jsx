@@ -6,6 +6,7 @@ export const EN = {
   // navigation + footer
   "nav.home": "Home",
   "nav.matches": "Matches",
+  "nav.groups": "Groups",
   "nav.bracket": "Bracket",
   "nav.players": "Players",
   "nav.compare": "Compare",
@@ -110,6 +111,21 @@ export const EN = {
   "players.col.team_goal_share": "Share",
   "players.col.minutes": "Min",
   "players.col.apps": "Apps",
+
+  // group standings
+  "groups.title": "Group Standings",
+  "groups.group": ({ letter }) => `Group ${letter}`,
+  "groups.qualify": "Top 2 advance",
+  "groups.empty": "No group matches have finished yet.",
+  "groups.pos": "#",
+  "groups.col.played": "P",
+  "groups.col.won": "W",
+  "groups.col.drawn": "D",
+  "groups.col.lost": "L",
+  "groups.col.gf": "GF",
+  "groups.col.ga": "GA",
+  "groups.col.gd": "GD",
+  "groups.col.pts": "Pts",
 
   // player detail
   "player.age": ({ n }) => `${n} yrs`,

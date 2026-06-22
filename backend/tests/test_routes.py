@@ -48,8 +48,13 @@ def test_standings_ranked(client):
     groups = client.get("/api/standings").json()
     assert len(groups) == 12
     table_a = groups[0]["table"]
-    assert table_a[0]["name"] == "Mexico"  # won their opener 2-0
-    assert table_a[0]["pts"] == 3
+    assert table_a[0]["name"] == "Mexico"  # tops group A in the seed
+    # full FIFA table fields reconcile on every row (invariants survive seed updates)
+    for g in groups:
+        for r in g["table"]:
+            assert r["won"] + r["drawn"] + r["lost"] == r["played"]
+            assert r["pts"] == r["won"] * 3 + r["drawn"]
+            assert r["gd"] == r["gf"] - r["ga"]
 
 
 def test_players_route_lists_full_squads(client):

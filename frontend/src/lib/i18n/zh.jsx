@@ -4,6 +4,7 @@ export const ZH = {
   // navigation + footer
   "nav.home": "主页",
   "nav.matches": "赛程",
+  "nav.groups": "小组",
   "nav.bracket": "淘汰赛",
   "nav.players": "球员",
   "nav.compare": "对比",
@@ -108,6 +109,21 @@ export const ZH = {
   "players.col.team_goal_share": "占比",
   "players.col.minutes": "分钟",
   "players.col.apps": "出场",
+
+  // 小组积分榜
+  "groups.title": "小组积分榜",
+  "groups.group": ({ letter }) => `${letter} 组`,
+  "groups.qualify": "前两名出线",
+  "groups.empty": "暂无已结束的小组赛。",
+  "groups.pos": "#",
+  "groups.col.played": "赛",
+  "groups.col.won": "胜",
+  "groups.col.drawn": "平",
+  "groups.col.lost": "负",
+  "groups.col.gf": "进",
+  "groups.col.ga": "失",
+  "groups.col.gd": "净",
+  "groups.col.pts": "分",
 
   // player detail
   "player.age": ({ n }) => `${n}岁`,
