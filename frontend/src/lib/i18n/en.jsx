@@ -133,6 +133,7 @@ export const EN = {
   "player.career.years": "Years",
   "player.career.starts": "Starts",
   "player.career.cs": "CS",
+  "player.career.present": "present",
   "player.careerNote": "Pre-tournament career via ESPN season totals (league and cup competitions where tracked). ESPN counts starts, not substitute appearances.",
 
   // bracket

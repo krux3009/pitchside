@@ -121,6 +121,11 @@ function CareerTable({ title, rows, localizeNames = false }) {
   const { t, tCountry } = useLang();
   if (!rows.length) return null;
   const hasCleanSheets = rows.some((c) => c.clean_sheets != null);
+  // ponytail: the side with the latest season is treated as still-active (these
+  // are current-tournament players) so its end year reads "present", not a year
+  // that looks like a departure. Upgrade to a real current-club flag if a player
+  // is ever between clubs at tournament time.
+  const latestYear = Math.max(...rows.map((c) => c.to_year));
   return (
     <>
       <h2 className="section-title">{title}</h2>
@@ -141,7 +146,11 @@ function CareerTable({ title, rows, localizeNames = false }) {
               <tr key={`${c.team_name}-${c.from_year}`}>
                 <td>{localizeNames ? tCountry(c.team_name) : c.team_name}</td>
                 <td className="num">
-                  {c.from_year === c.to_year ? c.from_year : `${c.from_year}–${c.to_year}`}
+                  {c.to_year === latestYear
+                    ? `${c.from_year}–${t("player.career.present")}`
+                    : c.from_year === c.to_year
+                      ? c.from_year
+                      : `${c.from_year}–${c.to_year}`}
                 </td>
                 <td className="num">{c.starts ?? "–"}</td>
                 <td className="num">{c.goals ?? "–"}</td>

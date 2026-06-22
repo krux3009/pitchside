@@ -131,6 +131,7 @@ export const ZH = {
   "player.career.years": "年份",
   "player.career.starts": "首发",
   "player.career.cs": "零封",
+  "player.career.present": "至今",
   "player.careerNote": "生涯数据来自 ESPN 赛季统计（覆盖有记录的联赛与杯赛）。ESPN 统计首发场次，不含替补出场。",
 
   // bracket
