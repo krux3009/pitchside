@@ -39,10 +39,20 @@ export default function Groups() {
         <section key={g.group}>
           <h2 className="section-title">{t("groups.group", { letter: g.group })}</h2>
           <div className="card" style={{ padding: 0, overflowX: "auto" }}>
-            <table className="stat-table">
+            {/* fixed layout + shared colgroup so all 12 tables share one grid —
+                otherwise each auto-sizes to its own team names and the numeric
+                columns don't line up vertically across groups */}
+            <table className="stat-table" style={{ tableLayout: "fixed", minWidth: 560 }}>
+              <colgroup>
+                <col style={{ width: 44 }} />
+                <col style={{ width: 200 }} />
+                {COLUMNS.map((key) => (
+                  <col key={key} style={{ width: 52 }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: 28 }}>{t("groups.pos")}</th>
+                  <th>{t("groups.pos")}</th>
                   <th>{t("players.team")}</th>
                   {COLUMNS.map((key) => (
                     <th key={key} className="num">{t("groups.col." + key)}</th>
