@@ -1,23 +1,22 @@
 import Disclaimer from "./Disclaimer";
+import ProbBar from "./ProbBar";
 import { useLang } from "../lib/i18n";
 import { teamColor } from "../lib/teamColors";
 
 const W = 320;
 const H = 140;
 
-// ESPN-style win-probability band: the home team's chance fills from the bottom,
-// the away team's from the top, and the gap between them is the draw probability.
-export default function Momentum({ points, homeCode, awayCode, homeName, awayName }) {
-  const { t } = useLang();
+// A single line tracing the home team's win probability over the match (0–100%),
+// against a 50% "even" reference. Draw and away odds aren't on the line — they're
+// in the readout bar above, which shows all three outcomes at the latest minute.
+export default function Momentum({ points, homeCode, awayCode }) {
+  const { t, tTeam } = useLang();
   if (!points || points.length < 2) return null;
 
   const x = (i) => (i / (points.length - 1)) * W;
-  const homeLine = points.map((p, i) => `${x(i)},${H * (1 - p.p_home)}`);
-  const awayLine = points.map((p, i) => `${x(i)},${H * p.p_away}`);
-
-  // close each line into a filled area against its own edge of the chart
-  const homeArea = `0,${H} ${homeLine.join(" ")} ${W},${H}`;
-  const awayArea = `0,0 ${awayLine.join(" ")} ${W},0`;
+  const line = points.map((p, i) => `${x(i)},${H * (1 - p.p_home)}`);
+  const lineStr = line.join(" ");
+  const fillArea = `${lineStr} ${W},${H} 0,${H}`; // close the line down to the baseline
 
   // a marker each time the scoreline changes (sampled, so to the nearest 5')
   const goals = [];
@@ -28,33 +27,43 @@ export default function Momentum({ points, homeCode, awayCode, homeName, awayNam
   }
 
   const hc = teamColor(homeCode);
-  const ac = teamColor(awayCode);
+  const last = points[points.length - 1];
   return (
     <>
       <h2 className="section-title">{t("momentum.title")}</h2>
       <div className="card">
-        <div style={styles.legend}>
-          <span><span style={{ ...styles.dot, background: hc }} /> {homeName}</span>
-          <span style={{ color: "var(--text-low)" }}>{t("momentum.higher")}</span>
-          <span>{awayName} <span style={{ ...styles.dot, background: ac }} /></span>
+        <div style={styles.readout}>
+          <span style={styles.nowLabel}>{last.minute}' · {t("momentum.now")}</span>
         </div>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none"
-             style={{ display: "block", borderRadius: 4 }}>
-          <polygon points={homeArea} fill={hc} fillOpacity="0.8" />
-          <polygon points={awayArea} fill={ac} fillOpacity="0.8" />
-          <line x1="0" y1={H / 2} x2={W} y2={H / 2}
-                stroke="var(--text-low)" strokeWidth="0.5" strokeDasharray="3 3" />
-          {goals.map((g, i) => (
-            <g key={i}>
-              <line x1={g.x} y1="0" x2={g.x} y2={H} stroke="#fff" strokeWidth="1" strokeOpacity="0.6" />
-              <circle cx={g.x} cy="8" r="3" fill="#fff" />
-            </g>
-          ))}
-        </svg>
+        <ProbBar pHome={last.p_home} pDraw={last.p_draw} pAway={last.p_away}
+                 homeCode={homeCode} awayCode={awayCode} />
+        <div style={styles.chartWrap}>
+          <span style={{ ...styles.yLabel, top: 0 }}>100%</span>
+          <span style={{ ...styles.yLabel, top: "50%", transform: "translateY(-50%)" }}>50%</span>
+          <span style={{ ...styles.yLabel, bottom: 0 }}>0%</span>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none"
+               style={{ display: "block", borderRadius: 4 }}>
+            <line x1="0" y1={H / 2} x2={W} y2={H / 2}
+                  stroke="var(--text-low)" strokeWidth="0.5" strokeDasharray="3 3" />
+            <polygon points={fillArea} fill={hc} fillOpacity="0.15" />
+            <polyline points={lineStr} fill="none" stroke={hc} strokeWidth="2"
+                      strokeLinejoin="round" strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke" />
+            {goals.map((g, i) => (
+              <g key={i}>
+                <line x1={g.x} y1="0" x2={g.x} y2={H} stroke="#fff" strokeWidth="1" strokeOpacity="0.6" />
+                <circle cx={g.x} cy="8" r="3" fill="#fff" />
+              </g>
+            ))}
+          </svg>
+        </div>
         <div style={styles.axis}>
           <span>0'</span><span>45'</span><span>90'</span>
         </div>
-        <p style={{ color: "var(--text-low)", fontSize: 12, margin: "8px 0 0" }}>
+        <p style={styles.caption}>
+          <span style={{ color: hc, fontWeight: 600 }}>{tTeam(homeCode)}</span> {t("momentum.lineLabel")} · {t("momentum.even")} = 50%
+        </p>
+        <p style={{ color: "var(--text-low)", fontSize: 12, margin: "4px 0 0" }}>
           {goals.length > 0 && <>⚽ {goals.map((g) => g.label).join(" · ")} · </>}
           {t("momentum.note")}
         </p>
@@ -65,13 +74,16 @@ export default function Momentum({ points, homeCode, awayCode, homeName, awayNam
 }
 
 const styles = {
-  legend: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    fontSize: 13, fontWeight: 600, marginBottom: 8,
+  readout: { display: "flex", justifyContent: "flex-end", marginBottom: 4 },
+  nowLabel: { fontSize: 11, fontWeight: 600, color: "var(--text-low)" },
+  chartWrap: { position: "relative", paddingLeft: 28, marginTop: 10 },
+  yLabel: {
+    position: "absolute", left: 0, width: 24, textAlign: "right",
+    fontSize: 10, color: "var(--text-low)", lineHeight: 1,
   },
-  dot: { display: "inline-block", width: 10, height: 10, borderRadius: 3, verticalAlign: "middle" },
   axis: {
     display: "flex", justifyContent: "space-between",
-    color: "var(--text-low)", fontSize: 11, marginTop: 4,
+    color: "var(--text-low)", fontSize: 11, marginTop: 4, paddingLeft: 28,
   },
+  caption: { color: "var(--text-mid)", fontSize: 12, margin: "8px 0 0" },
 };
