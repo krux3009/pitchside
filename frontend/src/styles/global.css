@@ -104,6 +104,9 @@ a.card:active { transform: translateY(-1px); }
   box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
 }
 
+/* ---- Calendar reminder button ---- */
+.cal-icon:hover { color: var(--gold); }
+
 /* ---- Page headline ---- */
 .page-title {
   font-family: var(--font-display);

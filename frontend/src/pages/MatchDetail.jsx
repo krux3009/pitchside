@@ -11,6 +11,7 @@ import StatCompareRow from "../components/StatCompareRow";
 import TeamBadge from "../components/TeamBadge";
 import { useFactBar } from "../lib/factBar";
 import { localKickoff } from "../lib/format";
+import { downloadMatchIcs } from "../lib/ics";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
@@ -58,6 +59,11 @@ export default function MatchDetail() {
           </span>
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
+        {!played && (
+          <button onClick={() => downloadMatchIcs(m, t)} style={styles.remindBtn} className="cal-icon">
+            🔔 {t("reminder.cta")}
+          </button>
+        )}
       </div>
 
       {m.prediction && !played && (
@@ -209,6 +215,17 @@ function PlayerLine({ p, dim = false }) {
 }
 
 const styles = {
+  remindBtn: {
+    marginTop: 16,
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 600,
+    background: "none",
+    border: "1px solid var(--gold)",
+    borderRadius: 999,
+    color: "var(--gold)",
+    cursor: "pointer",
+  },
   posLabel: {
     color: "var(--text-low)",
     fontSize: 11,
