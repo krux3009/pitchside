@@ -93,7 +93,6 @@ export default function MatchDetail() {
         <Momentum
           points={m.momentum}
           homeCode={m.home_code} awayCode={m.away_code}
-          homeName={m.home_name} awayName={m.away_name}
         />
       )}
 

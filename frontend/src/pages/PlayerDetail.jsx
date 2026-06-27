@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import Sparkline from "../components/Sparkline";
 import TeamBadge from "../components/TeamBadge";
+import { ageFromDob } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
@@ -45,7 +46,7 @@ export default function PlayerDetail() {
           <p style={{ color: "var(--text-mid)", margin: "4px 0 0" }}>
             <TeamBadge code={p.team_code} name={p.team_name} />{" "}
             · {p.position} {p.shirt_number ? `· #${p.shirt_number}` : ""}
-            {p.date_of_birth ? <> · {t("player.age", { n: age(p.date_of_birth) })}</> : ""}
+            {p.date_of_birth ? <> · {t("player.age", { n: ageFromDob(p.date_of_birth) })}</> : ""}
           </p>
         </div>
       </div>
@@ -163,11 +164,6 @@ function CareerTable({ title, rows, localizeNames = false }) {
       </div>
     </>
   );
-}
-
-function age(dob) {
-  const ms = Date.now() - new Date(dob).getTime();
-  return Math.floor(ms / (365.25 * 24 * 3600 * 1000));
 }
 
 const styles = {

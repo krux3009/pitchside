@@ -2,7 +2,7 @@ import { useFactBar } from "../lib/factBar";
 import { useLang } from "../lib/i18n";
 import { teamFlag } from "../lib/teamColors";
 
-export default function TeamBadge({ code, name, size = 20, showName = true }) {
+export default function TeamBadge({ code, name, size = 20 }) {
   const { tTeam } = useLang();
   const { showTeam, clear } = useFactBar();
   return (
@@ -12,7 +12,7 @@ export default function TeamBadge({ code, name, size = 20, showName = true }) {
       onMouseLeave={clear}
     >
       <span style={{ fontSize: size, lineHeight: 1 }}>{teamFlag(code)}</span>
-      {showName && <span>{tTeam(code, name)}</span>}
+      <span>{tTeam(code, name)}</span>
     </span>
   );
 }

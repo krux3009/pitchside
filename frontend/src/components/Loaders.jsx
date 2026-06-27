@@ -3,7 +3,7 @@ import { useLang } from "../lib/i18n";
 // Skeleton shell while data loads. The cold-start caption stays: Render's free
 // tier sleeps between matches, so the first request can take up to a minute and
 // users need that expectation set, not just a shimmer.
-export function ColdStartLoader({ label }) {
+export function ColdStartLoader() {
   const { t } = useLang();
   return (
     <div style={{ marginTop: 28 }}>
@@ -14,7 +14,7 @@ export function ColdStartLoader({ label }) {
         ))}
       </div>
       <div style={{ textAlign: "center", marginTop: 22 }} role="status">
-        <p style={{ color: "var(--text-mid)", margin: 0 }}>{label ?? t("loader.warming")}</p>
+        <p style={{ color: "var(--text-mid)", margin: 0 }}>{t("loader.warming")}</p>
         <p style={{ color: "var(--text-low)", fontSize: 12, marginTop: 4 }}>
           {t("loader.coldStart")}
         </p>

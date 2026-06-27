@@ -19,6 +19,7 @@ times and the test suite can construct scenarios directly.
 
 Match tuple: (home_id, away_id, home_goals, away_goals) — 90-minute scores.
 """
+from itertools import groupby
 
 
 def table_stats(team_ids: list, results: list) -> dict:
@@ -49,14 +50,7 @@ def _resolve_tied(tied: list, results: list, fair_play: dict, fifa_rank: dict) -
     key = lambda t: (-h2h[t]["pts"], -h2h[t]["gd"], -h2h[t]["gf"])
     ordered = sorted(tied, key=key)
     # split into clusters still tied on the head-to-head criteria
-    clusters, cluster = [], [ordered[0]]
-    for t in ordered[1:]:
-        if key(t) == key(cluster[0]):
-            cluster.append(t)
-        else:
-            clusters.append(cluster)
-            cluster = [t]
-    clusters.append(cluster)
+    clusters = [list(g) for _, g in groupby(ordered, key=key)]
 
     out = []
     for c in clusters:
@@ -83,11 +77,9 @@ def rank_group(
     key = lambda t: (-stats[t]["pts"], -stats[t]["gd"], -stats[t]["gf"])
     ordered = sorted(team_ids, key=key)
 
-    ranked, i = [], 0
-    while i < len(ordered):
-        tied = [t for t in ordered if key(t) == key(ordered[i])]
-        ranked.extend(_resolve_tied(tied, results, fair_play, fifa_rank))
-        i += len(tied)
+    ranked = []
+    for _, g in groupby(ordered, key=key):
+        ranked.extend(_resolve_tied(list(g), results, fair_play, fifa_rank))
     return ranked
 
 
