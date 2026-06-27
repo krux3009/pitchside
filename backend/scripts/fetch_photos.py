@@ -27,9 +27,6 @@ SEARCH_ALIASES = {
     "Curaçao": "Curacao",
     "Czech Republic": "Czech",
     "DR Congo": "Congo DR",
-    "Ivory Coast": "Ivory Coast",
-    "South Korea": "South Korea",
-    "USA": "USA",
 }
 
 

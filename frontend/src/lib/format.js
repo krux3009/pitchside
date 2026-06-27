@@ -28,3 +28,6 @@ export function localDateHeading(isoDate, locale) {
 }
 
 export const pct = (x) => (x == null ? "–" : Math.round(x * 100) + "%");
+
+export const ageFromDob = (dob) =>
+  Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 3600 * 1000));

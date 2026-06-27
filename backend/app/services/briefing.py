@@ -101,7 +101,7 @@ def _injury_flags(conn) -> list:
            WHERE i.reported_at >= datetime('now', '-1 day')
            ORDER BY i.reported_at DESC LIMIT 6"""
     ).fetchall()
-    return [dict(r) for r in rows]
+    return rows
 
 
 def rebuild(conn, for_date: str | None = None) -> dict:

@@ -3,6 +3,7 @@ import json
 from fastapi import APIRouter
 
 from .. import db
+from ..model import elo
 from ..model.poisson import load_params
 
 router = APIRouter()
@@ -25,7 +26,7 @@ def params():
         conn.close()
     return {
         "model": load_params(),
-        "elo": {"k_world_cup": 60, "home_bonus": 100, "seed_note":
+        "elo": {"k_world_cup": elo.K_WORLD_CUP, "home_bonus": elo.HOME_BONUS, "seed_note":
                 elo_note["value"] if elo_note else None},
         "backtest": json.loads(backtest["value"]) if backtest else None,
         "latest_sim": sim["value"] if sim else None,

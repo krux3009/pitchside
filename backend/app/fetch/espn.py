@@ -30,34 +30,26 @@ def _log(conn, endpoint: str, params: str, status: int):
     conn.commit()
 
 
-def scoreboard(conn, yyyymmdd: str) -> dict | None:
+def _get(conn, endpoint: str, label: str, params: dict | None = None) -> dict | None:
     try:
-        r = httpx.get(f"{BASE}/scoreboard", params={"dates": yyyymmdd}, timeout=TIMEOUT)
-        _log(conn, "scoreboard", yyyymmdd, r.status_code)
+        r = httpx.get(f"{BASE}/{endpoint}", params=params, timeout=TIMEOUT)
+        _log(conn, endpoint, label, r.status_code)
         r.raise_for_status()
         return r.json()
     except httpx.HTTPError:
         return None
+
+
+def scoreboard(conn, yyyymmdd: str) -> dict | None:
+    return _get(conn, "scoreboard", yyyymmdd, {"dates": yyyymmdd})
 
 
 def summary(conn, event_id: str) -> dict | None:
-    try:
-        r = httpx.get(f"{BASE}/summary", params={"event": event_id}, timeout=TIMEOUT)
-        _log(conn, "summary", event_id, r.status_code)
-        r.raise_for_status()
-        return r.json()
-    except httpx.HTTPError:
-        return None
+    return _get(conn, "summary", event_id, {"event": event_id})
 
 
 def injuries(conn) -> dict | None:
-    try:
-        r = httpx.get(f"{BASE}/injuries", timeout=TIMEOUT)
-        _log(conn, "injuries", "", r.status_code)
-        r.raise_for_status()
-        return r.json()
-    except httpx.HTTPError:
-        return None
+    return _get(conn, "injuries", "")
 
 
 def plays(conn, event_id: str) -> list | None:

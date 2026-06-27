@@ -124,33 +124,6 @@ a.card:active { transform: translateY(-1px); }
 }
 .mono-num { font-variant-numeric: tabular-nums; }
 
-/* ---- Pills (filters) ---- */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--line);
-  background: var(--bg-elevated);
-  font-family: inherit;
-  font-size: 12px;
-  color: var(--text-mid);
-  cursor: pointer;
-  user-select: none;
-  transition: color var(--t-fast), background var(--t-fast),
-    border-color var(--t-fast), transform var(--t-fast);
-}
-.pill:hover { color: var(--text-hi); border-color: var(--line-strong); }
-.pill:active { transform: scale(0.96); }
-.pill.active {
-  color: var(--bg-pitch);
-  background: var(--gold);
-  border-color: var(--gold);
-  font-weight: 600;
-}
-.pill.active:hover { color: var(--bg-pitch); }
-
 /* ---- Nav ---- */
 .site-nav {
   position: sticky;
@@ -423,7 +396,6 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
   .section-title { font-size: 14px; margin: 24px 0 10px; }
 
-  .pill { min-height: 36px; padding: 7px 13px; } /* bigger tap target */
   .select { padding: 10px 12px; font-size: 14px; } /* bigger tap target */
 
   .odds-row { grid-template-columns: 92px 1fr 42px; gap: 8px; }

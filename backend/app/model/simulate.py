@@ -107,7 +107,7 @@ def run(conn, n: int = 10_000, seed: int | None = None) -> dict:
         thirds_ranked = tiebreakers.rank_thirds(
             [t for t, _ in thirds], all_stats, fifa_rank=fifa_rank
         )
-        letter_of = dict((t, l) for t, l in thirds)
+        letter_of = dict(thirds)
         thirds_ranked = [(t, letter_of[t]) for t in thirds_ranked]
 
         r32_pairs = bracket.resolve_r32(group_ranks, thirds_ranked, r32_slots)

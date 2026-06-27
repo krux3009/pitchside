@@ -21,7 +21,6 @@
 
   --radius-card: 12px;
   --radius-sm: 7px;
-  --radius-pill: 999px;
 
   /* Tinted, layered depth: lit-from-above inset hairline + soft dark drop */
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset,

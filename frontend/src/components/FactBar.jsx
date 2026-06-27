@@ -1,4 +1,5 @@
 import { useFactBar } from "../lib/factBar";
+import { ageFromDob } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { teamFlag } from "../lib/teamColors";
 
@@ -49,7 +50,7 @@ function playerFact(t, tTeam, p) {
   return t("fact.player", {
     team: tTeam(p.team_code, p.team_name),
     posLabel: p.position ? t("posOne." + p.position) : null,
-    age: p.date_of_birth ? ageFrom(p.date_of_birth) : null,
+    age: p.date_of_birth ? ageFromDob(p.date_of_birth) : null,
     club,
     g: p.totals?.goals ?? 0,
     a: p.totals?.assists ?? 0,
@@ -58,7 +59,3 @@ function playerFact(t, tTeam, p) {
   });
 }
 
-function ageFrom(dob) {
-  const ms = Date.now() - new Date(dob).getTime();
-  return Math.floor(ms / (365.25 * 24 * 3600 * 1000));
-}
