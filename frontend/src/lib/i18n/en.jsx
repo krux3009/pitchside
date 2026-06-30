@@ -161,6 +161,8 @@ export const EN = {
   "bracket.title": "Knockout Bracket",
   "bracket.lead": ({ n }) => `Round of 32 through the final · champion odds from ${n} Monte Carlo simulations · `,
   "bracket.leadNoSim": "Round of 32 through the final · ",
+  "bracket.champion": "Champion",
+  "bracket.third": "3rd place",
   "bracket.caveat": "Slots show the FIFA seeding (group winner 1A, runner-up 2B, a best third 3rd) until results resolve them. The eight best third-placed teams are assigned by a deterministic rule that can differ from FIFA's published allocation in rare combinations. Percentages are each team's simulated chance of winning the tournament.",
 
   // compare

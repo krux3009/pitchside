@@ -73,6 +73,47 @@ function Node({ m, odds }) {
   );
 }
 
+// 'W101' -> 101; group/loser slots have no winner-feed.
+const feedId = (slot) => (slot && slot[0] === "W" ? Number(slot.slice(1)) : null);
+
+// Walk the W<n> feed graph from a subtree root, collecting matches per stage in
+// top->bottom (in-order) order so each round lines up with its two feeders.
+// NOTE: id order does NOT split into halves cleanly (match 76 is right-half
+// while 77 is left-half), so the tree must be built from the feeds.
+function collectSubtree(byId, rootId, acc = {}) {
+  const m = byId[rootId];
+  if (!m) return acc;
+  if (feedId(m.home.slot)) collectSubtree(byId, feedId(m.home.slot), acc);
+  if (feedId(m.away.slot)) collectSubtree(byId, feedId(m.away.slot), acc);
+  (acc[m.stage] ||= []).push(m);
+  return acc;
+}
+
+const LEFT_ORDER = ["R32", "R16", "QF", "SF"];
+
+function Half({ order, rounds, side, odds, t }) {
+  return (
+    <div className={`bkt-side bkt-${side}`}>
+      {order.map((stage) => {
+        const matches = rounds[stage] ?? [];
+        if (!matches.length) return null;
+        return (
+          <div key={stage} className="bkt-round">
+            <div className="bkt-colhead">{t(`stage.${stage}`)}</div>
+            <div className="bkt-col">
+              {matches.map((m) => (
+                <div key={m.id} className="bkt-match">
+                  <Node m={m} odds={odds} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Bracket() {
   const { t } = useLang();
   const { data, loading, error } = useApi("/api/bracket", { pollMs: 60_000 });
@@ -81,6 +122,17 @@ export default function Bracket() {
   if (error) return <ErrorState error={error} />;
 
   const odds = data.odds ?? {};
+  const all = data.rounds.flatMap((r) => r.matches);
+  const byId = Object.fromEntries(all.map((m) => [m.id, m]));
+  const final = all.find((m) => m.stage === "FINAL");
+  const third = all.find((m) => m.stage === "THIRD");
+
+  const left = final ? collectSubtree(byId, feedId(final.home.slot)) : {};
+  const right = final ? collectSubtree(byId, feedId(final.away.slot)) : {};
+  const champ = final?.winner_team_id
+    ? [final.home, final.away].find((s) => s.team_id === final.winner_team_id)
+    : null;
+
   return (
     <>
       <h1 className="page-title">{t("bracket.title")}</h1>
@@ -91,16 +143,37 @@ export default function Bracket() {
         <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
       </p>
 
-      <div style={styles.scroller}>
-        {data.rounds.map((round) => (
-          <div key={round.stage} style={styles.column}>
-            <h2 style={styles.roundTitle}>{t(`stage.${round.stage}`)}</h2>
-            {round.matches.map((m) => (
-              <Node key={m.id} m={m} odds={odds} />
-            ))}
+      <div className="bkt-scroll">
+        <div className="bkt">
+          <Half order={LEFT_ORDER} rounds={left} side="left" odds={odds} t={t} />
+
+          <div className="bkt-center">
+            <div className="bkt-colhead">{t("stage.FINAL")}</div>
+            <div className="bkt-center-mid">
+              {final && <Node m={final} odds={odds} />}
+            </div>
+            <div className="bkt-champ">
+              <div className="bkt-champ-label">{t("bracket.champion")}</div>
+              {champ ? (
+                <TeamBadge code={champ.code} name={champ.name} size={20} />
+              ) : (
+                <div className="bkt-champ-trophy" aria-hidden="true">🏆</div>
+              )}
+            </div>
           </div>
-        ))}
+
+          <Half order={[...LEFT_ORDER].reverse()} rounds={right} side="right" odds={odds} t={t} />
+        </div>
       </div>
+
+      {third && (
+        <div style={{ marginTop: 22, maxWidth: 340 }}>
+          <div className="bkt-colhead" style={{ textAlign: "left", marginBottom: 6 }}>
+            {t("bracket.third")}
+          </div>
+          <Node m={third} odds={odds} />
+        </div>
+      )}
 
       <div className="card" style={{ marginTop: 16 }}>
         <p style={{ color: "var(--text-low)", fontSize: 12, margin: 0 }}>
@@ -113,29 +186,6 @@ export default function Bracket() {
 }
 
 const styles = {
-  scroller: {
-    display: "flex",
-    gap: 14,
-    overflowX: "auto",
-    paddingBottom: 12,
-    WebkitOverflowScrolling: "touch",
-  },
-  column: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    minWidth: 196,
-    flex: "0 0 auto",
-  },
-  roundTitle: {
-    fontSize: 13,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    color: "var(--text-mid)",
-    margin: "4px 0 2px",
-    position: "sticky",
-    top: 0,
-  },
   node: {
     position: "relative",
     display: "flex",

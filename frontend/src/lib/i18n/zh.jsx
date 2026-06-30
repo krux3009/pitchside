@@ -159,6 +159,8 @@ export const ZH = {
   "bracket.title": "淘汰赛对阵图",
   "bracket.lead": ({ n }) => `32强直到决赛 · 夺冠概率来自 ${n} 次蒙特卡洛模拟 · `,
   "bracket.leadNoSim": "32强直到决赛 · ",
+  "bracket.champion": "冠军",
+  "bracket.third": "季军赛",
   "bracket.caveat": "在结果确定前，席位显示 FIFA 的种子规则（小组头名 1A、第二 2B、最佳第三 3rd）。八支最佳第三名球队由确定性规则分配，在少数组合下可能与 FIFA 公布的分配不同。百分比为各队模拟夺冠的概率。",
 
   // compare

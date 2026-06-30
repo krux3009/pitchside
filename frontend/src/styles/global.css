@@ -418,6 +418,72 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .stat-table tbody tr:hover td:first-child { background: var(--bg-elevated); }
 }
 
+/* ---- Knockout bracket (two-sided, feeds toward a centre champion) ---- */
+/* full-bleed out of the 1080px content column so a 9-column tree has room;
+   scrolls horizontally on viewports narrower than the bracket's min-width */
+.bkt-scroll {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 0 24px 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.bkt {
+  --bkt-gap: 20px;
+  display: flex;
+  align-items: stretch;
+  gap: var(--bkt-gap);
+  min-width: 1120px;
+  padding-top: 4px;
+}
+.bkt-side { display: flex; align-items: stretch; gap: var(--bkt-gap); flex: 1; }
+.bkt-round { display: flex; flex-direction: column; flex: 1; min-width: 124px; }
+.bkt-col { flex: 1; display: flex; flex-direction: column; }
+.bkt-match {
+  flex: 1 1 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.bkt-match > .card { width: 100%; }
+.bkt-colhead {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-low); text-align: center; margin-bottom: 8px; white-space: nowrap;
+}
+
+/* connectors: every match emits a horizontal stub spanning the full gap toward
+   the centre; the top match of each pair drops a vertical at the receiving
+   column's edge, where the next round's node centre meets it. */
+.bkt-match::after, .bkt-match::before { content: ""; position: absolute; background: var(--line-strong); }
+.bkt-left .bkt-match::after {
+  top: 50%; right: calc(var(--bkt-gap) * -1); width: var(--bkt-gap); height: 2px;
+}
+.bkt-left .bkt-col .bkt-match:nth-child(odd):not(:last-child)::before {
+  top: 50%; right: calc(var(--bkt-gap) * -1); width: 2px; height: 100%;
+}
+.bkt-right .bkt-match::after {
+  top: 50%; left: calc(var(--bkt-gap) * -1); width: var(--bkt-gap); height: 2px;
+}
+.bkt-right .bkt-col .bkt-match:nth-child(odd):not(:last-child)::before {
+  top: 50%; left: calc(var(--bkt-gap) * -1); width: 2px; height: 100%;
+}
+
+.bkt-center { position: relative; display: flex; flex-direction: column; min-width: 150px; }
+.bkt-center-mid { flex: 1; display: flex; align-items: center; justify-content: center; }
+.bkt-center-mid > .card { width: 100%; }
+.bkt-champ {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px; border: 1px solid var(--gold-dim); border-radius: var(--radius-card);
+  background: linear-gradient(180deg, rgba(255, 194, 51, 0.08), rgba(255, 194, 51, 0.02));
+}
+.bkt-champ-label {
+  font-family: var(--font-display); font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; font-size: 13px; color: var(--gold);
+}
+.bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
+
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
