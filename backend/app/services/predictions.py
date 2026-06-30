@@ -7,7 +7,7 @@ Called by the refresh orchestrator after results are ingested:
 import json
 from datetime import datetime, timezone
 
-from ..model import elo, poisson
+from ..model import bracket, elo, poisson, tiebreakers
 
 MODEL_VERSION = "elo-poisson-dc-1"
 
@@ -67,6 +67,83 @@ def replay_unapplied_results(conn) -> int:
         applied += 1
     conn.commit()
     return applied
+
+
+def resolve_knockout(conn) -> int:
+    """Persist resolved knockout teams into matches.home_team_id/away_team_id
+    once their feeders are decided. Idempotent — only NULL slots are written, so
+    re-running is a no-op. Returns the number of fixtures newly resolved.
+
+    R32 fills once the whole group stage is FT (deterministic bracket from the
+    final tables); R16+ fill from their W<n>/L<n> feeds as each match reaches FT.
+    Fair play is skipped, so ties fall through to the Elo-based FIFA-rank
+    fallback — the same documented approximation simulate.run uses.
+    """
+    matches = conn.execute("SELECT * FROM matches ORDER BY id").fetchall()
+    teams = conn.execute("SELECT * FROM teams").fetchall()
+    by_id = {m["id"]: m for m in matches}
+
+    # FIFA-rank fallback by Elo, mirroring simulate._load_state.
+    by_elo = sorted(teams, key=lambda t: -t["elo"])
+    fifa_rank = {
+        t["id"]: t["fifa_rank"] if t["fifa_rank"] is not None else 100 + i
+        for i, t in enumerate(by_elo)
+    }
+
+    pairs = {}  # match_id -> (home_id, away_id) to write, NULL rows only
+
+    # R32 from the final group tables (only once every group match is FT).
+    group = [m for m in matches if m["stage"] == "GROUP"]
+    if group and all(m["status"] == "FT" for m in group):
+        results = [(m["home_team_id"], m["away_team_id"],
+                    m["home_goals_90"], m["away_goals_90"]) for m in group]
+        group_teams = {}
+        for t in teams:
+            group_teams.setdefault(t["group_letter"], []).append(t["id"])
+        group_ranks, thirds, all_stats = {}, [], {}
+        for letter, ids in group_teams.items():
+            ranked = tiebreakers.rank_group(ids, results, fifa_rank=fifa_rank)
+            group_ranks[letter] = ranked
+            thirds.append((ranked[2], letter))
+            all_stats.update(tiebreakers.table_stats(ids, results))
+        letter_of = dict(thirds)
+        thirds_ranked = [
+            (t, letter_of[t]) for t in tiebreakers.rank_thirds(
+                [t for t, _ in thirds], all_stats, fifa_rank=fifa_rank)
+        ]
+        r32_slots = {m["id"]: (m["home_slot"], m["away_slot"])
+                     for m in matches if m["stage"] == "R32"}
+        for num, (h, a) in bracket.resolve_r32(
+                group_ranks, thirds_ranked, r32_slots).items():
+            if by_id[num]["home_team_id"] is None:
+                pairs[num] = (h, a)
+
+    # R16+ feeds: W<n>/L<n>, resolvable once match n is FT.
+    winners, losers = {}, {}
+    for m in matches:
+        if m["stage"] != "GROUP" and m["status"] == "FT" and m["winner_team_id"]:
+            w = m["winner_team_id"]
+            winners[m["id"]] = w
+            losers[m["id"]] = (m["away_team_id"] if w == m["home_team_id"]
+                               else m["home_team_id"])
+
+    def feed(slot):
+        table = winners if slot[0] == "W" else losers
+        return table.get(int(slot[1:]))
+
+    for m in matches:
+        if m["stage"] in ("GROUP", "R32") or m["home_team_id"] is not None:
+            continue
+        h, a = feed(m["home_slot"]), feed(m["away_slot"])
+        if h is not None and a is not None:
+            pairs[m["id"]] = (h, a)
+
+    for mid, (h, a) in pairs.items():
+        conn.execute(
+            "UPDATE matches SET home_team_id=?, away_team_id=? WHERE id=?", (h, a, mid)
+        )
+    conn.commit()
+    return len(pairs)
 
 
 def recompute_predictions(conn) -> int:

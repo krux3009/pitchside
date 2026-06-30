@@ -133,7 +133,16 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             )
             conn.commit()
 
-    needs_model_pass = bool(newly_finished or report["summaries"])
+    # Fill knockout team ids whenever feeders are decided (group stage complete,
+    # or a knockout reached FT). Cheap + idempotent, so run every cycle: the group
+    # stage may have finished in an earlier cycle that had no new result THIS one,
+    # leaving an unresolved R32 backlog the model pass must still pick up. Folded
+    # into needs_model_pass so a fresh resolution triggers predictions + sim.
+    report["knockout_resolved"] = predictions.resolve_knockout(conn)
+
+    needs_model_pass = bool(
+        newly_finished or report["summaries"] or report["knockout_resolved"]
+    )
     no_sim_yet = conn.execute(
         "SELECT 1 FROM meta WHERE key='latest_sim_run_id'"
     ).fetchone() is None
