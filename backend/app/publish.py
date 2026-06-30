@@ -69,9 +69,17 @@ def snapshot(published_at: str) -> dict[str, bytes]:
     for m in match_list:
         files[f"matches/{m['id']}.json"] = _dumps(_detail(matches.match_detail, m["id"]))
 
-    # CORS for the data dir (replaces the workflow's .htaccess step) and a freshness
-    # beacon the frontend reads to show "updated HH:MM".
-    files[".htaccess"] = b'Header set Access-Control-Allow-Origin "*"\n'
+    # CORS + a short cache window for the data dir (replaces the workflow's
+    # .htaccess step): max-age=60 + must-revalidate so a publish reaches browsers
+    # within a minute, while the existing ETag/Last-Modified make revalidation a
+    # cheap 304. Without this, Hostinger sends no Cache-Control and browsers
+    # heuristic-cache the JSON, showing stale data long after a publish.
+    files[".htaccess"] = (
+        b'Header set Access-Control-Allow-Origin "*"\n'
+        b'<FilesMatch "\\.json$">\n'
+        b'Header set Cache-Control "public, max-age=60, must-revalidate"\n'
+        b"</FilesMatch>\n"
+    )
     files["status.json"] = _dumps(
         {"published_at": published_at,
          "matches": len(match_list), "players": len(player_list)}
