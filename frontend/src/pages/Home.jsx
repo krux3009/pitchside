@@ -73,15 +73,21 @@ export default function Home() {
           <div className="card">
             {b.yesterday.map((m) => (
               <div key={m.match_id} style={styles.resultRow}>
-                <Link to={`/matches/${m.match_id}`} style={{ fontWeight: 600 }}>
-                  <TeamBadge code={m.home_code} name={m.home} />{" "}
-                  <span className="score">{m.score[0]} – {m.score[1]}</span>{" "}
-                  {m.pens && (
-                    <span style={{ color: "var(--text-mid)", fontSize: 12 }}>
-                      {t("match.pensShort", { h: m.pens[0], a: m.pens[1] })}{" "}
-                    </span>
-                  )}
-                  <TeamBadge code={m.away_code} name={m.away} />
+                <Link to={`/matches/${m.match_id}`} style={styles.resultLine}>
+                  <span style={styles.resultHome}>
+                    <TeamBadge code={m.home_code} name={m.home} />
+                  </span>
+                  <span className="score" style={styles.resultScore}>
+                    {m.score[0]} – {m.score[1]}
+                    {m.pens && (
+                      <span style={styles.resultPens}>
+                        {t("match.pensShort", { h: m.pens[0], a: m.pens[1] })}
+                      </span>
+                    )}
+                  </span>
+                  <span>
+                    <TeamBadge code={m.away_code} name={m.away} />
+                  </span>
                 </Link>
                 {(m.upset || m.upset_note) && (
                   <div style={styles.upset}>{upsetLine(m)}</div>
@@ -242,6 +248,16 @@ function HeroMatch({ m }) {
 
 const styles = {
   resultRow: { padding: "8px 0", borderBottom: "1px solid var(--line)" },
+  resultLine: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: 12,
+    fontWeight: 600,
+  },
+  resultHome: { display: "flex", justifyContent: "flex-end", textAlign: "right" },
+  resultScore: { fontSize: 18, lineHeight: 1.1, textAlign: "center", minWidth: 44 },
+  resultPens: { display: "block", fontSize: 11, color: "var(--text-mid)", fontWeight: 500 },
   upset: {
     color: "var(--gold)", fontSize: 13, marginTop: 4,
     borderLeft: "3px solid var(--gold)", paddingLeft: 8,
