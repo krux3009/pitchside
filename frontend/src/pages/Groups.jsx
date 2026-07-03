@@ -5,6 +5,8 @@ import { useApi } from "../lib/useApi";
 
 // Order is the official 2026 table from the API — never re-sort it client-side.
 const COLUMNS = ["played", "won", "drawn", "lost", "gf", "ga", "gd", "pts"];
+// phones keep the essentials (P / GD / Pts); the rest hide via .col-wide
+const WIDE = new Set(["won", "drawn", "lost", "gf", "ga"]);
 const signed = (n) => (n > 0 ? `+${n}` : `${n}`);
 
 // Tolerate a CDN snapshot published before won/drawn/lost/ga existed: GA is
@@ -42,12 +44,12 @@ export default function Groups() {
             {/* fixed layout + shared colgroup so all 12 tables share one grid —
                 otherwise each auto-sizes to its own team names and the numeric
                 columns don't line up vertically across groups */}
-            <table className="stat-table" style={{ tableLayout: "fixed", minWidth: 560 }}>
+            <table className="stat-table groups-table" style={{ tableLayout: "fixed" }}>
               <colgroup>
-                <col style={{ width: 44 }} />
-                <col style={{ width: 200 }} />
+                <col className="gcol-pos" />
+                <col className="gcol-team" />
                 {COLUMNS.map((key) => (
-                  <col key={key} style={{ width: 52 }} />
+                  <col key={key} className={`gcol-num${WIDE.has(key) ? " col-wide" : ""}`} />
                 ))}
               </colgroup>
               <thead>
@@ -55,16 +57,19 @@ export default function Groups() {
                   <th>{t("groups.pos")}</th>
                   <th>{t("players.team")}</th>
                   {COLUMNS.map((key) => (
-                    <th key={key} className="num">{t("groups.col." + key)}</th>
+                    <th key={key} className={`num${WIDE.has(key) ? " col-wide" : ""}`}>
+                      {t("groups.col." + key)}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {g.table.map((r) => (
-                  // rank<=2 auto-advance: faint tint, with a gold cut line under 2nd
+                  // rank<=2 auto-advance: faint tint + grass "advancing" strip,
+                  // with a gold cut line under 2nd
                   <tr
                     key={r.team_id}
-                    style={r.rank <= 2 ? styles.qualifyRow : undefined}
+                    className={r.rank <= 2 ? "qualify-row" : undefined}
                   >
                     <td style={r.rank === 2 ? styles.cutCell : undefined}>{r.rank}</td>
                     <td style={r.rank === 2 ? styles.cutCell : undefined}>
@@ -73,7 +78,7 @@ export default function Groups() {
                     {COLUMNS.map((key) => (
                       <td
                         key={key}
-                        className="num"
+                        className={`num${WIDE.has(key) ? " col-wide" : ""}`}
                         style={{
                           ...(r.rank === 2 ? styles.cutCell : {}),
                           ...(key === "pts" ? { fontWeight: 700 } : {}),
@@ -93,10 +98,7 @@ export default function Groups() {
   );
 }
 
-const QUALIFY_TINT = "color-mix(in srgb, var(--gold) 8%, transparent)";
-
 const styles = {
-  qualifyRow: { background: QUALIFY_TINT },
   cutCell: { borderBottom: "2px solid var(--gold)" },
   cut: {
     display: "inline-block",

@@ -515,6 +515,23 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
 
+/* ---- Group tables ---- */
+/* fixed shared widths so all 12 group tables align vertically */
+.groups-table { min-width: 560px; }
+.gcol-pos { width: 44px; }
+.gcol-team { width: 200px; }
+.gcol-num { width: 52px; }
+.qualify-row { background: color-mix(in srgb, var(--gold) 8%, transparent); }
+.qualify-row td:first-child { box-shadow: inset 3px 0 0 var(--grass); }
+@media (max-width: 560px) {
+  /* essentials only — no horizontal scroll at any width */
+  .col-wide { display: none; }
+  .groups-table { min-width: 0; }
+  .gcol-pos { width: 34px; }
+  .gcol-team { width: auto; }
+  .gcol-num { width: 44px; }
+}
+
 /* ---- Bracket round-pager (phone/tablet) ---- */
 .bkt-pager { display: none; }
 .bkt-tabs {
