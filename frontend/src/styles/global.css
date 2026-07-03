@@ -83,6 +83,29 @@ a.card:hover {
 }
 a.card:active { transform: translateY(-1px); }
 
+/* ---- Matchday hero (Home): floodlit broadcast scoreboard ---- */
+.hero-card {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  margin-top: 18px;
+  padding: 24px 20px 20px;
+  background:
+    radial-gradient(700px 300px at 50% -40%, rgba(255, 194, 51, 0.10), transparent 65%),
+    linear-gradient(180deg, var(--bg-surface), color-mix(in srgb, var(--grass-deep) 28%, var(--bg-surface)));
+}
+/* faint halfway line + centre circle, like looking down on the pitch */
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 1px), #fff calc(50% - 1px), #fff calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 50%, transparent 72px, #fff 72px, #fff 74px, transparent 74px);
+}
+
 /* An in-play match card reads "on air" */
 .card--live {
   border-color: color-mix(in srgb, var(--live) 40%, var(--line));
@@ -233,7 +256,7 @@ a.card:active { transform: translateY(-1px); }
 /* ---- Odds row (Home title race) ---- */
 .odds-row {
   display: grid;
-  grid-template-columns: 180px 1fr 52px;
+  grid-template-columns: minmax(110px, 180px) 1fr 52px;
   align-items: center;
   gap: 10px;
   padding: 5px 0;
@@ -405,7 +428,8 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
   .select { padding: 10px 12px; font-size: 14px; } /* bigger tap target */
 
-  .odds-row { grid-template-columns: 92px 1fr 42px; gap: 8px; }
+  .odds-row { grid-template-columns: minmax(96px, 130px) 1fr 42px; gap: 8px; }
+  .hero-card { padding: 18px 14px 16px; }
 
   .score-team { font-size: 15px; }
   .big-score { font-size: 30px; }

@@ -43,6 +43,7 @@ export const EN = {
   "match.live": "LIVE",
   "match.ft": "FT",
   "match.fullTime": "Full time",
+  "hero.countdown": ({ h, m }) => (h > 0 ? `Kicks off in ${h}h ${m}m` : `Kicks off in ${m}m`),
   "match.pens": ({ h, a }) => `${h}–${a} on penalties`,
   "match.pensShort": ({ h, a }) => `(${h}–${a} p)`,
   "match.aet": "AET",
