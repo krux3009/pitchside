@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 
+import DashLine from "../components/DashLine";
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchTimeline from "../components/MatchTimeline";
@@ -59,9 +60,12 @@ export default function MatchDetail() {
         </p>
         <div className="score-row">
           <span className="score-team"><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
-          <span className="score big-score">
-            {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
-          </span>
+          {played ? (
+            <DashLine className="score big-score"
+                      left={m.home_goals} right={m.away_goals} />
+          ) : (
+            <span className="score big-score">{t("compare.vs")}</span>
+          )}
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
         {played && m.home_pens != null && m.away_pens != null && (
@@ -76,9 +80,9 @@ export default function MatchDetail() {
           </p>
         )}
         {homeStats?.xg != null && awayStats?.xg != null && (
-          <p style={{ color: "var(--text-low)", fontSize: 13, margin: "6px 0 0", position: "relative" }}>
-            {t("match.xgLine", { h: homeStats.xg, a: awayStats.xg })}
-          </p>
+          <div style={{ color: "var(--text-low)", fontSize: 13, margin: "6px 0 0", position: "relative" }}>
+            <DashLine left={`xG ${homeStats.xg}`} right={awayStats.xg} />
+          </div>
         )}
         {!played && (
           <button onClick={() => downloadMatchIcs(m, t)} style={styles.remindBtn} className="cal-icon">

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import DashLine from "./DashLine";
 import { localKickoff } from "../lib/format";
 import { downloadMatchIcs } from "../lib/ics";
 import { useLang } from "../lib/i18n";
@@ -38,9 +39,12 @@ export default function MatchCard({ m }) {
       </div>
       <div style={styles.row}>
         <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} />
-        <span className="score" style={styles.score}>
-          {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
-        </span>
+        {played ? (
+          <DashLine className="score" style={styles.score}
+                    left={m.home_goals} right={m.away_goals} />
+        ) : (
+          <span className="score" style={styles.score}>{t("compare.vs")}</span>
+        )}
         <span style={{ textAlign: "right" }}>
           <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} />
         </span>
@@ -53,7 +57,7 @@ export default function MatchCard({ m }) {
             <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
           )}
           {m.home_xg != null && m.away_xg != null && (
-            <div>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</div>
+            <DashLine left={`xG ${m.home_xg}`} right={m.away_xg} />
           )}
         </div>
       )}

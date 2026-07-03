@@ -54,7 +54,6 @@ export const ZH = {
   "match.pens": ({ h, a }) => `点球大战 ${h}–${a}`,
   "match.pensShort": ({ h, a }) => `(点球 ${h}–${a})`,
   "match.aet": "加时赛后",
-  "match.xgLine": ({ h, a }) => `xG ${h} – ${a}`,
   "match.prediction": "模型预测",
   "match.likelyScore": "最可能比分：",
   "match.how": "模型原理",

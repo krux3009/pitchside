@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import DashLine from "../components/DashLine";
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
@@ -109,9 +110,8 @@ export default function Home() {
                   <span style={styles.resultHome}>
                     <TeamBadge code={m.home_code} name={m.home_name} />
                   </span>
-                  <span className="score" style={styles.resultScore}>
-                    {m.home_goals} – {m.away_goals}
-                  </span>
+                  <DashLine className="score" style={styles.resultScore}
+                            left={m.home_goals} right={m.away_goals} />
                   <span>
                     <TeamBadge code={m.away_code} name={m.away_name} />
                   </span>
@@ -122,7 +122,7 @@ export default function Home() {
                       <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
                     )}
                     {m.home_xg != null && m.away_xg != null && (
-                      <div>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</div>
+                      <DashLine left={`xG ${m.home_xg}`} right={m.away_xg} />
                     )}
                   </div>
                 )}
@@ -248,9 +248,12 @@ function HeroMatch({ m }) {
         <span style={styles.heroTeam}>
           <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} />
         </span>
-        <span className="score" style={styles.heroScore}>
-          {played ? `${m.home_goals ?? 0} – ${m.away_goals ?? 0}` : "vs"}
-        </span>
+        {played ? (
+          <DashLine className="score" style={styles.heroScore}
+                    left={m.home_goals ?? 0} right={m.away_goals ?? 0} />
+        ) : (
+          <span className="score" style={styles.heroScore}>vs</span>
+        )}
         <span style={{ ...styles.heroTeam, justifyContent: "flex-end" }}>
           <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} />
         </span>
@@ -259,7 +262,9 @@ function HeroMatch({ m }) {
         <p style={styles.heroPens}>{t("match.pens", { h: m.home_pens, a: m.away_pens })}</p>
       )}
       {played && m.home_xg != null && m.away_xg != null && (
-        <p style={styles.heroXg}>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</p>
+        <div style={styles.heroXg}>
+          <DashLine left={`xG ${m.home_xg}`} right={m.away_xg} />
+        </div>
       )}
       {!played && (
         <p style={styles.heroCountdown}>
