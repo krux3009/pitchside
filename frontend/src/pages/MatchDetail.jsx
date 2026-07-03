@@ -69,9 +69,10 @@ export default function MatchDetail() {
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
         {played && m.home_pens != null && m.away_pens != null && (
-          <p style={{ color: "var(--gold)", fontSize: 14, fontWeight: 600, margin: "4px 0 0" }}>
-            {t("match.pens", { h: m.home_pens, a: m.away_pens })}
-          </p>
+          <div style={{ color: "var(--gold)", fontSize: 14, fontWeight: 600, margin: "4px 0 0", position: "relative" }}>
+            <DashLine left={t("match.pensL", { h: m.home_pens })}
+                      right={t("match.pensR", { a: m.away_pens })} />
+          </div>
         )}
         {played && m.home_pens == null && m.home_goals_90 != null &&
           (m.home_goals !== m.home_goals_90 || m.away_goals !== m.away_goals_90) && (

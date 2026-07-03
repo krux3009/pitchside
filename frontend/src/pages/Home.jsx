@@ -119,7 +119,8 @@ export default function Home() {
                 {(m.home_pens != null || m.home_xg != null) && (
                   <div style={styles.resultSubs}>
                     {m.home_pens != null && m.away_pens != null && (
-                      <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
+                      <DashLine left={t("match.pensL", { h: m.home_pens })}
+                                right={t("match.pensR", { a: m.away_pens })} />
                     )}
                     {m.home_xg != null && m.away_xg != null && (
                       <DashLine left={`xG ${m.home_xg}`} right={m.away_xg} />
@@ -259,7 +260,10 @@ function HeroMatch({ m }) {
         </span>
       </div>
       {played && m.home_pens != null && m.away_pens != null && (
-        <p style={styles.heroPens}>{t("match.pens", { h: m.home_pens, a: m.away_pens })}</p>
+        <div style={styles.heroPens}>
+          <DashLine left={t("match.pensL", { h: m.home_pens })}
+                    right={t("match.pensR", { a: m.away_pens })} />
+        </div>
       )}
       {played && m.home_xg != null && m.away_xg != null && (
         <div style={styles.heroXg}>

@@ -53,6 +53,8 @@ export const ZH = {
   "meth.tile.baseline": ({ v }) => `均匀基线 ${v}`,
   "match.pens": ({ h, a }) => `点球大战 ${h}–${a}`,
   "match.pensShort": ({ h, a }) => `(点球 ${h}–${a})`,
+  "match.pensL": ({ h }) => `(点球 ${h}`,
+  "match.pensR": ({ a }) => `${a})`,
   "match.aet": "加时赛后",
   "match.prediction": "模型预测",
   "match.likelyScore": "最可能比分：",

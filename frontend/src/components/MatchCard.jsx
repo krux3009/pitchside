@@ -54,7 +54,8 @@ export default function MatchCard({ m }) {
       {played && (m.home_pens != null || m.home_xg != null) && (
         <div style={styles.scoreSubs}>
           {m.home_pens != null && m.away_pens != null && (
-            <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
+            <DashLine left={t("match.pensL", { h: m.home_pens })}
+                      right={t("match.pensR", { a: m.away_pens })} />
           )}
           {m.home_xg != null && m.away_xg != null && (
             <DashLine left={`xG ${m.home_xg}`} right={m.away_xg} />

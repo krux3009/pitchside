@@ -55,6 +55,8 @@ export const EN = {
   "meth.tile.baseline": ({ v }) => `uniform baseline ${v}`,
   "match.pens": ({ h, a }) => `${h}–${a} on penalties`,
   "match.pensShort": ({ h, a }) => `(${h}–${a} p)`,
+  "match.pensL": ({ h }) => `(${h}`,
+  "match.pensR": ({ a }) => `${a} p)`,
   "match.aet": "AET",
   "match.prediction": "Model Prediction",
   "match.likelyScore": "Most likely score:",
