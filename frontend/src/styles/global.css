@@ -468,26 +468,33 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   .stat-table tbody tr:hover td:first-child { background: var(--bg-elevated); }
 }
 
-/* ---- Knockout bracket (two-sided, feeds toward a centre champion) ---- */
-/* full-bleed out of the 1080px content column so a 9-column tree has room;
-   scrolls horizontally on viewports narrower than the bracket's min-width */
+/* ---- Knockout bracket ----
+   Three tiers: ≥1560px the classic two-sided tree (nine columns need that
+   much room to breathe); 901–1559px the draw splits into its two halves,
+   each a roomy four-column tree with the final as a centre band; ≤900px
+   the round-pager. */
 .bkt-scroll {
+  display: none;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   padding: 0 24px 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+@media (min-width: 1560px) {
+  .bkt-scroll { display: block; }
+  .bkt-stack { display: none; }
+}
 .bkt {
   --bkt-gap: 20px;
   display: flex;
   align-items: stretch;
   gap: var(--bkt-gap);
-  min-width: 1120px;
+  min-width: 1500px;
   padding-top: 4px;
 }
 .bkt-side { display: flex; align-items: stretch; gap: var(--bkt-gap); flex: 1; }
-.bkt-round { display: flex; flex-direction: column; flex: 1; min-width: 124px; }
+.bkt-round { display: flex; flex-direction: column; flex: 1; min-width: 150px; }
 .bkt-col { flex: 1; display: flex; flex-direction: column; }
 .bkt-match {
   flex: 1 1 0;
@@ -533,6 +540,50 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   text-transform: uppercase; font-size: 13px; color: var(--gold);
 }
 .bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
+.bkt-champ--static { position: static; }
+
+/* ---- Stacked halves (regular desktop) ---- */
+.bkt-stack { --bkt-gap: 20px; padding-top: 4px; }
+.bkt-stack .bkt-round { min-width: 0; }
+/* a half's SF column feeds the final band below, not a neighbouring column */
+.bkt-stack .bkt-round:last-child .bkt-match::after { display: none; }
+.bkt-half-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 18px 0 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.bkt-half-head::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--gold);
+  box-shadow: var(--glow-gold);
+}
+.bkt-final-band {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--bkt-gap);
+  max-width: 720px;
+  margin: 26px auto 6px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.bkt-final-band__match { flex: 1; max-width: 340px; }
+.bkt-final-band .bkt-champ--static { flex: 1; max-width: 250px; justify-content: center; }
+
+@media (max-width: 900px) {
+  .bkt-stack { display: none; }
+}
 
 /* ---- ShotMap timeline scrubber ---- */
 input.scrub {

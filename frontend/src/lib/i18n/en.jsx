@@ -48,6 +48,8 @@ export const EN = {
   "event.ht": "Half-time",
   "event.et": "Extra time",
   "compare.vs": "VS",
+  "bracket.topHalf": "Top half of the draw",
+  "bracket.bottomHalf": "Bottom half of the draw",
   "meth.tile.brier": "Brier score",
   "meth.tile.logloss": "Log loss",
   "meth.tile.baseline": ({ v }) => `uniform baseline ${v}`,

@@ -46,6 +46,8 @@ export const ZH = {
   "event.ht": "中场休息",
   "event.et": "加时赛",
   "compare.vs": "VS",
+  "bracket.topHalf": "上半区",
+  "bracket.bottomHalf": "下半区",
   "meth.tile.brier": "Brier 分数",
   "meth.tile.logloss": "对数损失",
   "meth.tile.baseline": ({ v }) => `均匀基线 ${v}`,

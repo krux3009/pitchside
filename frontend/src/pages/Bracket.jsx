@@ -118,6 +118,19 @@ function Half({ order, rounds, side, odds, t }) {
 
 const PAGER_STAGES = ["R32", "R16", "QF", "SF", "FINAL"];
 
+function ChampPanel({ champ, t, className = "bkt-champ" }) {
+  return (
+    <div className={className}>
+      <div className="bkt-champ-label">{t("bracket.champion")}</div>
+      {champ ? (
+        <TeamBadge code={champ.code} name={champ.name} size={20} />
+      ) : (
+        <div className="bkt-champ-trophy" aria-hidden="true">🏆</div>
+      )}
+    </div>
+  );
+}
+
 export default function Bracket() {
   const { t } = useLang();
   const { data, loading, error } = useApi("/api/bracket", { pollMs: 60_000 });
@@ -154,6 +167,7 @@ export default function Bracket() {
         <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
       </p>
 
+      {/* ultra-wide: the classic two-sided tree, columns at full width */}
       <div className="bkt-scroll">
         <div className="bkt">
           <Half order={LEFT_ORDER} rounds={left} side="left" odds={odds} t={t} />
@@ -163,21 +177,33 @@ export default function Bracket() {
             <div className="bkt-center-mid">
               {final && <Node m={final} odds={odds} />}
             </div>
-            <div className="bkt-champ">
-              <div className="bkt-champ-label">{t("bracket.champion")}</div>
-              {champ ? (
-                <TeamBadge code={champ.code} name={champ.name} size={20} />
-              ) : (
-                <div className="bkt-champ-trophy" aria-hidden="true">🏆</div>
-              )}
-            </div>
+            <ChampPanel champ={champ} t={t} />
           </div>
 
           <Half order={[...LEFT_ORDER].reverse()} rounds={right} side="right" odds={odds} t={t} />
         </div>
       </div>
 
-      {/* phone: one round at a time instead of panning a 1120px canvas */}
+      {/* regular desktop: the draw split into its two halves, each a roomy
+          4-column tree, with the final as a centre band between them —
+          nine abreast never fits under ~1560px without squeezing */}
+      <div className="bkt-stack">
+        <div className="bkt-half-head">{t("bracket.topHalf")}</div>
+        <Half order={LEFT_ORDER} rounds={left} side="left" odds={odds} t={t} />
+
+        <div className="bkt-final-band">
+          <div className="bkt-final-band__match">
+            <div className="bkt-colhead">{t("stage.FINAL")}</div>
+            {final && <Node m={final} odds={odds} />}
+          </div>
+          <ChampPanel champ={champ} t={t} className="bkt-champ bkt-champ--static" />
+        </div>
+
+        <div className="bkt-half-head">{t("bracket.bottomHalf")}</div>
+        <Half order={LEFT_ORDER} rounds={right} side="left" odds={odds} t={t} />
+      </div>
+
+      {/* phone: one round at a time instead of panning a wide canvas */}
       <div className="bkt-pager">
         <div className="bkt-tabs" role="tablist" aria-label={t("bracket.title")}>
           {PAGER_STAGES.map((s) => (
@@ -197,14 +223,7 @@ export default function Bracket() {
             <Node key={m.id} m={m} odds={odds} />
           ))}
           {activeStage === "FINAL" && (
-            <div className="bkt-champ" style={{ position: "static" }}>
-              <div className="bkt-champ-label">{t("bracket.champion")}</div>
-              {champ ? (
-                <TeamBadge code={champ.code} name={champ.name} size={20} />
-              ) : (
-                <div className="bkt-champ-trophy" aria-hidden="true">🏆</div>
-              )}
-            </div>
+            <ChampPanel champ={champ} t={t} className="bkt-champ bkt-champ--static" />
           )}
         </div>
       </div>
