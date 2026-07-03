@@ -83,6 +83,12 @@ a.card:hover {
 }
 a.card:active { transform: translateY(-1px); }
 
+/* An in-play match card reads "on air" */
+.card--live {
+  border-color: color-mix(in srgb, var(--live) 40%, var(--line));
+  box-shadow: var(--shadow-card), 0 0 18px -8px var(--live);
+}
+
 /* ---- Section title: broadcast lower-third tick ---- */
 .section-title {
   display: flex;

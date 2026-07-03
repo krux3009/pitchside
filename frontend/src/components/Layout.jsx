@@ -21,7 +21,7 @@ export default function Layout() {
       <nav className="site-nav">
         <div className="container site-nav__inner">
           <NavLink to="/" className="brand">
-            ⚽ PITCHSIDE<span className="brand-year">’26</span>
+            <BrandMark /> PITCHSIDE<span className="brand-year">’26</span>
           </NavLink>
           <div className="site-nav__links">
             {links.map((l) => (
@@ -55,6 +55,19 @@ export default function Layout() {
       </footer>
       <FactBar />
     </>
+  );
+}
+
+// the favicon mark, inlined so the nav brand matches the tab icon exactly
+function BrandMark() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true"
+         style={{ verticalAlign: "-4px", marginRight: 2 }}>
+      <rect width="64" height="64" rx="14" fill="var(--bg-elevated)" />
+      <path d="M0 47 Q32 36 64 47 L64 64 L0 64 Z" fill="var(--grass)" />
+      <circle cx="32" cy="27" r="14" fill="var(--gold)" />
+      <polygon points="32,19.5 39.2,24.7 36.4,33.2 27.6,33.2 24.8,24.7" fill="var(--bg-pitch)" />
+    </svg>
   );
 }
 

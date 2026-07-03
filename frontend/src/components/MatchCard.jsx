@@ -19,7 +19,9 @@ export default function MatchCard({ m }) {
     ? t("stage.group", { letter: m.group_letter })
     : t("stage." + m.stage);
   return (
-    <Link to={`/matches/${m.id}`} className="card" style={styles.card}>
+    <Link to={`/matches/${m.id}`}
+          className={`card${m.status === "LIVE" ? " card--live" : ""}`}
+          style={styles.card}>
       <div style={styles.meta}>
         <span>{label}</span>
         <span style={styles.right}>
