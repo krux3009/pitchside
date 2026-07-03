@@ -18,9 +18,37 @@
 
   --font-display: "Oswald", "Arial Narrow", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-body: "Inter", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  /* scoreboard numerals: squared LED feel, tabular digits */
+  --font-score: "Oxanium", "Oswald", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+
+  /* the pitch itself (mown-grass stripes shared by Pitch + ShotMap) */
+  --grass: #1b6b3a;
+  --grass-dim: #1a5f36;
+  --grass-deep: #0f3d22;
+  --pitch-line: rgba(255, 255, 255, 0.35);
+  --pitch-stripes: repeating-linear-gradient(90deg, var(--grass) 0 12.5%, var(--grass-dim) 12.5% 25%);
+
+  /* timeline event colors */
+  --card-yellow: #f7c948;
+  --card-red: #e5484d;
 
   --radius-card: 12px;
   --radius-sm: 7px;
+  --radius-pill: 999px;
+
+  /* spacing scale (4px base) — new code uses these; legacy px literals migrate
+     as files are touched */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+
+  --glow-gold: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
+  --glow-live: 0 0 8px var(--live);
 
   /* Tinted, layered depth: lit-from-above inset hairline + soft dark drop */
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
