@@ -58,7 +58,13 @@ export default function Momentum({ points, homeCode, awayCode }) {
           </svg>
         </div>
         <div style={styles.axis}>
-          <span>0'</span><span>45'</span><span>90'</span>
+          {(last.minute > 90 ? [0, 45, 90, 120] : [0, 45, 90]).map((m) => (
+            <span key={m} style={{
+              position: "absolute",
+              left: `${(m / last.minute) * 100}%`,
+              transform: m === 0 ? "none" : m === last.minute ? "translateX(-100%)" : "translateX(-50%)",
+            }}>{m}'</span>
+          ))}
         </div>
         <p style={styles.caption}>
           <span style={{ color: hc, fontWeight: 600 }}>{tTeam(homeCode)}</span> {t("momentum.lineLabel")} · {t("momentum.even")} = 50%
@@ -82,8 +88,8 @@ const styles = {
     fontSize: 10, color: "var(--text-low)", lineHeight: 1,
   },
   axis: {
-    display: "flex", justifyContent: "space-between",
-    color: "var(--text-low)", fontSize: 11, marginTop: 4, paddingLeft: 28,
+    position: "relative", height: 14,
+    color: "var(--text-low)", fontSize: 11, marginTop: 4, marginLeft: 28,
   },
   caption: { color: "var(--text-mid)", fontSize: 12, margin: "8px 0 0" },
 };

@@ -214,13 +214,13 @@ const styles = {
   chips: { display: "flex", flexWrap: "wrap", gap: 6 },
   chip: {
     display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px",
-    borderRadius: 999, border: "1px solid var(--line, rgba(255,255,255,0.12))",
+    borderRadius: 999, border: "1px solid var(--line)",
     background: "transparent", color: "var(--text-hi)", fontSize: 13, cursor: "pointer",
   },
   select: {
     marginLeft: "auto", padding: "6px 10px", borderRadius: 8, fontSize: 13,
-    background: "var(--bg-elev, #16203a)", color: "var(--text-hi)",
-    border: "1px solid var(--line, rgba(255,255,255,0.12))",
+    background: "var(--bg-elevated)", color: "var(--text-hi)",
+    border: "1px solid var(--line)",
   },
   pitch: {
     position: "relative", width: "100%", aspectRatio: "105 / 64", borderRadius: 10,
@@ -235,7 +235,7 @@ const styles = {
   hint: { fontSize: 11, color: "var(--text-low)", margin: "8px 2px 0", overflow: "hidden" },
   detail: {
     display: "flex", flexWrap: "wrap", gap: 16, marginTop: 12, paddingTop: 12,
-    borderTop: "1px solid var(--line, rgba(255,255,255,0.08))",
+    borderTop: "1px solid var(--line)",
   },
   detailHead: { display: "flex", alignItems: "center", gap: 8, fontSize: 14, marginBottom: 10 },
   statGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px 12px" },

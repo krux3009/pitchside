@@ -59,6 +59,17 @@ export default function MatchDetail() {
           </span>
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
+        {played && m.home_pens != null && m.away_pens != null && (
+          <p style={{ color: "var(--gold)", fontSize: 14, fontWeight: 600, margin: "4px 0 0" }}>
+            {t("match.pens", { h: m.home_pens, a: m.away_pens })}
+          </p>
+        )}
+        {played && m.home_pens == null && m.home_goals_90 != null &&
+          (m.home_goals !== m.home_goals_90 || m.away_goals !== m.away_goals_90) && (
+          <p style={{ color: "var(--text-mid)", fontSize: 13, margin: "4px 0 0" }}>
+            {t("match.aet")}
+          </p>
+        )}
         {!played && (
           <button onClick={() => downloadMatchIcs(m, t)} style={styles.remindBtn} className="cal-icon">
             🔔 {t("reminder.cta")}

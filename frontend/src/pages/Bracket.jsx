@@ -48,11 +48,12 @@ function Side({ side, score, isWinner, champ }) {
 }
 
 function Node({ m, odds }) {
+  const { t } = useLang();
   const decided = m.home_goals != null && m.away_goals != null;
   const winId = m.winner_team_id;
   const pens =
     m.home_pens != null && m.away_pens != null
-      ? ` (${m.home_pens}-${m.away_pens} pens)`
+      ? t("match.pensShort", { h: m.home_pens, a: m.away_pens })
       : "";
   return (
     <Link to={`/matches/${m.id}`} className="card" style={styles.node}>
@@ -68,7 +69,7 @@ function Node({ m, odds }) {
         isWinner={winId == null ? null : winId === m.away.team_id}
         champ={odds[m.away.team_id]?.p_champion}
       />
-      {pens && <span style={styles.pens}>{pens.trim()}</span>}
+      {pens && <span style={styles.pens}>{pens}</span>}
     </Link>
   );
 }

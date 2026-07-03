@@ -17,6 +17,9 @@ export const ZH = {
   "loader.warming": "球场灯光预热中…",
   "loader.coldStart": "免费服务器在比赛间隙休眠——首次加载最长可能需要一分钟。",
   "loader.apiError": "无法连接到 API。",
+  "error.title": "页面出错了",
+  "error.body": "页面遇到错误，数据没有问题，请刷新重试。",
+  "error.reload": "刷新",
 
   // gambling disclaimer (required on every prediction surface)
   "disclaimer.ps": "提示：",
@@ -38,6 +41,9 @@ export const ZH = {
   "match.live": "直播中",
   "match.ft": "完场",
   "match.fullTime": "全场结束",
+  "match.pens": ({ h, a }) => `点球大战 ${h}–${a}`,
+  "match.pensShort": ({ h, a }) => `(点球 ${h}–${a})`,
+  "match.aet": "加时赛后",
   "match.prediction": "模型预测",
   "match.likelyScore": "最可能比分：",
   "match.how": "模型原理",

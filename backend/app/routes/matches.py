@@ -9,7 +9,8 @@ router = APIRouter()
 
 CARD_SQL = """
 SELECT m.id, m.stage, m.group_letter, m.kickoff_utc, m.venue, m.status,
-       m.home_goals, m.away_goals, m.home_slot, m.away_slot,
+       m.home_goals, m.away_goals, m.home_goals_90, m.away_goals_90,
+       m.home_pens, m.away_pens, m.winner_team_id, m.home_slot, m.away_slot,
        th.name AS home_name, th.fifa_code AS home_code, th.id AS home_id,
        ta.name AS away_name, ta.fifa_code AS away_code, ta.id AS away_id,
        p.p_home, p.p_draw, p.p_away, p.likely_score

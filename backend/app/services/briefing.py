@@ -20,6 +20,8 @@ def _match_card(conn, m, prediction=True):
         "status": m["status"],
         "score": [m["home_goals"], m["away_goals"]] if m["status"] != "SCHEDULED" else None,
     }
+    if m["home_pens"] is not None and m["away_pens"] is not None:
+        card["pens"] = [m["home_pens"], m["away_pens"]]
     if prediction:
         p = conn.execute("SELECT * FROM predictions WHERE match_id=?", (m["id"],)).fetchone()
         if p:
@@ -98,7 +100,7 @@ def _injury_flags(conn) -> list:
                   t.fifa_code AS team_code
            FROM injuries i
            JOIN teams t ON t.id = i.team_id
-           WHERE i.reported_at >= datetime('now', '-1 day')
+           WHERE datetime(i.reported_at) >= datetime('now', '-1 day')
            ORDER BY i.reported_at DESC LIMIT 6"""
     ).fetchall()
     return rows
