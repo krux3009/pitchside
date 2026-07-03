@@ -49,13 +49,21 @@ def list_matches(stage: str | None = None, group: str | None = None,
                WHERE type IN ('goal', 'penalty-goal', 'own-goal')
                ORDER BY match_id, seq"""
         ).fetchall()
+        # per-team xG (sum of ESPN shot-level xG) for the match cards
+        xg = conn.execute(
+            """SELECT match_id, team_id, ROUND(SUM(xg), 2) AS xg FROM match_shots
+               WHERE xg IS NOT NULL GROUP BY match_id, team_id"""
+        ).fetchall()
     finally:
         conn.close()
     by_match = {}
     for g in goals:
         by_match.setdefault(g.pop("match_id"), []).append(g)
+    xg_by = {(r["match_id"], r["team_id"]): r["xg"] for r in xg}
     for m in rows:
         m["goals"] = by_match.get(m["id"], [])
+        m["home_xg"] = xg_by.get((m["id"], m["home_id"]))
+        m["away_xg"] = xg_by.get((m["id"], m["away_id"]))
     return rows
 
 

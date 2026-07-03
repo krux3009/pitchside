@@ -75,6 +75,11 @@ export default function MatchDetail() {
             {t("match.aet")}
           </p>
         )}
+        {homeStats?.xg != null && awayStats?.xg != null && (
+          <p style={{ color: "var(--text-low)", fontSize: 13, margin: "6px 0 0", position: "relative" }}>
+            {t("match.xgLine", { h: homeStats.xg, a: awayStats.xg })}
+          </p>
+        )}
         {!played && (
           <button onClick={() => downloadMatchIcs(m, t)} style={styles.remindBtn} className="cal-icon">
             🔔 {t("reminder.cta")}

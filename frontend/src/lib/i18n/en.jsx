@@ -56,6 +56,7 @@ export const EN = {
   "match.pens": ({ h, a }) => `${h}–${a} on penalties`,
   "match.pensShort": ({ h, a }) => `(${h}–${a} p)`,
   "match.aet": "AET",
+  "match.xgLine": ({ h, a }) => `xG ${h} – ${a}`,
   "match.prediction": "Model Prediction",
   "match.likelyScore": "Most likely score:",
   "match.how": "how this works",

@@ -116,6 +116,11 @@ export default function Home() {
                         {t("match.pensShort", { h: m.home_pens, a: m.away_pens })}
                       </span>
                     )}
+                    {m.home_xg != null && m.away_xg != null && (
+                      <span style={styles.resultPens}>
+                        {t("match.xgLine", { h: m.home_xg, a: m.away_xg })}
+                      </span>
+                    )}
                   </span>
                   <span>
                     <TeamBadge code={m.away_code} name={m.away_name} />
@@ -253,6 +258,9 @@ function HeroMatch({ m }) {
       {played && m.home_pens != null && m.away_pens != null && (
         <p style={styles.heroPens}>{t("match.pens", { h: m.home_pens, a: m.away_pens })}</p>
       )}
+      {played && m.home_xg != null && m.away_xg != null && (
+        <p style={styles.heroXg}>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</p>
+      )}
       {!played && (
         <p style={styles.heroCountdown}>
           {t("hero.countdown", { h: Math.floor(minsToKo / 60), m: minsToKo % 60 })}
@@ -310,6 +318,7 @@ const styles = {
   heroTeam: { display: "flex", fontWeight: 700, fontSize: 18, minWidth: 0 },
   heroScore: { fontSize: 46, fontWeight: 700, lineHeight: 1 },
   heroPens: { color: "var(--gold)", fontSize: 14, fontWeight: 600, margin: "6px 0 0", textAlign: "center", position: "relative" },
+  heroXg: { color: "var(--text-mid)", fontSize: 13, margin: "6px 0 0", textAlign: "center", position: "relative" },
   heroCountdown: {
     color: "var(--gold)", fontSize: 13, fontWeight: 600, letterSpacing: 1,
     textTransform: "uppercase", margin: "8px 0 0", textAlign: "center", position: "relative",

@@ -43,6 +43,9 @@ export default function MatchCard({ m }) {
           {played && m.home_pens != null && m.away_pens != null && (
             <span style={styles.pens}>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</span>
           )}
+          {played && m.home_xg != null && m.away_xg != null && (
+            <span style={styles.pens}>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</span>
+          )}
         </span>
         <span style={{ textAlign: "right" }}>
           <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} />
