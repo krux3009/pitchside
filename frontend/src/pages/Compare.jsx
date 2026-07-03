@@ -41,10 +41,11 @@ function Picker({ value, onChange, children, label }) {
 }
 
 function Header({ a, b }) {
+  const { t } = useLang();
   return (
     <div style={styles.header}>
       <span style={{ fontWeight: 700 }}><TeamBadge code={a.code} name={a.name} /></span>
-      <span style={{ color: "var(--text-low)", fontSize: 13 }}>vs</span>
+      <span style={styles.vsBadge}>{t("compare.vs")}</span>
       <span style={{ fontWeight: 700 }}><TeamBadge code={b.code} name={b.name} /></span>
     </div>
   );
@@ -235,10 +236,25 @@ const styles = {
     gap: 8, paddingBottom: 10, marginBottom: 6, borderBottom: "1px solid var(--line)",
   },
   empty: { color: "var(--text-mid)", marginTop: 18 },
+  vsBadge: {
+    flexShrink: 0,
+    padding: "4px 12px",
+    fontFamily: "var(--font-score)",
+    fontWeight: 700,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: "var(--gold)",
+    border: "1px solid var(--gold-dim)",
+    borderRadius: "var(--radius-pill)",
+    boxShadow: "var(--glow-gold)",
+  },
   forms: {
     display: "flex", justifyContent: "space-between", alignItems: "flex-end",
     gap: 12, marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)",
   },
   formLabel: { fontSize: 12, color: "var(--text-mid)", marginBottom: 4 },
-  toggle: { background: "none", border: "1px solid var(--line)", cursor: "pointer" },
+  toggle: {
+    background: "none", border: "1px solid var(--line)", cursor: "pointer",
+    padding: "6px 16px", borderRadius: "var(--radius-pill)",
+  },
 };

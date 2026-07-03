@@ -59,7 +59,7 @@ export default function MatchDetail() {
         <div className="score-row">
           <span className="score-team"><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
           <span className="score big-score">
-            {played ? `${m.home_goals} – ${m.away_goals}` : "vs"}
+            {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
           </span>
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>

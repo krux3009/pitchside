@@ -447,6 +447,9 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   /* the two-row phone nav has no fixed height to pin under */
   .day-sep { position: static; padding: 0; backdrop-filter: none; background: none; }
 
+  /* pickers stack full-width so long team/player names stay readable */
+  .filter-row .select { flex: 1 1 100%; }
+
   .score-team { font-size: 15px; }
   .big-score { font-size: 30px; }
   .score-row { gap: 8px; }
