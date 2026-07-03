@@ -15,7 +15,8 @@ def run(conn) -> dict | None:
     rows = conn.execute(
         """SELECT p.p_home, p.p_draw, p.p_away, m.home_goals_90, m.away_goals_90
            FROM predictions p JOIN matches m ON m.id = p.match_id
-           WHERE m.status = 'FT'"""
+           WHERE m.status = 'FT'
+             AND m.home_goals_90 IS NOT NULL AND m.away_goals_90 IS NOT NULL"""
     ).fetchall()
     if not rows:
         return None

@@ -395,6 +395,63 @@ def test_scoreboard_pens_finish_defers_goals90_writes_pens(scoreboard_match):
     assert row["winner_team_id"] == home["id"]               # from the shootout score
 
 
+def test_scoreboard_repairs_wrong_knockout_pairing(conn):
+    """Our third-place allocation can differ from FIFA's actual draw (documented
+    caveat). When the feed's fixture matches no row by teams, the knockout match
+    at that exact kickoff is claimed: teams re-pointed to the feed's, the stale
+    prediction dropped, and the result ingested."""
+    match = conn.execute(
+        "SELECT * FROM matches WHERE stage != 'GROUP' ORDER BY id LIMIT 1"
+    ).fetchone()
+    teams = conn.execute("SELECT * FROM teams ORDER BY id LIMIT 4").fetchall()
+    wrong_h, wrong_a, real_h, real_a = teams
+    conn.execute(
+        "UPDATE matches SET home_team_id=?, away_team_id=?, status='SCHEDULED' WHERE id=?",
+        (wrong_h["id"], wrong_a["id"], match["id"]),
+    )
+    conn.execute(
+        """INSERT OR REPLACE INTO predictions
+           (match_id, model_version, home_elo, away_elo, lambda_home, mu_away,
+            p_home, p_draw, p_away, likely_score, score_matrix_json, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+        (match["id"], "test", 1800, 1800, 1.2, 1.2, 0.4, 0.3, 0.3, "1-1", "[]", "now"),
+    )
+    conn.commit()
+
+    espn_scoreboard(conn, _scoreboard(match, real_h, real_a, "post", 2, 0))
+
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_team_id"], row["away_team_id"]) == (real_h["id"], real_a["id"])
+    assert row["status"] == "FT"
+    assert (row["home_goals"], row["away_goals"]) == (2, 0)
+    assert row["winner_team_id"] == real_h["id"]
+    # the prediction was frozen for a fixture that never existed
+    assert conn.execute(
+        "SELECT 1 FROM predictions WHERE match_id=?", (match["id"],)
+    ).fetchone() is None
+
+
+def test_scoreboard_never_repairs_a_finished_match(conn):
+    """A finished knockout row must not be re-pointed by a stray feed event."""
+    match = conn.execute(
+        "SELECT * FROM matches WHERE stage != 'GROUP' ORDER BY id LIMIT 1"
+    ).fetchone()
+    teams = conn.execute("SELECT * FROM teams ORDER BY id LIMIT 4").fetchall()
+    done_h, done_a, other_h, other_a = teams
+    conn.execute(
+        """UPDATE matches SET home_team_id=?, away_team_id=?, status='FT',
+           home_goals=1, away_goals=0, winner_team_id=? WHERE id=?""",
+        (done_h["id"], done_a["id"], done_h["id"], match["id"]),
+    )
+    conn.commit()
+
+    espn_scoreboard(conn, _scoreboard(match, other_h, other_a, "post", 5, 5))
+
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_team_id"], row["away_team_id"]) == (done_h["id"], done_a["id"])
+    assert (row["home_goals"], row["away_goals"]) == (1, 0)
+
+
 # --- summary header: authoritative regulation/pens split ------------------
 
 def _header_side(home_away, team, score, periods, shootout=None, winner=False):

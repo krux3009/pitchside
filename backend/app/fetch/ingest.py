@@ -112,6 +112,17 @@ def _find_match(conn, home_id: int, away_id: int, date_utc: str) -> dict | None:
     ).fetchone()
 
 
+def _ko_match_by_kickoff(conn, event_date: str) -> dict | None:
+    """The knockout match at this exact kickoff, or None when not unique.
+    ESPN event dates read '2026-06-28T19:00Z'; ours '2026-06-28T19:00:00Z'."""
+    key = event_date.rstrip("Z")[:16]
+    rows = conn.execute(
+        "SELECT * FROM matches WHERE stage != 'GROUP' AND substr(kickoff_utc, 1, 16) = ?",
+        (key,),
+    ).fetchall()
+    return rows[0] if len(rows) == 1 else None
+
+
 def espn_scoreboard(conn, payload: dict) -> list[int]:
     """Update scores/status from a scoreboard. Returns match ids that newly hit FT."""
     newly_finished = []
@@ -124,7 +135,19 @@ def espn_scoreboard(conn, payload: dict) -> list[int]:
             continue
         m = _find_match(conn, home["id"], away["id"], event["date"][:10])
         if not m:
-            continue
+            # Knockout pairings come from our own third-place allocation, which
+            # is documented as possibly differing from FIFA's actual draw. The
+            # feed is the truth: claim the knockout fixture at this exact
+            # kickoff, re-point its teams, and drop any prediction frozen for
+            # the fictional pairing so the backtest never grades it.
+            m = _ko_match_by_kickoff(conn, event["date"])
+            if not m or m["status"] == "FT":
+                continue
+            conn.execute(
+                "UPDATE matches SET home_team_id=?, away_team_id=? WHERE id=?",
+                (home["id"], away["id"], m["id"]),
+            )
+            conn.execute("DELETE FROM predictions WHERE match_id=?", (m["id"],))
         st = ((comp.get("status") or event.get("status") or {}).get("type") or {})
         state = st.get("state")
         status = {"pre": "SCHEDULED", "in": "LIVE", "post": "FT"}.get(state, m["status"])

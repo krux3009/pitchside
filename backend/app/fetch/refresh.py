@@ -47,6 +47,27 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
         if payload:
             report["scoreboards"] += 1
             newly_finished += ingest.espn_scoreboard(conn, payload)
+
+    # knockout self-heal: a fixture that resolved its teams late (or needs
+    # re-pairing to the feed's actual draw) can fall out of the
+    # yesterday/today window and stay SCHEDULED forever, since the scoreboard
+    # loop never looks back. Refetch those matchdays directly; quota-free,
+    # and the pass self-terminates once the matches reach FT.
+    # ESPN files a scoreboard under the US-Eastern date, so a 03:00Z kickoff
+    # lives on the previous day's board — key the fetch by kickoff minus 4h
+    # (the whole tournament runs in EDT).
+    stale_days = conn.execute(
+        """SELECT DISTINCT date(kickoff_utc, '-4 hours') AS day FROM matches
+           WHERE stage != 'GROUP' AND status = 'SCHEDULED' AND kickoff_utc < ?
+           ORDER BY day LIMIT 3""",
+        ((datetime.now(timezone.utc) - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ"),),
+    ).fetchall()
+    for row in stale_days:
+        payload = espn.scoreboard(conn, row["day"].replace("-", ""))
+        if payload:
+            report["stale_days"] = report.get("stale_days", 0) + 1
+            newly_finished += ingest.espn_scoreboard(conn, payload)
+
     report["newly_finished"] = newly_finished
 
     # summaries for FT matches we haven't ingested yet (covers restarts too)
