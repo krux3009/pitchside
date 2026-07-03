@@ -42,6 +42,7 @@ export const ZH = {
   "match.ft": "完场",
   "match.fullTime": "全场结束",
   "hero.countdown": ({ h, m }) => (h > 0 ? `距开球 ${h} 小时 ${m} 分` : `距开球 ${m} 分钟`),
+  "timetable.onNow": "正在进行",
   "match.pens": ({ h, a }) => `点球大战 ${h}–${a}`,
   "match.pensShort": ({ h, a }) => `(点球 ${h}–${a})`,
   "match.aet": "加时赛后",

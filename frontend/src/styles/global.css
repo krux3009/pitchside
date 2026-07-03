@@ -238,6 +238,18 @@ a.card:active { transform: translateY(-1px); }
 
 /* ---- Filter dropdowns (Timetable stage/group) ---- */
 .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.filter-row .select { border-radius: var(--radius-pill); }
+
+/* Timetable day separators ride under the sticky nav like broadcast slates */
+.day-sep {
+  position: sticky;
+  top: 56px;
+  z-index: 5;
+  padding: 8px 0;
+  margin: 22px 0 10px;
+  background: color-mix(in srgb, var(--bg-pitch) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
 .select {
   padding: 8px 12px;
   background: var(--bg-surface);
@@ -430,6 +442,9 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
   .odds-row { grid-template-columns: minmax(96px, 130px) 1fr 42px; gap: 8px; }
   .hero-card { padding: 18px 14px 16px; }
+
+  /* the two-row phone nav has no fixed height to pin under */
+  .day-sep { position: static; padding: 0; backdrop-filter: none; background: none; }
 
   .score-team { font-size: 15px; }
   .big-score { font-size: 30px; }
