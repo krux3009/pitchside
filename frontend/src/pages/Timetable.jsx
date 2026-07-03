@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import Disclaimer from "../components/Disclaimer";
 import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
-import { localDateHeading } from "../lib/format";
+import { localDateHeading, localDayKey } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
 
@@ -37,7 +37,7 @@ export default function Timetable() {
     });
     const days = new Map();
     for (const m of filtered) {
-      const day = m.kickoff_utc.slice(0, 10);
+      const day = localDayKey(m.kickoff_utc);
       if (!days.has(day)) days.set(day, []);
       days.get(day).push(m);
     }
