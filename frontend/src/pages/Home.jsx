@@ -55,7 +55,7 @@ export default function Home() {
         {updatedAt && <> · {t("home.updated", { time: localTime(updatedAt, dateLocale) })}</>}
       </p>
 
-      {b.yesterday.length > 0 && (
+      {(b.yesterday ?? []).length > 0 && (
         <>
           <h2 className="section-title">{t("home.yesterday")}</h2>
           <div className="card">
@@ -64,6 +64,11 @@ export default function Home() {
                 <Link to={`/matches/${m.match_id}`} style={{ fontWeight: 600 }}>
                   <TeamBadge code={m.home_code} name={m.home} />{" "}
                   <span className="score">{m.score[0]} – {m.score[1]}</span>{" "}
+                  {m.pens && (
+                    <span style={{ color: "var(--text-mid)", fontSize: 12 }}>
+                      {t("match.pensShort", { h: m.pens[0], a: m.pens[1] })}{" "}
+                    </span>
+                  )}
                   <TeamBadge code={m.away_code} name={m.away} />
                 </Link>
                 {(m.upset || m.upset_note) && (
@@ -71,7 +76,7 @@ export default function Home() {
                 )}
               </div>
             ))}
-            {b.standouts.length > 0 && (
+            {(b.standouts ?? []).length > 0 && (
               <div style={styles.standouts}>
                 {b.standouts.map((s, i) => (
                   <span key={i} style={styles.standout}>
@@ -85,11 +90,11 @@ export default function Home() {
       )}
 
       <h2 className="section-title">{t("home.today")}</h2>
-      {b.today.length === 0 && (
+      {(b.today ?? []).length === 0 && (
         <p style={{ color: "var(--text-mid)" }}>{t("home.noMatches")}</p>
       )}
       <div style={styles.todayGrid}>
-        {b.today.map((m) => (
+        {(b.today ?? []).map((m) => (
           <MatchCard
             key={m.match_id}
             m={{
@@ -98,13 +103,14 @@ export default function Home() {
               home_name: m.home, home_code: m.home_code,
               away_name: m.away, away_code: m.away_code,
               home_goals: m.score?.[0], away_goals: m.score?.[1],
+              home_pens: m.pens?.[0], away_pens: m.pens?.[1],
               p_home: m.p_home, p_draw: m.p_draw, p_away: m.p_away,
             }}
           />
         ))}
       </div>
 
-      {b.injuries.length > 0 && (
+      {(b.injuries ?? []).length > 0 && (
         <>
           <h2 className="section-title">{t("home.injuries")}</h2>
           <div className="card">
@@ -151,7 +157,7 @@ export default function Home() {
         <Disclaimer />
       </div>
 
-      {b.odds_movers.length > 0 && (
+      {(b.odds_movers ?? []).length > 0 && (
         <>
           <h2 className="section-title">{t("home.oddsMovers")}</h2>
           <div className="card" style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>

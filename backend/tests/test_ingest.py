@@ -12,6 +12,7 @@ from app.fetch.ingest import (
     _resolve_player,
     _shot_result,
     espn_events,
+    espn_header_scores,
     espn_scoreboard,
     espn_shots,
     espn_summary,
@@ -303,8 +304,8 @@ def test_event_minute_from_clock(events_db):
 
 # --- scoreboard winner resolution ---------------------------------------
 
-def _competitor(home_away, team, score, winner=False):
-    return {
+def _competitor(home_away, team, score, winner=False, shootout=None):
+    c = {
         "homeAway": home_away,
         "score": str(score),
         "winner": winner,
@@ -312,18 +313,22 @@ def _competitor(home_away, team, score, winner=False):
         "team": {"id": f"espn-{team['id']}", "abbreviation": team["fifa_code"],
                  "displayName": team["name"]},
     }
+    if shootout is not None:
+        c["shootoutScore"] = str(shootout)   # the scoreboard ships it as a string
+    return c
 
 
-def _scoreboard(match, home, away, state, hs, as_, home_win=False, away_win=False):
+def _scoreboard(match, home, away, state, hs, as_, home_win=False, away_win=False,
+                detail="FT", home_pens=None, away_pens=None):
     return {"events": [{
         "id": "EVT1",
         "date": match["kickoff_utc"],
         "competitions": [{
             "competitors": [
-                _competitor("home", home, hs, home_win),
-                _competitor("away", away, as_, away_win),
+                _competitor("home", home, hs, home_win, home_pens),
+                _competitor("away", away, as_, away_win, away_pens),
             ],
-            "status": {"type": {"state": state}},
+            "status": {"type": {"state": state, "detail": detail}},
         }],
     }]}
 
@@ -361,3 +366,106 @@ def test_scoreboard_decisive_score_still_wins_without_flag(scoreboard_match):
         "SELECT winner_team_id FROM matches WHERE id=?", (match["id"],)
     ).fetchone()
     assert row["winner_team_id"] == home["id"]
+
+
+def test_scoreboard_regulation_finish_writes_goals90(scoreboard_match):
+    """A 90'-decided match ("FT" detail) keeps feeding the regulation columns."""
+    conn, match, home, away = scoreboard_match
+    espn_scoreboard(conn, _scoreboard(match, home, away, "post", 3, 1))
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_goals_90"], row["away_goals_90"]) == (3, 1)
+
+
+def test_scoreboard_pens_finish_defers_goals90_writes_pens(scoreboard_match):
+    """A shootout finish must not write the (potentially ET-inflated) score into
+    *_goals_90 — the summary header owns that split — and the shootout score
+    must land in the pens columns and decide the winner without ESPN's flag."""
+    conn, match, home, away = scoreboard_match
+    before = conn.execute(
+        "SELECT home_goals_90, away_goals_90 FROM matches WHERE id=?", (match["id"],)
+    ).fetchone()
+    espn_scoreboard(conn, _scoreboard(
+        match, home, away, "post", 1, 1, detail="FT-Pens", home_pens=4, away_pens=2))
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert row["status"] == "FT"
+    assert (row["home_goals"], row["away_goals"]) == (1, 1)
+    assert (row["home_goals_90"], row["away_goals_90"]) == \
+        (before["home_goals_90"], before["away_goals_90"])   # untouched
+    assert (row["home_pens"], row["away_pens"]) == (4, 2)
+    assert row["winner_team_id"] == home["id"]               # from the shootout score
+
+
+# --- summary header: authoritative regulation/pens split ------------------
+
+def _header_side(home_away, team, score, periods, shootout=None, winner=False):
+    c = {
+        "homeAway": home_away,
+        "score": float(score),                 # the header ships numbers
+        "winner": winner,
+        "team": {"id": f"espn-{team['id']}", "abbreviation": team["fifa_code"],
+                 "displayName": team["name"]},
+        "linescores": [{"displayValue": str(p)} for p in periods],
+    }
+    if shootout is not None:
+        c["shootoutScore"] = float(shootout)
+    return c
+
+
+def _summary_header(home_side, away_side, detail="FT"):
+    return {"header": {"competitions": [{
+        "competitors": [home_side, away_side],
+        "status": {"type": {"detail": detail}},
+    }]}}
+
+
+def test_header_scores_extra_time_split(scoreboard_match):
+    """3-2 after extra time, level 2-2 at 90': goals_90 must carry the
+    regulation score, not the inflated final one."""
+    conn, match, home, away = scoreboard_match
+    payload = _summary_header(
+        _header_side("home", home, 3, [1, 1, 1, 0], winner=True),
+        _header_side("away", away, 2, [0, 2, 0, 0]),
+        detail="FT-ET",
+    )
+    assert espn_header_scores(conn, match["id"], payload)
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_goals"], row["away_goals"]) == (3, 2)
+    assert (row["home_goals_90"], row["away_goals_90"]) == (2, 2)
+    assert row["winner_team_id"] == home["id"]
+    assert conn.execute(
+        "SELECT 1 FROM meta WHERE key=?", (f"ingested:header:v1:{match['id']}",)
+    ).fetchone()
+
+
+def test_header_scores_pens(scoreboard_match):
+    """Match-75 shape: 1-1 through five periods, shootout 2-3 — pens stored,
+    winner from the shootout score even without ESPN's flag."""
+    conn, match, home, away = scoreboard_match
+    payload = _summary_header(
+        _header_side("home", home, 1, [0, 1, 0, 0, 2], shootout=2),
+        _header_side("away", away, 1, [1, 0, 0, 0, 3], shootout=3),
+        detail="FT-Pens",
+    )
+    assert espn_header_scores(conn, match["id"], payload)
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_goals"], row["away_goals"]) == (1, 1)
+    assert (row["home_goals_90"], row["away_goals_90"]) == (1, 1)
+    assert (row["home_pens"], row["away_pens"]) == (2, 3)
+    assert row["winner_team_id"] == away["id"]
+
+
+def test_header_scores_regulation_is_a_noop_rerun(scoreboard_match):
+    """Group rows are already correct; re-ingesting the header must not change
+    them (sum of the two regulation periods == the full score)."""
+    conn, match, home, away = scoreboard_match
+    espn_scoreboard(conn, _scoreboard(match, home, away, "post", 2, 0))
+    payload = _summary_header(
+        _header_side("home", home, 2, [1, 1]),
+        _header_side("away", away, 0, [0, 0]),
+    )
+    assert espn_header_scores(conn, match["id"], payload)
+    assert espn_header_scores(conn, match["id"], payload)   # idempotent
+    row = conn.execute("SELECT * FROM matches WHERE id=?", (match["id"],)).fetchone()
+    assert (row["home_goals"], row["away_goals"]) == (2, 0)
+    assert (row["home_goals_90"], row["away_goals_90"]) == (2, 0)
+    assert row["home_pens"] is None and row["away_pens"] is None

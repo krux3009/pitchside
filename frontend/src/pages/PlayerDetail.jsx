@@ -126,7 +126,8 @@ function CareerTable({ title, rows, localizeNames = false }) {
   // are current-tournament players) so its end year reads "present", not a year
   // that looks like a departure. Upgrade to a real current-club flag if a player
   // is ever between clubs at tournament time.
-  const latestYear = Math.max(...rows.map((c) => c.to_year));
+  const years = rows.map((c) => c.to_year).filter((y) => y != null);
+  const latestYear = years.length ? Math.max(...years) : null;
   return (
     <>
       <h2 className="section-title">{title}</h2>

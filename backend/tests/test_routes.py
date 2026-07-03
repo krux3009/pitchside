@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import config, db
+from app.services import predictions
 
 SEED = Path(__file__).resolve().parent.parent / "app" / "data" / "seed.db"
 
@@ -68,7 +69,17 @@ def test_players_route_lists_full_squads(client):
 
 
 def test_match_detail_includes_squads_before_lineups(client):
-    m = client.get("/api/matches/10").json()   # group-stage match, not yet played
+    # any not-yet-played match with both teams resolved — the seed advances as
+    # the tournament runs, so the id can't be hardcoded. Knockout pairings only
+    # materialize at runtime, so resolve them the way the refresh cycle does.
+    conn = db.connect()
+    predictions.resolve_knockout(conn)
+    target = conn.execute(
+        """SELECT id FROM matches WHERE status='SCHEDULED'
+           AND home_team_id IS NOT NULL AND away_team_id IS NOT NULL
+           ORDER BY id LIMIT 1"""
+    ).fetchone()
+    m = client.get(f"/api/matches/{target['id']}").json()
     assert m["status"] == "SCHEDULED"
     assert m["lineups"] == []
     assert m["squads"] is not None

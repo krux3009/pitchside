@@ -39,6 +39,7 @@ def replay_unapplied_results(conn) -> int:
     rows = conn.execute(
         """SELECT m.* FROM matches m
            WHERE m.status='FT' AND m.id >= ?
+             AND m.home_goals_90 IS NOT NULL AND m.away_goals_90 IS NOT NULL
              AND NOT EXISTS (SELECT 1 FROM elo_history h
                              WHERE h.match_id = m.id AND h.team_id = m.home_team_id)
            ORDER BY m.id""",

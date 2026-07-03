@@ -38,6 +38,9 @@ export default function MatchCard({ m }) {
         <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} />
         <span className="score" style={styles.score}>
           {played ? `${m.home_goals} – ${m.away_goals}` : "v"}
+          {played && m.home_pens != null && m.away_pens != null && (
+            <span style={styles.pens}>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</span>
+          )}
         </span>
         <span style={{ textAlign: "right" }}>
           <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} />
@@ -91,5 +94,6 @@ const styles = {
     fontWeight: 600,
     fontSize: 15,
   },
-  score: { fontSize: 20 },
+  score: { fontSize: 20, textAlign: "center" },
+  pens: { display: "block", fontSize: 11, color: "var(--text-mid)", fontWeight: 500 },
 };

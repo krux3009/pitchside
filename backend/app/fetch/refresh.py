@@ -97,6 +97,36 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             ingest.espn_events(conn, m["id"], payload)
             report["events_backfilled"] = report.get("events_backfilled", 0) + 1
 
+    # one-shot header backfill: knockouts ingested before espn_header_scores
+    # existed lack the regulation/pens split (e.g. match 75's shootout score).
+    # Group rows are already correct (regulation sum == full score), so restrict
+    # to knockout; new matches get the header ingest inside espn_summary's FT
+    # pass, so this drains the historical set once and self-terminates.
+    header_pending = conn.execute(
+        """SELECT m.id, m.espn_event_id, m.home_goals_90, m.away_goals_90
+           FROM matches m
+           WHERE m.status='FT' AND m.stage != 'GROUP' AND m.espn_event_id IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM meta
+                             WHERE key = 'ingested:header:v1:' || m.id)"""
+    ).fetchall()
+    for m in header_pending:
+        payload = espn.summary(conn, m["espn_event_id"])
+        if payload and ingest.espn_header_scores(conn, m["id"], payload):
+            report["headers_backfilled"] = report.get("headers_backfilled", 0) + 1
+            new = conn.execute(
+                "SELECT home_goals_90, away_goals_90 FROM matches WHERE id=?",
+                (m["id"],),
+            ).fetchone()
+            changed = (new["home_goals_90"], new["away_goals_90"]) != (
+                m["home_goals_90"], m["away_goals_90"])
+            replayed = conn.execute(
+                "SELECT 1 FROM elo_history WHERE match_id=?", (m["id"],)
+            ).fetchone()
+            if changed and replayed:
+                # Elo was applied with the old (inflated) score; ratings need a
+                # manual rebuild — surface it rather than silently diverge.
+                report.setdefault("elo_stale", []).append(m["id"])
+
     # shot map: FT matches that lack a current-version shot set. Heavier than the
     # other passes (~5 core-feed pages each), so cap per cycle — the backlog drains
     # over a few crons; new matches (<=2/day) clear at once. The 'ingested:shots:v2'
@@ -142,6 +172,7 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
 
     needs_model_pass = bool(
         newly_finished or report["summaries"] or report["knockout_resolved"]
+        or report.get("headers_backfilled")
     )
     no_sim_yet = conn.execute(
         "SELECT 1 FROM meta WHERE key='latest_sim_run_id'"

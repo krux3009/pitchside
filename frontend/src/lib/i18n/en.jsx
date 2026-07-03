@@ -19,6 +19,9 @@ export const EN = {
   "loader.warming": "Stadium lights warming up…",
   "loader.coldStart": "The free server sleeps between matches — first load can take up to a minute.",
   "loader.apiError": "Couldn’t reach the API.",
+  "error.title": "Something broke",
+  "error.body": "The page hit an error. The data is fine — try reloading.",
+  "error.reload": "Reload",
 
   // gambling disclaimer (required on every prediction surface)
   "disclaimer.ps": "PS:",
@@ -40,6 +43,9 @@ export const EN = {
   "match.live": "LIVE",
   "match.ft": "FT",
   "match.fullTime": "Full time",
+  "match.pens": ({ h, a }) => `${h}–${a} on penalties`,
+  "match.pensShort": ({ h, a }) => `(${h}–${a} p)`,
+  "match.aet": "AET",
   "match.prediction": "Model Prediction",
   "match.likelyScore": "Most likely score:",
   "match.how": "how this works",

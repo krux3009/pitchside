@@ -96,6 +96,13 @@ def _team_by_espn(conn, competitor: dict) -> dict | None:
     return row
 
 
+def _int_score(v) -> int | None:
+    """ESPN scores arrive as int, float, or numeric string; None/'' stay None."""
+    if v in (None, ""):
+        return None
+    return int(float(v))
+
+
 def _find_match(conn, home_id: int, away_id: int, date_utc: str) -> dict | None:
     return conn.execute(
         """SELECT * FROM matches
@@ -118,7 +125,8 @@ def espn_scoreboard(conn, payload: dict) -> list[int]:
         m = _find_match(conn, home["id"], away["id"], event["date"][:10])
         if not m:
             continue
-        state = comp.get("status", event.get("status", {})).get("type", {}).get("state")
+        st = ((comp.get("status") or event.get("status") or {}).get("type") or {})
+        state = st.get("state")
         status = {"pre": "SCHEDULED", "in": "LIVE", "post": "FT"}.get(state, m["status"])
         hg = int(sides["home"].get("score") or 0)
         ag = int(sides["away"].get("score") or 0)
@@ -126,25 +134,39 @@ def espn_scoreboard(conn, payload: dict) -> list[int]:
             conn.execute("UPDATE matches SET espn_event_id=? WHERE id=?",
                          (event["id"], m["id"]))
             continue
+        pens_h = _int_score(sides["home"].get("shootoutScore"))
+        pens_a = _int_score(sides["away"].get("shootoutScore"))
         winner = None
         if status == "FT":
             # ESPN flags the advancing side on the competitor even when a knockout
             # is level after 90'/120' and decided on penalties, so trust the flag
-            # first; fall back to the score for group games that don't carry it.
+            # first; then the shootout score; fall back to the full score.
             if sides["home"].get("winner"):
                 winner = home["id"]
             elif sides["away"].get("winner"):
                 winner = away["id"]
+            elif pens_h is not None and pens_a is not None and pens_h != pens_a:
+                winner = home["id"] if pens_h > pens_a else away["id"]
             elif hg != ag:
                 winner = home["id"] if hg > ag else away["id"]
-        # NOTE: the scoreboard score is the only source of *_goals_90 (simulate +
-        # standings read it), so we still write it here; knockout extra-time/penalty
-        # splits would need the summary feed and are a documented limitation.
-        conn.execute(
-            """UPDATE matches SET espn_event_id=?, status=?, home_goals=?, away_goals=?,
-               home_goals_90=?, away_goals_90=?, winner_team_id=? WHERE id=?""",
-            (event["id"], status, hg, ag, hg, ag, winner, m["id"]),
-        )
+        # *_goals_90 is the regulation score (Elo replay, standings, and the
+        # backtest read it), so write it only when ESPN says the match ended in
+        # 90' (detail "FT"). An extra-time/penalty finish carries the inflated
+        # full score here; its true split comes from the summary header's
+        # per-period linescores (espn_header_scores), same refresh cycle.
+        if status == "FT" and st.get("detail") == "FT":
+            conn.execute(
+                """UPDATE matches SET espn_event_id=?, status=?, home_goals=?,
+                   away_goals=?, home_goals_90=?, away_goals_90=?, home_pens=?,
+                   away_pens=?, winner_team_id=? WHERE id=?""",
+                (event["id"], status, hg, ag, hg, ag, pens_h, pens_a, winner, m["id"]),
+            )
+        else:
+            conn.execute(
+                """UPDATE matches SET espn_event_id=?, status=?, home_goals=?,
+                   away_goals=?, home_pens=?, away_pens=?, winner_team_id=? WHERE id=?""",
+                (event["id"], status, hg, ag, pens_h, pens_a, winner, m["id"]),
+            )
         if status == "FT" and m["status"] != "FT":
             newly_finished.append(m["id"])
     conn.commit()
@@ -359,6 +381,66 @@ def espn_shots(conn, match_id: int, plays: list) -> int:
     return len(rows)
 
 
+def espn_header_scores(conn, match_id: int, payload: dict) -> bool:
+    """Authoritative final score from the summary feed's header block.
+
+    The scoreboard folds extra time into its single score, so a knockout decided
+    after 90' would corrupt *_goals_90 (Elo replay, standings, and the backtest
+    all read it as the regulation score). The header's per-period linescores give
+    the true split — 2 entries = regulation, 4 = extra time, 5 = shootout rides
+    as a pseudo-period — and shootoutScore carries the pens tally. Idempotent:
+    fixed values; the meta marker only gates the refresh backfill.
+    """
+    comp = ((payload.get("header") or {}).get("competitions") or [{}])[0]
+    sides = {c.get("homeAway"): c for c in comp.get("competitors") or []}
+    if not sides.get("home") or not sides.get("away"):
+        return False
+    m = conn.execute("SELECT * FROM matches WHERE id=?", (match_id,)).fetchone()
+    if not m:
+        return False
+    listed_home = _team_by_espn(conn, sides["home"])
+    if listed_home and listed_home["id"] == m["away_team_id"]:
+        sides = {"home": sides["away"], "away": sides["home"]}
+
+    def goals_90(c):
+        periods = c.get("linescores") or []
+        if len(periods) < 2:
+            return None
+        return sum(_int_score(p.get("displayValue")) or 0 for p in periods[:2])
+
+    detail = ((comp.get("status") or {}).get("type") or {}).get("detail")
+    hg = _int_score(sides["home"].get("score")) or 0
+    ag = _int_score(sides["away"].get("score")) or 0
+    h90, a90 = goals_90(sides["home"]), goals_90(sides["away"])
+    if h90 is None or a90 is None:
+        if detail != "FT":
+            return False  # can't split yet: retry on a later, complete feed
+        h90, a90 = hg, ag
+    pens_h = _int_score(sides["home"].get("shootoutScore"))
+    pens_a = _int_score(sides["away"].get("shootoutScore"))
+    winner = None
+    if sides["home"].get("winner"):
+        winner = m["home_team_id"]
+    elif sides["away"].get("winner"):
+        winner = m["away_team_id"]
+    elif pens_h is not None and pens_a is not None and pens_h != pens_a:
+        winner = m["home_team_id"] if pens_h > pens_a else m["away_team_id"]
+    elif hg != ag:
+        winner = m["home_team_id"] if hg > ag else m["away_team_id"]
+    conn.execute(
+        """UPDATE matches SET home_goals=?, away_goals=?, home_goals_90=?,
+           away_goals_90=?, home_pens=?, away_pens=?, winner_team_id=? WHERE id=?""",
+        (hg, ag, h90, a90, pens_h, pens_a, winner, match_id),
+    )
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn.execute(
+        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+        (f"ingested:header:v1:{match_id}", now),
+    )
+    conn.commit()
+    return True
+
+
 def espn_summary(conn, match_id: int, payload: dict, mark_done: bool = True):
     """Ingest team stats, lineups, and per-player stats from a summary feed.
 
@@ -441,6 +523,8 @@ def espn_summary(conn, match_id: int, payload: dict, mark_done: bool = True):
     espn_events(conn, match_id, payload)
 
     if mark_done:
+        # authoritative regulation/pens split — the scoreboard can't provide it
+        espn_header_scores(conn, match_id, payload)
         conn.execute(
             "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
             (f"ingested:espn_summary:{match_id}", now),

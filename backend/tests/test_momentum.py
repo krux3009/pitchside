@@ -1,8 +1,8 @@
 from app.services import momentum
 
 
-def ev(minute, type, team_id):
-    return {"minute": minute, "type": type, "team_id": team_id}
+def ev(minute, type, team_id, clock=None):
+    return {"minute": minute, "type": type, "team_id": team_id, "clock": clock}
 
 
 def sh(minute, team_id, xg):
@@ -39,3 +39,26 @@ def test_red_card_tilts_remaining_expectation():
     red = momentum.series([ev(5, "red-card", 1)], [], 1, 2, 1.4, 1.4)  # home sent off
     mid = next(p for p in red if p["minute"] == 50)
     assert mid["p_home"] < mid["p_away"]
+
+
+def test_series_extends_to_120_on_extra_time():
+    # an ET board clock reads "105'" — its first number exceeds 90
+    events = [ev(20, "goal", 1), ev(105, "goal", 1, clock="105'")]
+    pts = momentum.series(events, [], 1, 2, 1.4, 1.1)
+    assert pts[-1]["minute"] == 120
+    assert (pts[-1]["home_goals"], pts[-1]["away_goals"]) == (2, 0)
+    assert pts[-1]["p_home"] == 1.0                       # decided at 120'
+    for p in pts:
+        assert abs(p["p_home"] + p["p_draw"] + p["p_away"] - 1) < 0.01
+    at90 = next(p for p in pts if p["minute"] == 90)
+    assert at90["p_home"] < 1.0                           # ET still to play at 90'
+
+
+def test_stoppage_clock_stays_on_regulation_axis():
+    # "90'+4'" folds to minute 94 but is stoppage, not extra time: the series
+    # must end at 90' and the goal must land on that final sample
+    events = [ev(94, "goal", 1, clock="90'+4'")]
+    pts = momentum.series(events, [], 1, 2, 1.4, 1.1)
+    assert pts[-1]["minute"] == 90
+    assert pts[-1]["home_goals"] == 1
+    assert pts[-1]["p_home"] == 1.0
