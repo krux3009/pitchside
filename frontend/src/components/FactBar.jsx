@@ -1,7 +1,7 @@
 import { useFactBar } from "../lib/factBar";
 import { ageFromDob } from "../lib/format";
 import { useLang } from "../lib/i18n";
-import { teamFlag } from "../lib/teamColors";
+import { teamFlag, teamFlagUrl } from "../lib/teamColors";
 
 // Global hover fun-fact bar. Country facts are curated (fact.team.<CODE>);
 // player facts are derived from real API data, so they are factual by
@@ -15,7 +15,10 @@ export default function FactBar() {
   let body = "";
 
   if (fact?.kind === "team") {
-    icon = teamFlag(fact.code);
+    const url = teamFlagUrl(fact.code);
+    icon = url
+      ? <img src={url} alt="" width={24} height={18} style={{ borderRadius: 2, boxShadow: "0 0 0 1px var(--line)", display: "block" }} />
+      : teamFlag(fact.code);
     title = tTeam(fact.code, fact.name);
     const key = "fact.team." + fact.code;
     const f = t(key);

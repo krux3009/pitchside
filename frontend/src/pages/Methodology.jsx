@@ -54,15 +54,23 @@ export default function Methodology() {
 
       <Section title={t("meth.s5.title")}>
         {bt ? (
-          <p>
-            {t("meth.s5.p", {
-              n: bt.n_matches,
-              brier: <Mono>{bt.brier}</Mono>,
-              brierBase: <Mono>{bt.brier_uniform_baseline}</Mono>,
-              logLoss: <Mono>{bt.log_loss}</Mono>,
-              logLossBase: <Mono>{bt.log_loss_uniform_baseline}</Mono>,
-            })}
-          </p>
+          <>
+            <div style={styles.tiles}>
+              <Tile label={t("meth.tile.brier")} value={bt.brier}
+                    base={t("meth.tile.baseline", { v: bt.brier_uniform_baseline })} />
+              <Tile label={t("meth.tile.logloss")} value={bt.log_loss}
+                    base={t("meth.tile.baseline", { v: bt.log_loss_uniform_baseline })} />
+            </div>
+            <p>
+              {t("meth.s5.p", {
+                n: bt.n_matches,
+                brier: <Mono>{bt.brier}</Mono>,
+                brierBase: <Mono>{bt.brier_uniform_baseline}</Mono>,
+                logLoss: <Mono>{bt.log_loss}</Mono>,
+                logLossBase: <Mono>{bt.log_loss_uniform_baseline}</Mono>,
+              })}
+            </p>
+          </>
         ) : (
           <p>{t("meth.s5.none")}</p>
         )}
@@ -113,16 +121,34 @@ const Note = ({ children }) => (
   <p style={{ fontSize: 12, color: "var(--text-low)" }}>{children}</p>
 );
 
+const Tile = ({ label, value, base }) => (
+  <div className="card" style={{ textAlign: "center", padding: "14px 10px" }}>
+    <div style={{ fontFamily: "var(--font-score)", fontWeight: 700, fontSize: 24, color: "var(--text-hi)" }}>
+      {value}
+    </div>
+    <div style={{ fontSize: 12, color: "var(--text-low)" }}>{label}</div>
+    <div style={{ fontSize: 11, color: "var(--text-low)" }}>{base}</div>
+  </div>
+);
+
 const styles = {
   lead: { color: "var(--text-mid)", fontSize: 16 },
   a: { color: "var(--gold)" },
   formula: {
-    background: "var(--bg-surface)",
+    // chalkboard: elevated slate with a grass accent edge
+    background: "color-mix(in srgb, var(--grass-deep) 22%, var(--bg-elevated))",
     border: "1px solid var(--line)",
+    borderLeft: "3px solid var(--grass)",
     borderRadius: 8,
-    padding: "10px 14px",
+    padding: "12px 14px",
     overflowX: "auto",
     color: "var(--text-hi)",
     fontSize: 13,
+  },
+  tiles: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+    gap: 12,
+    margin: "4px 0 12px",
   },
 };

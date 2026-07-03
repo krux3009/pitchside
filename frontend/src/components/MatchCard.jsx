@@ -19,7 +19,9 @@ export default function MatchCard({ m }) {
     ? t("stage.group", { letter: m.group_letter })
     : t("stage." + m.stage);
   return (
-    <Link to={`/matches/${m.id}`} className="card" style={styles.card}>
+    <Link to={`/matches/${m.id}`}
+          className={`card${m.status === "LIVE" ? " card--live" : ""}`}
+          style={styles.card}>
       <div style={styles.meta}>
         <span>{label}</span>
         <span style={styles.right}>
@@ -37,7 +39,7 @@ export default function MatchCard({ m }) {
       <div style={styles.row}>
         <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} />
         <span className="score" style={styles.score}>
-          {played ? `${m.home_goals} – ${m.away_goals}` : "v"}
+          {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
           {played && m.home_pens != null && m.away_pens != null && (
             <span style={styles.pens}>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</span>
           )}

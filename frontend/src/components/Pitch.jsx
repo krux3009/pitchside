@@ -128,15 +128,15 @@ const styles = {
     aspectRatio: "4 / 5",
     borderRadius: 10,
     overflow: "hidden",
-    // mown-grass stripes
-    background: "repeating-linear-gradient(0deg, #1b6b3a 0 12.5%, #1a5f36 12.5% 25%)",
+    // mown-grass stripes (vertical pitch, so the stripes run horizontally)
+    background: "repeating-linear-gradient(0deg, var(--grass) 0 12.5%, var(--grass-dim) 12.5% 25%)",
   },
   lines: {
     position: "absolute",
     inset: 0,
     width: "100%",
     height: "100%",
-    stroke: "rgba(255,255,255,0.35)",
+    stroke: "var(--pitch-line)",
     strokeWidth: 0.6,
     fill: "none",
   },

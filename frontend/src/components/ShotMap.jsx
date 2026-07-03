@@ -15,6 +15,8 @@ export default function ShotMap({ shots = [], homeId, awayId, homeCode, awayCode
   const [active, setActive] = useState(() => new Set(RESULTS)); // result chips on
   const [player, setPlayer] = useState("all");
   const [selSeq, setSelSeq] = useState(null);
+  // timeline scrub position in match minutes; null = full map (no scrub yet)
+  const [scrubMin, setScrubMin] = useState(null);
 
   // distinct shooters for the player dropdown
   const players = useMemo(() => {
@@ -26,10 +28,43 @@ export default function ShotMap({ shots = [], homeId, awayId, homeCode, awayCode
   if (!shots.length) return null;
 
   const colorFor = (s) => teamColor(s.team_id === homeId ? homeCode : awayCode);
-  const visible = shots.filter(
+  // chips + player scope the set; the scrubber then reveals it up to a minute.
+  // Shots with no clock stay visible at any scrub position.
+  const filtered = shots.filter(
     (s) => active.has(s.result) && (player === "all" || String(s.player_id) === player)
   );
+  const visible = filtered.filter(
+    (s) => scrubMin == null || s.minute == null || s.minute <= scrubMin
+  );
   const selected = shots.find((s) => s.seq === selSeq) || null;
+
+  const minutes = [...new Set(
+    filtered.filter((s) => s.minute != null).map((s) => s.minute)
+  )].sort((a, b) => a - b);
+  const maxMin = Math.max(90, ...(minutes.length ? minutes : [0]));
+
+  // releasing the handle snaps to the nearest shot and selects it, so the
+  // scrubber doubles as a shot-stepper
+  const snap = () => {
+    if (scrubMin == null || !minutes.length) return;
+    const nearest = minutes.reduce(
+      (best, m) => (Math.abs(m - scrubMin) < Math.abs(best - scrubMin) ? m : best)
+    );
+    setScrubMin(nearest);
+    const shot = filtered.find((s) => s.minute === nearest);
+    if (shot) setSelSeq(shot.seq);
+  };
+
+  const step = (dir) => {
+    if (!minutes.length) return;
+    const cur = scrubMin ?? Infinity;
+    const target = dir > 0
+      ? (minutes.find((m) => m > cur) ?? minutes[minutes.length - 1])
+      : ([...minutes].reverse().find((m) => m < cur) ?? minutes[0]);
+    setScrubMin(target);
+    const shot = filtered.find((s) => s.minute === target);
+    if (shot) setSelSeq(shot.seq);
+  };
 
   const toggle = (r) => {
     const next = new Set(active);
@@ -56,7 +91,8 @@ export default function ShotMap({ shots = [], homeId, awayId, homeCode, awayCode
             ))}
           </div>
           {players.length > 1 && (
-            <select value={player} onChange={(e) => setPlayer(e.target.value)} style={styles.select}>
+            <select value={player} onChange={(e) => setPlayer(e.target.value)}
+                    className="shot-select" style={styles.select}>
               <option value="all">{t("shotmap.allPlayers")}</option>
               {players.map((p) => (
                 <option key={p.id} value={String(p.id)}>{p.name}</option>
@@ -90,6 +126,26 @@ export default function ShotMap({ shots = [], homeId, awayId, homeCode, awayCode
                 />
               );
             })}
+        </div>
+
+        {/* timeline scrubber: drag through match minutes to replay the shots */}
+        <div style={styles.scrubRow}>
+          <button aria-label={t("shotmap.prevShot")} onClick={() => step(-1)} style={styles.stepBtn}>‹</button>
+          <input
+            type="range"
+            className="scrub"
+            min="0"
+            max={maxMin}
+            value={scrubMin ?? maxMin}
+            onChange={(e) => setScrubMin(Number(e.target.value))}
+            onPointerUp={snap}
+            aria-label={t("shotmap.scrub")}
+            aria-valuetext={`${scrubMin ?? maxMin}'`}
+          />
+          <button aria-label={t("shotmap.nextShot")} onClick={() => step(1)} style={styles.stepBtn}>›</button>
+          <span style={styles.scrubReadout}>
+            {t("shotmap.upTo", { min: scrubMin ?? maxMin, shown: visible.length, total: filtered.length })}
+          </span>
         </div>
 
         <p style={styles.hint}>
@@ -224,15 +280,25 @@ const styles = {
   },
   pitch: {
     position: "relative", width: "100%", aspectRatio: "105 / 64", borderRadius: 10,
-    overflow: "hidden", background: "repeating-linear-gradient(90deg, #1b6b3a 0 12.5%, #1a5f36 12.5% 25%)",
+    overflow: "hidden", background: "var(--pitch-stripes)",
   },
   lines: { position: "absolute", inset: 0, width: "100%", height: "100%",
-    stroke: "rgba(255,255,255,0.35)", strokeWidth: 0.4, fill: "none" },
+    stroke: "var(--pitch-line)", strokeWidth: 0.4, fill: "none" },
   marker: {
     position: "absolute", transform: "translate(-50%, -50%)", padding: 0, border: "none",
     background: "none", cursor: "pointer", lineHeight: 0,
   },
   hint: { fontSize: 11, color: "var(--text-low)", margin: "8px 2px 0", overflow: "hidden" },
+  scrubRow: { display: "flex", alignItems: "center", gap: 8, marginTop: 12 },
+  stepBtn: {
+    flexShrink: 0, width: 44, height: 44, fontSize: 20, lineHeight: 1,
+    color: "var(--text-mid)", background: "var(--bg-elevated)",
+    border: "1px solid var(--line)", borderRadius: "var(--radius-sm)", cursor: "pointer",
+  },
+  scrubReadout: {
+    flexShrink: 0, minWidth: 96, textAlign: "right", fontSize: 12, fontWeight: 600,
+    color: "var(--text-mid)", fontVariantNumeric: "tabular-nums",
+  },
   detail: {
     display: "flex", flexWrap: "wrap", gap: 16, marginTop: 12, paddingTop: 12,
     borderTop: "1px solid var(--line)",
@@ -241,5 +307,5 @@ const styles = {
   statGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px 12px" },
   statVal: { fontSize: 16, fontWeight: 700, color: "var(--text-hi)" },
   statLbl: { fontSize: 11, color: "var(--text-low)", textTransform: "uppercase", letterSpacing: 0.5 },
-  net: { width: 150, height: 90, alignSelf: "center", flexShrink: 0 },
+  net: { width: "min(150px, 40%)", aspectRatio: "100 / 60", alignSelf: "center", flexShrink: 0 },
 };

@@ -59,9 +59,22 @@ export default function Timetable() {
   if (loading) return <ColdStartLoader />;
   if (error) return <ErrorState error={error} />;
 
+  const live = (data ?? []).filter((m) => m.status === "LIVE");
+
   return (
     <>
       <h1 className="page-title">{t("timetable.title")}</h1>
+
+      {live.length > 0 && (
+        <section>
+          <h2 className="section-title">
+            <span className="live-dot" /> {t("timetable.onNow")}
+          </h2>
+          <div style={styles.grid}>
+            {live.map((m) => <MatchCard key={m.id} m={m} />)}
+          </div>
+        </section>
+      )}
       <input
         className="search"
         placeholder={t("timetable.search")}
@@ -103,7 +116,7 @@ export default function Timetable() {
       )}
       {byDate.map(([day, matches]) => (
         <section key={day}>
-          <h2 className="section-title">{localDateHeading(day, dateLocale)}</h2>
+          <h2 className="section-title day-sep">{localDateHeading(day, dateLocale)}</h2>
           <div style={styles.grid}>
             {matches.map((m) => (
               <MatchCard key={m.id} m={m} />

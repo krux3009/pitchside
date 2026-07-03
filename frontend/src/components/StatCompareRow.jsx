@@ -8,9 +8,9 @@ export default function StatCompareRow({ label, home, away, homeCode, awayCode, 
   return (
     <div style={{ margin: "10px 0" }}>
       <div style={styles.labels}>
-        <span className="mono-num">{home ?? "–"}{suffix}</span>
+        <span className="mono-num" style={h > a ? styles.lead : styles.trail}>{home ?? "–"}{suffix}</span>
         <span style={{ color: "var(--text-low)", fontSize: 12 }}>{label}</span>
-        <span className="mono-num">{away ?? "–"}{suffix}</span>
+        <span className="mono-num" style={a > h ? styles.lead : styles.trail}>{away ?? "–"}{suffix}</span>
       </div>
       <div style={styles.track}>
         <div style={{ display: "flex", justifyContent: "flex-end", width: "50%" }}>
@@ -25,6 +25,8 @@ export default function StatCompareRow({ label, home, away, homeCode, awayCode, 
 }
 
 const styles = {
-  labels: { display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 600, marginBottom: 4 },
+  labels: { display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 4 },
+  lead: { fontWeight: 700, color: "var(--text-hi)" },
+  trail: { fontWeight: 500, color: "var(--text-mid)" },
   track: { display: "flex", height: 6, background: "var(--bg-elevated)", borderRadius: 3 },
 };

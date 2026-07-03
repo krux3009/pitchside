@@ -13,6 +13,7 @@ import { useFactBar } from "../lib/factBar";
 import { localKickoff } from "../lib/format";
 import { downloadMatchIcs } from "../lib/ics";
 import { useLang } from "../lib/i18n";
+import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 const STAT_ROWS = [
@@ -46,8 +47,11 @@ export default function MatchDetail() {
 
   return (
     <>
-      <div className="card" style={{ marginTop: 24, textAlign: "center", padding: 24 }}>
-        <p style={{ color: "var(--text-low)", fontSize: 13, margin: 0 }}>
+      <div className="card hero-card" style={{ marginTop: 24, textAlign: "center" }}>
+        {/* team-colour edge bars, like a broadcast scoreboard chyron */}
+        <span style={{ ...styles.edgeBar, left: 0, background: teamColor(m.home_code) }} aria-hidden="true" />
+        <span style={{ ...styles.edgeBar, right: 0, background: teamColor(m.away_code) }} aria-hidden="true" />
+        <p style={{ color: "var(--text-low)", fontSize: 13, margin: 0, position: "relative" }}>
           {m.group_letter ? t("stage.group", { letter: m.group_letter }) : t("stage." + m.stage)} · {m.venue} ·{" "}
           {m.status === "LIVE" ? <span><span className="live-dot" /> {t("match.live")}</span>
             : m.status === "FT" ? t("match.fullTime") : localKickoff(m.kickoff_utc, dateLocale)}
@@ -55,7 +59,7 @@ export default function MatchDetail() {
         <div className="score-row">
           <span className="score-team"><TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} /></span>
           <span className="score big-score">
-            {played ? `${m.home_goals} – ${m.away_goals}` : "vs"}
+            {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
           </span>
           <span className="score-team"><TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} /></span>
         </div>
@@ -104,6 +108,7 @@ export default function MatchDetail() {
         <Momentum
           points={m.momentum}
           homeCode={m.home_code} awayCode={m.away_code}
+          pens={m.home_pens != null && m.away_pens != null ? [m.home_pens, m.away_pens] : null}
         />
       )}
 
@@ -225,6 +230,12 @@ function PlayerLine({ p, dim = false }) {
 }
 
 const styles = {
+  edgeBar: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 4,
+  },
   remindBtn: {
     marginTop: 16,
     padding: "8px 16px",

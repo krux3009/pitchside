@@ -5,6 +5,7 @@ import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import TeamBadge from "../components/TeamBadge";
 import { useFactBar } from "../lib/factBar";
 import { useLang } from "../lib/i18n";
+import { teamFlagUrl } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 const COLUMNS = ["goals", "assists", "goals_per_90", "team_goal_share", "minutes", "apps"];
@@ -47,7 +48,7 @@ export default function PlayerIndex() {
             <thead>
               <tr>
                 <th>{t("players.player")}</th>
-                <th>{t("players.team")}</th>
+                <th className="col-wide">{t("players.team")}</th>
                 {COLUMNS.map((key) => (
                   <th key={key} className="num" aria-sort={sort === key ? "descending" : "none"}>
                     <button
@@ -63,9 +64,16 @@ export default function PlayerIndex() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((p) => (
+              {rows.map((p, i) => (
                 <tr key={p.player_id}>
                   <td>
+                    {i < 3 && !q && (
+                      <span style={styles.rank} aria-hidden="true">{i + 1}</span>
+                    )}
+                    {teamFlagUrl(p.team_code) && (
+                      <img src={teamFlagUrl(p.team_code)} alt={p.team_code} width={16} height={12}
+                           loading="lazy" style={styles.flag} />
+                    )}
                     <Link
                       to={`/players/${p.player_id}`}
                       onMouseEnter={() => showPlayer(p.player_id, p.name)}
@@ -76,7 +84,7 @@ export default function PlayerIndex() {
                     </Link>{" "}
                     <span style={{ color: "var(--text-low)", fontSize: 12 }}>{p.position}</span>
                   </td>
-                  <td><TeamBadge code={p.team_code} name={p.team_code} /></td>
+                  <td className="col-wide"><TeamBadge code={p.team_code} name={p.team_code} /></td>
                   <td className="num">{p.goals}</td>
                   <td className="num">{p.assists}</td>
                   <td className="num">{p.goals_per_90 ?? "–"}</td>
@@ -92,3 +100,21 @@ export default function PlayerIndex() {
     </>
   );
 }
+
+const styles = {
+  // golden-boot-race rank for the top three of the active sort
+  rank: {
+    display: "inline-block",
+    width: 16,
+    marginRight: 4,
+    fontFamily: "var(--font-score)",
+    fontWeight: 700,
+    color: "var(--gold)",
+  },
+  flag: {
+    borderRadius: 2,
+    boxShadow: "0 0 0 1px var(--line)",
+    verticalAlign: "-1px",
+    marginRight: 6,
+  },
+};

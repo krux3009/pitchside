@@ -24,8 +24,9 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(1100px 520px at 50% -10%, rgba(255, 194, 51, 0.07), transparent 60%),
-    radial-gradient(900px 600px at 88% -4%, rgba(0, 230, 118, 0.045), transparent 55%);
+    radial-gradient(1100px 520px at 50% -10%, rgba(255, 194, 51, 0.09), transparent 60%),
+    radial-gradient(900px 600px at 88% -4%, rgba(0, 230, 118, 0.05), transparent 55%),
+    radial-gradient(1300px 700px at 50% 115%, rgba(15, 61, 34, 0.5), transparent 60%);
 }
 body::after {
   content: "";
@@ -82,6 +83,35 @@ a.card:hover {
 }
 a.card:active { transform: translateY(-1px); }
 
+/* ---- Matchday hero (Home): floodlit broadcast scoreboard ---- */
+.hero-card {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  margin-top: 18px;
+  padding: 24px 20px 20px;
+  background:
+    radial-gradient(700px 300px at 50% -40%, rgba(255, 194, 51, 0.10), transparent 65%),
+    linear-gradient(180deg, var(--bg-surface), color-mix(in srgb, var(--grass-deep) 28%, var(--bg-surface)));
+}
+/* faint halfway line + centre circle, like looking down on the pitch */
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 1px), #fff calc(50% - 1px), #fff calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 50%, transparent 72px, #fff 72px, #fff 74px, transparent 74px);
+}
+
+/* An in-play match card reads "on air" */
+.card--live {
+  border-color: color-mix(in srgb, var(--live) 40%, var(--line));
+  box-shadow: var(--shadow-card), 0 0 18px -8px var(--live);
+}
+
 /* ---- Section title: broadcast lower-third tick ---- */
 .section-title {
   display: flex;
@@ -101,7 +131,7 @@ a.card:active { transform: translateY(-1px); }
   height: 14px;
   border-radius: 2px;
   background: var(--gold);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
+  box-shadow: var(--glow-gold);
 }
 
 /* ---- Calendar reminder button ---- */
@@ -118,7 +148,7 @@ a.card:active { transform: translateY(-1px); }
 }
 
 .score {
-  font-family: var(--font-display);
+  font-family: var(--font-score);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -170,7 +200,7 @@ a.card:active { transform: translateY(-1px); }
   height: 2px;
   border-radius: 2px;
   background: var(--gold);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 60%, transparent);
+  box-shadow: var(--glow-gold);
 }
 .lang-toggle {
   flex-shrink: 0;
@@ -208,6 +238,18 @@ a.card:active { transform: translateY(-1px); }
 
 /* ---- Filter dropdowns (Timetable stage/group) ---- */
 .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.filter-row .select { border-radius: var(--radius-pill); }
+
+/* Timetable day separators ride under the sticky nav like broadcast slates */
+.day-sep {
+  position: sticky;
+  top: 56px;
+  z-index: 5;
+  padding: 8px 0;
+  margin: 22px 0 10px;
+  background: color-mix(in srgb, var(--bg-pitch) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
 .select {
   padding: 8px 12px;
   background: var(--bg-surface);
@@ -226,7 +268,7 @@ a.card:active { transform: translateY(-1px); }
 /* ---- Odds row (Home title race) ---- */
 .odds-row {
   display: grid;
-  grid-template-columns: 180px 1fr 52px;
+  grid-template-columns: minmax(110px, 180px) 1fr 52px;
   align-items: center;
   gap: 10px;
   padding: 5px 0;
@@ -234,6 +276,7 @@ a.card:active { transform: translateY(-1px); }
 
 /* ---- Match score header (MatchDetail) ---- */
 .score-row {
+  position: relative; /* stays above the hero-card pitch-line overlay */
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -250,7 +293,7 @@ a.card:active { transform: translateY(-1px); }
   height: 8px;
   border-radius: 50%;
   background: var(--live);
-  box-shadow: 0 0 8px var(--live);
+  box-shadow: var(--glow-live);
   animation: pulse 1.4s ease-in-out infinite;
 }
 @keyframes pulse { 50% { opacity: 0.35; } }
@@ -353,7 +396,7 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   height: 18px;
   border-radius: 2px;
   background: var(--gold);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 55%, transparent);
+  box-shadow: var(--glow-gold);
 }
 .fact-bar__icon { flex-shrink: 0; font-size: 20px; line-height: 1; }
 .fact-bar__title { flex-shrink: 0; font-weight: 700; white-space: nowrap; }
@@ -398,7 +441,14 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 
   .select { padding: 10px 12px; font-size: 14px; } /* bigger tap target */
 
-  .odds-row { grid-template-columns: 92px 1fr 42px; gap: 8px; }
+  .odds-row { grid-template-columns: minmax(96px, 130px) 1fr 42px; gap: 8px; }
+  .hero-card { padding: 18px 14px 16px; }
+
+  /* the two-row phone nav has no fixed height to pin under */
+  .day-sep { position: static; padding: 0; backdrop-filter: none; background: none; }
+
+  /* pickers stack full-width so long team/player names stay readable */
+  .filter-row .select { flex: 1 1 100%; }
 
   .score-team { font-size: 15px; }
   .big-score { font-size: 30px; }
@@ -483,6 +533,107 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   text-transform: uppercase; font-size: 13px; color: var(--gold);
 }
 .bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
+
+/* ---- ShotMap timeline scrubber ---- */
+input.scrub {
+  flex: 1;
+  min-width: 0;
+  height: 44px; /* generous touch target; the track is drawn thin */
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input.scrub::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+input.scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--bg-pitch);
+  box-shadow: var(--glow-gold);
+}
+input.scrub::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+input.scrub::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--bg-pitch);
+  box-shadow: var(--glow-gold);
+}
+@media (max-width: 560px) {
+  /* full-width player picker under the chips */
+  .shot-select { margin-left: 0 !important; width: 100%; }
+}
+
+/* ---- Group tables ---- */
+/* fixed shared widths so all 12 group tables align vertically */
+.groups-table { min-width: 560px; }
+.gcol-pos { width: 44px; }
+.gcol-team { width: 200px; }
+.gcol-num { width: 52px; }
+.qualify-row { background: color-mix(in srgb, var(--gold) 8%, transparent); }
+.qualify-row td:first-child { box-shadow: inset 3px 0 0 var(--grass); }
+@media (max-width: 560px) {
+  /* essentials only — no horizontal scroll at any width */
+  .col-wide { display: none; }
+  .groups-table { min-width: 0; }
+  .gcol-pos { width: 34px; }
+  .gcol-team { width: auto; }
+  .gcol-num { width: 44px; }
+}
+
+/* ---- Bracket round-pager (phone/tablet) ---- */
+.bkt-pager { display: none; }
+.bkt-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  margin-bottom: 12px;
+}
+.bkt-tabs::-webkit-scrollbar { display: none; }
+.bkt-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.bkt-tab--on {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  box-shadow: var(--glow-gold);
+}
+.bkt-pager-list { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 900px) {
+  .bkt-scroll { display: none; }
+  .bkt-pager { display: block; margin-top: 4px; }
+}
 
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
