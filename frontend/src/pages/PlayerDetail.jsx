@@ -5,6 +5,7 @@ import Sparkline from "../components/Sparkline";
 import TeamBadge from "../components/TeamBadge";
 import { ageFromDob } from "../lib/format";
 import { useLang } from "../lib/i18n";
+import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 export default function PlayerDetail() {
@@ -33,20 +34,26 @@ export default function PlayerDetail() {
 
   return (
     <>
-      <div className="card" style={{ marginTop: 24, display: "flex", gap: 16, alignItems: "center" }}>
+      {/* broadcast lower-third: photo ringed in team colour, chips for the vitals */}
+      <div className="card hero-card" style={{ marginTop: 24, display: "flex", gap: 18, alignItems: "center" }}>
         {p.photo_url && (
-          <img src={p.photo_url} alt="" width="64" height="64"
-               style={{ borderRadius: "50%", background: "var(--bg-elevated)" }}
+          <img src={p.photo_url} alt="" width="84" height="84"
+               style={{
+                 position: "relative", borderRadius: "50%", background: "var(--bg-elevated)",
+                 boxShadow: `0 0 0 3px ${teamColor(p.team_code)}, 0 0 18px -4px ${teamColor(p.team_code)}`,
+                 flexShrink: 0,
+               }}
                onError={(e) => { e.currentTarget.style.display = "none"; }} />
         )}
-        <div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 24, margin: 0 }}>
+        <div style={{ position: "relative", minWidth: 0 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, margin: 0, letterSpacing: 0.5 }}>
             {p.name}
           </h1>
-          <p style={{ color: "var(--text-mid)", margin: "4px 0 0" }}>
-            <TeamBadge code={p.team_code} name={p.team_name} />{" "}
-            · {p.position} {p.shirt_number ? `· #${p.shirt_number}` : ""}
-            {p.date_of_birth ? <> · {t("player.age", { n: ageFromDob(p.date_of_birth) })}</> : ""}
+          <p style={{ color: "var(--text-mid)", margin: "6px 0 0", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <TeamBadge code={p.team_code} name={p.team_name} />
+            {p.position && <span style={styles.chip}>{p.position}</span>}
+            {p.shirt_number != null && <span style={styles.chip}>#{p.shirt_number}</span>}
+            {p.date_of_birth && <span style={styles.chip}>{t("player.age", { n: ageFromDob(p.date_of_birth) })}</span>}
           </p>
         </div>
       </div>
@@ -169,4 +176,13 @@ function CareerTable({ title, rows, localizeNames = false }) {
 
 const styles = {
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 },
+  chip: {
+    padding: "2px 10px",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--text-hi)",
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--line)",
+    borderRadius: "var(--radius-pill)",
+  },
 };
