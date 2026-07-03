@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import Disclaimer from "../components/Disclaimer";
@@ -115,9 +116,13 @@ function Half({ order, rounds, side, odds, t }) {
   );
 }
 
+const PAGER_STAGES = ["R32", "R16", "QF", "SF", "FINAL"];
+
 export default function Bracket() {
   const { t } = useLang();
   const { data, loading, error } = useApi("/api/bracket", { pollMs: 60_000 });
+  // phone round-pager selection; null = "default to the first undecided stage"
+  const [pickedStage, setPickedStage] = useState(null);
 
   if (loading) return <ColdStartLoader />;
   if (error) return <ErrorState error={error} />;
@@ -133,6 +138,11 @@ export default function Bracket() {
   const champ = final?.winner_team_id
     ? [final.home, final.away].find((s) => s.team_id === final.winner_team_id)
     : null;
+
+  const byStage = Object.fromEntries(data.rounds.map((r) => [r.stage, r.matches]));
+  const activeStage = pickedStage ??
+    PAGER_STAGES.find((s) => (byStage[s] ?? []).some((m) => m.winner_team_id == null)) ??
+    "FINAL";
 
   return (
     <>
@@ -164,6 +174,38 @@ export default function Bracket() {
           </div>
 
           <Half order={[...LEFT_ORDER].reverse()} rounds={right} side="right" odds={odds} t={t} />
+        </div>
+      </div>
+
+      {/* phone: one round at a time instead of panning a 1120px canvas */}
+      <div className="bkt-pager">
+        <div className="bkt-tabs" role="tablist" aria-label={t("bracket.title")}>
+          {PAGER_STAGES.map((s) => (
+            <button
+              key={s}
+              role="tab"
+              aria-selected={activeStage === s}
+              className={`bkt-tab${activeStage === s ? " bkt-tab--on" : ""}`}
+              onClick={() => setPickedStage(s)}
+            >
+              {t(`stage.${s}`)}
+            </button>
+          ))}
+        </div>
+        <div className="bkt-pager-list">
+          {(byStage[activeStage] ?? []).map((m) => (
+            <Node key={m.id} m={m} odds={odds} />
+          ))}
+          {activeStage === "FINAL" && (
+            <div className="bkt-champ" style={{ position: "static" }}>
+              <div className="bkt-champ-label">{t("bracket.champion")}</div>
+              {champ ? (
+                <TeamBadge code={champ.code} name={champ.name} size={20} />
+              ) : (
+                <div className="bkt-champ-trophy" aria-hidden="true">🏆</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -213,7 +255,7 @@ const styles = {
   },
   champ: { color: "var(--text-low)", fontSize: 11 },
   slot: { color: "var(--text-low)", fontStyle: "italic" },
-  score: { minWidth: 14, textAlign: "right" },
+  score: { minWidth: 14, textAlign: "right", fontFamily: "var(--font-score)" },
   winBar: {
     position: "absolute",
     left: -12,

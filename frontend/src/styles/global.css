@@ -515,6 +515,44 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 }
 .bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
 
+/* ---- Bracket round-pager (phone/tablet) ---- */
+.bkt-pager { display: none; }
+.bkt-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+  margin-bottom: 12px;
+}
+.bkt-tabs::-webkit-scrollbar { display: none; }
+.bkt-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-mid);
+  background: var(--bg-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.bkt-tab--on {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  box-shadow: var(--glow-gold);
+}
+.bkt-pager-list { display: flex; flex-direction: column; gap: 10px; }
+
+@media (max-width: 900px) {
+  .bkt-scroll { display: none; }
+  .bkt-pager { display: block; margin-top: 4px; }
+}
+
 /* ---- Motion preference ---- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
