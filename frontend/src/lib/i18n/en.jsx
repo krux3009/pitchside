@@ -98,6 +98,7 @@ export const EN = {
   "prob.draw": "draw",
 
   // team stat rows
+  "stat.xg": "Expected goals (xG)",
   "stat.possession": "Possession",
   "stat.shots": "Shots",
   "stat.shots_on_target": "On target",

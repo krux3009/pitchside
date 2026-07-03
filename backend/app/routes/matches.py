@@ -69,6 +69,16 @@ def match_detail(match_id: int):
         stats = conn.execute(
             "SELECT * FROM match_team_stats WHERE match_id = ?", (match_id,)
         ).fetchall()
+        # team xG = sum of the ESPN shot-level xG already in match_shots;
+        # computed on read so it always agrees with the shot map below it
+        xg_rows = conn.execute(
+            """SELECT team_id, ROUND(SUM(xg), 2) AS xg FROM match_shots
+               WHERE match_id = ? AND xg IS NOT NULL GROUP BY team_id""",
+            (match_id,),
+        ).fetchall()
+        xg_by_team = {r["team_id"]: r["xg"] for r in xg_rows}
+        for s in stats:
+            s["xg"] = xg_by_team.get(s["team_id"], s.get("xg"))
         lineups = conn.execute(
             "SELECT * FROM lineups WHERE match_id = ?", (match_id,)
         ).fetchall()

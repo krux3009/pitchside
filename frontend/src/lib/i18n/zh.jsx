@@ -96,6 +96,7 @@ export const ZH = {
   "prob.draw": "平局",
 
   // team stat rows
+  "stat.xg": "预期进球 (xG)",
   "stat.possession": "控球率",
   "stat.shots": "射门",
   "stat.shots_on_target": "射正",

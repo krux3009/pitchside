@@ -17,6 +17,7 @@ import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 const STAT_ROWS = [
+  ["xg", ""],
   ["possession", "%"],
   ["shots", ""],
   ["shots_on_target", ""],
