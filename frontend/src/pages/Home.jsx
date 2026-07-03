@@ -7,15 +7,20 @@ import MatchCard from "../components/MatchCard";
 import ProbBar from "../components/ProbBar";
 import TeamBadge from "../components/TeamBadge";
 import { getPublishedAt } from "../lib/api";
-import { localDateHeading, localKickoff, localTime, pct } from "../lib/format";
+import { localDateHeading, localDayKey, localKickoff, localTime, pct } from "../lib/format";
 import { useLang } from "../lib/i18n";
 import { teamColor } from "../lib/teamColors";
 import { useApi } from "../lib/useApi";
 
 export default function Home() {
   const { t, tTeam, tInjuryStatus, dateLocale } = useLang();
-  // poll so a live match flips to FT on its own, within ~1 min of each republish
+  // The briefing buckets its days in server (UTC) time; the hero and the
+  // today/yesterday sections regroup from the full match list in the
+  // VIEWER'S day instead, so the headings agree with the kickoff times shown.
+  // The briefing still supplies the editorial extras (standouts, injuries,
+  // upset notes, odds movers). Both poll so a live match flips on its own.
   const briefing = useApi("/api/briefing/today", { pollMs: 60_000 });
+  const matches = useApi("/api/matches", { pollMs: 60_000 });
   const sim = useApi("/api/sim/championship");
 
   // freshness beacon: when the CDN was last republished (production only)
@@ -31,8 +36,9 @@ export default function Home() {
     };
   }, []);
 
-  if (briefing.loading) return <ColdStartLoader />;
-  if (briefing.error) return <ErrorState error={briefing.error} />;
+  if (briefing.loading || matches.loading) return <ColdStartLoader />;
+  if (briefing.error || matches.error)
+    return <ErrorState error={briefing.error || matches.error} />;
   const b = briefing.data;
 
   // sentences are composed client-side so they localize; `upset_note` / `line`
@@ -48,8 +54,22 @@ export default function Home() {
       s.assists ? t("home.assists", { n: s.assists }) : null,
     ].filter(Boolean).join(" + ");
 
+  // regroup in the viewer's calendar: today's slate + yesterday's results
+  const all = matches.data ?? [];
+  const todayKey = localDayKey(new Date().toISOString());
+  const yesterdayKey = localDayKey(new Date(Date.now() - 86400e3).toISOString());
+  const todays = all
+    .filter((m) => localDayKey(m.kickoff_utc) === todayKey)
+    .sort((x, y) => x.kickoff_utc.localeCompare(y.kickoff_utc));
+  const yesterdays = all
+    .filter((m) => m.status === "FT" && localDayKey(m.kickoff_utc) === yesterdayKey)
+    .sort((x, y) => y.kickoff_utc.localeCompare(x.kickoff_utc));
+  // the briefing's upset annotations, joined back onto the regrouped rows
+  const upsetBy = {};
+  for (const c of [...(b.yesterday ?? []), ...(b.today ?? [])])
+    if (c.upset || c.upset_note) upsetBy[c.match_id] = c;
+
   // matchday hero: the single most relevant match — live beats upcoming beats done
-  const todays = b.today ?? [];
   const hero =
     todays.find((m) => m.status === "LIVE") ??
     todays.find((m) => m.status === "SCHEDULED") ??
@@ -61,36 +81,36 @@ export default function Home() {
     <>
       <h1 className="page-title">{t("home.title")}</h1>
       <p style={{ color: "var(--text-low)", marginTop: -8 }}>
-        {localDateHeading(b.date, dateLocale)} · {t("home.autogen")}
+        {localDateHeading(todayKey, dateLocale)} · {t("home.autogen")}
         {updatedAt && <> · {t("home.updated", { time: localTime(updatedAt, dateLocale) })}</>}
       </p>
 
       {hero && <HeroMatch m={hero} />}
 
-      {(b.yesterday ?? []).length > 0 && (
+      {yesterdays.length > 0 && (
         <>
           <h2 className="section-title">{t("home.yesterday")}</h2>
           <div className="card">
-            {b.yesterday.map((m) => (
-              <div key={m.match_id} style={styles.resultRow}>
-                <Link to={`/matches/${m.match_id}`} style={styles.resultLine}>
+            {yesterdays.map((m) => (
+              <div key={m.id} style={styles.resultRow}>
+                <Link to={`/matches/${m.id}`} style={styles.resultLine}>
                   <span style={styles.resultHome}>
-                    <TeamBadge code={m.home_code} name={m.home} />
+                    <TeamBadge code={m.home_code} name={m.home_name} />
                   </span>
                   <span className="score" style={styles.resultScore}>
-                    {m.score[0]} – {m.score[1]}
-                    {m.pens && (
+                    {m.home_goals} – {m.away_goals}
+                    {m.home_pens != null && m.away_pens != null && (
                       <span style={styles.resultPens}>
-                        {t("match.pensShort", { h: m.pens[0], a: m.pens[1] })}
+                        {t("match.pensShort", { h: m.home_pens, a: m.away_pens })}
                       </span>
                     )}
                   </span>
                   <span>
-                    <TeamBadge code={m.away_code} name={m.away} />
+                    <TeamBadge code={m.away_code} name={m.away_name} />
                   </span>
                 </Link>
-                {(m.upset || m.upset_note) && (
-                  <div style={styles.upset}>{upsetLine(m)}</div>
+                {upsetBy[m.id] && (
+                  <div style={styles.upset}>{upsetLine(upsetBy[m.id])}</div>
                 )}
               </div>
             ))}
@@ -114,18 +134,7 @@ export default function Home() {
       )}
       <div style={styles.todayGrid}>
         {rest.map((m) => (
-          <MatchCard
-            key={m.match_id}
-            m={{
-              id: m.match_id, stage: m.stage, group_letter: m.group,
-              kickoff_utc: m.kickoff_utc, status: m.status,
-              home_name: m.home, home_code: m.home_code,
-              away_name: m.away, away_code: m.away_code,
-              home_goals: m.score?.[0], away_goals: m.score?.[1],
-              home_pens: m.pens?.[0], away_pens: m.pens?.[1],
-              p_home: m.p_home, p_draw: m.p_draw, p_away: m.p_away,
-            }}
-          />
+          <MatchCard key={m.id} m={m} />
         ))}
       </div>
 
@@ -201,15 +210,15 @@ export default function Home() {
 
 // Broadcast scoreboard hero — floodlit card for the day's headline match.
 function HeroMatch({ m }) {
-  const { t, tTeam, dateLocale } = useLang();
+  const { t, dateLocale } = useLang();
   const live = m.status === "LIVE";
   const played = m.status !== "SCHEDULED";
   const minsToKo = Math.max(0, Math.round((new Date(m.kickoff_utc) - Date.now()) / 60000));
-  const stage = m.group
-    ? t("stage.group", { letter: m.group })
+  const stage = m.group_letter
+    ? t("stage.group", { letter: m.group_letter })
     : t("stage." + m.stage);
   return (
-    <Link to={`/matches/${m.match_id}`}
+    <Link to={`/matches/${m.id}`}
           className={`card hero-card${live ? " card--live" : ""}`}>
       <p style={styles.heroMeta}>
         {stage} · {m.venue} ·{" "}
@@ -219,17 +228,17 @@ function HeroMatch({ m }) {
       </p>
       <div style={styles.heroRow}>
         <span style={styles.heroTeam}>
-          <TeamBadge code={m.home_code} name={m.home} size={30} />
+          <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} size={30} />
         </span>
         <span className="score" style={styles.heroScore}>
-          {played ? `${m.score?.[0] ?? 0} – ${m.score?.[1] ?? 0}` : "vs"}
+          {played ? `${m.home_goals ?? 0} – ${m.away_goals ?? 0}` : "vs"}
         </span>
         <span style={{ ...styles.heroTeam, justifyContent: "flex-end" }}>
-          <TeamBadge code={m.away_code} name={m.away} size={30} />
+          <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} size={30} />
         </span>
       </div>
-      {played && m.pens && (
-        <p style={styles.heroPens}>{t("match.pens", { h: m.pens[0], a: m.pens[1] })}</p>
+      {played && m.home_pens != null && m.away_pens != null && (
+        <p style={styles.heroPens}>{t("match.pens", { h: m.home_pens, a: m.away_pens })}</p>
       )}
       {!played && (
         <p style={styles.heroCountdown}>
