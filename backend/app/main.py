@@ -1,4 +1,5 @@
 import threading
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import db
 from .config import ALLOWED_ORIGINS
 from .routes import bracket, briefing, internal, matches, methodology, players, sim, standings
+
+LIVE_TICK_SECONDS = 75    # refresh cadence while a match is in play
+IDLE_CHECK_SECONDS = 120  # how often to peek at the schedule otherwise
 
 
 def _catch_up():
@@ -20,6 +24,31 @@ def _catch_up():
         conn.close()
 
 
+def _live_loop():
+    """Fast refresh while a match is in play. The external pinger only fires
+    every ~10 minutes — fine between matchdays, glacial mid-match. This loop
+    shares the pinger's cycle lock, so ticks collapse instead of stacking.
+    It lives only while the instance is awake; the pinger stays the heartbeat
+    that keeps Render's free tier from sleeping through a match.
+    """
+    from .fetch import refresh
+    from .routes.internal import _refresh_then_publish
+
+    while True:
+        hot = False
+        try:
+            conn = db.connect()
+            try:
+                hot = refresh.live_window_open(conn)
+            finally:
+                conn.close()
+            if hot:
+                _refresh_then_publish()
+        except Exception:
+            pass  # never let a bad tick kill the loop; next tick retries
+        time.sleep(LIVE_TICK_SECONDS if hot else IDLE_CHECK_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     conn = db.bootstrap()
@@ -29,6 +58,7 @@ async def lifespan(app: FastAPI):
     conn.close()
     if needs_catchup:
         threading.Thread(target=_catch_up, daemon=True).start()
+    threading.Thread(target=_live_loop, daemon=True).start()
     yield
 
 

@@ -36,6 +36,20 @@ def _store_sim(conn, probs: dict, n: int) -> str:
     return run_id
 
 
+def live_window_open(conn) -> bool:
+    """True while a match is in play or kicking off imminently — the signal for
+    the in-app fast-refresh loop. A match stays LIVE in our DB until a refresh
+    observes the final whistle, so the closing tick still ingests the result."""
+    return conn.execute(
+        """SELECT 1 FROM matches
+           WHERE status = 'LIVE'
+              OR (status = 'SCHEDULED'
+                  AND datetime(kickoff_utc) <= datetime('now', '+5 minutes')
+                  AND datetime(kickoff_utc) >= datetime('now', '-30 minutes'))
+           LIMIT 1"""
+    ).fetchone() is not None
+
+
 def run(conn, sim_iterations: int = 10_000) -> dict:
     report = {"scoreboards": 0, "summaries": 0, "newly_finished": [],
               "elo_applied": 0, "predictions": 0, "sim_run": None}

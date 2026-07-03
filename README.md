@@ -34,7 +34,8 @@ tie-breaking rules. Full details, formulas, and citations live on the Methodolog
 React (Vite) on Vercel  ──fetch──▶  static-JSON CDN (Hostinger)   ← production read path
                               └────▶  FastAPI on Render  ──SQLite cache──▶  data sources
                                           ▲
-                          GitHub Actions cron (refresh + keep-alive + nightly archive + static-publish)
+          external cron pinger (~10 min refresh+publish, keep-alive) · in-app live loop (~75s during matches)
+          GitHub Actions (nightly archive · on-demand static-publish)
 ```
 
 **Cold-start avoidance:** Render's free tier sleeps after 15 min idle (30–60s to

@@ -27,7 +27,9 @@ cd frontend && npm run dev                        # local UI on :5173 (VITE_API_
   in the nightly archive (`backend/app/archive.py::TABLES`), or must be cheaply
   re-fetchable on boot (the lifespan self-heal handles recomputable state).
 - Career/heavy fetches must NOT run inside the matchday refresh loop
-  (`fetch/refresh.py` runs every 10 min via GitHub Actions cron).
+  (`fetch/refresh.py` runs every ~10 min via an external cron pinger hitting
+  `/api/internal/refresh?publish=1`, and every ~75s from the in-app live loop
+  while a match is in play — `main.py::_live_loop`).
 - Gambling disclaimer (`frontend/src/components/Disclaimer.jsx`) on every surface
   that shows a probability — don't remove placements.
 - Plain sqlite3 + handwritten SQL, no ORM. Recruiters read this repo.
