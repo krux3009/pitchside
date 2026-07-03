@@ -41,8 +41,21 @@ def list_matches(stage: str | None = None, group: str | None = None,
     conn = db.connect()
     try:
         rows = conn.execute(f"{CARD_SQL} {where} ORDER BY m.id", args).fetchall()
+        # compact scorer lines so list surfaces (home recap) can show who
+        # scored without fetching every match detail
+        goals = conn.execute(
+            """SELECT match_id, player_name, team_id, minute, clock, type
+               FROM match_events
+               WHERE type IN ('goal', 'penalty-goal', 'own-goal')
+               ORDER BY match_id, seq"""
+        ).fetchall()
     finally:
         conn.close()
+    by_match = {}
+    for g in goals:
+        by_match.setdefault(g.pop("match_id"), []).append(g)
+    for m in rows:
+        m["goals"] = by_match.get(m["id"], [])
     return rows
 
 

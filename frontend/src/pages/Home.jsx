@@ -48,11 +48,23 @@ export default function Home() {
       ? t("home.upset", { team: tTeam(m.upset.winner_code, m.upset.winner),
                           pct: pct(m.upset.p_winner) })
       : m.upset_note;
-  const standoutLine = (s) =>
-    s.line ?? [
-      s.goals ? t("home.goals", { n: s.goals }) : null,
-      s.assists ? t("home.assists", { n: s.assists }) : null,
-    ].filter(Boolean).join(" + ");
+
+  // "Oyarzabal 23' 55'" lines for one side; own goals credit the other side's
+  // scoreline, so they appear under the benefiting team with an (OG) tag
+  const scorerLines = (goals, sideId) => {
+    const byPlayer = new Map();
+    for (const g of goals ?? []) {
+      const benefits = g.type === "own-goal" ? g.team_id !== sideId : g.team_id === sideId;
+      if (!benefits) continue;
+      const when = g.clock || (g.minute != null ? `${g.minute}'` : "");
+      const tag = g.type === "own-goal" ? ` (${t("event.own-goal")})`
+        : g.type === "penalty-goal" ? ` (${t("event.penalty-goal")})` : "";
+      const key = g.player_name ?? "?";
+      if (!byPlayer.has(key)) byPlayer.set(key, []);
+      byPlayer.get(key).push(when + tag);
+    }
+    return [...byPlayer].map(([name, times]) => `${name} ${times.join(" ")}`);
+  };
 
   // regroup in the viewer's calendar: today's slate + yesterday's results
   const all = matches.data ?? [];
@@ -109,21 +121,22 @@ export default function Home() {
                     <TeamBadge code={m.away_code} name={m.away_name} />
                   </span>
                 </Link>
+                {(m.goals ?? []).length > 0 && (
+                  <div style={styles.scorers}>
+                    <span style={{ textAlign: "right" }}>
+                      {scorerLines(m.goals, m.home_id).map((l) => <div key={l}>{l}</div>)}
+                    </span>
+                    <span style={styles.scorersBall} aria-hidden="true">⚽</span>
+                    <span>
+                      {scorerLines(m.goals, m.away_id).map((l) => <div key={l}>{l}</div>)}
+                    </span>
+                  </div>
+                )}
                 {upsetBy[m.id] && (
                   <div style={styles.upset}>{upsetLine(upsetBy[m.id])}</div>
                 )}
               </div>
             ))}
-            {(b.standouts ?? []).length > 0 && (
-              <div style={styles.standouts}>
-                {b.standouts.map((s, i) => (
-                  <span key={i} style={styles.standout}>
-                    <strong style={{ color: "var(--text-hi)" }}>{s.player}</strong>{" "}
-                    ({tTeam(s.team_code, s.team)}) — {standoutLine(s)}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </>
       )}
@@ -271,8 +284,16 @@ const styles = {
     color: "var(--gold)", fontSize: 13, marginTop: 4,
     borderLeft: "3px solid var(--gold)", paddingLeft: 8,
   },
-  standouts: { display: "flex", flexDirection: "column", gap: 4, paddingTop: 10, fontSize: 13, color: "var(--text-mid)" },
-  standout: { borderLeft: "3px solid var(--gold-dim)", paddingLeft: 8 },
+  scorers: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "start",
+    gap: 12,
+    marginTop: 4,
+    fontSize: 12,
+    color: "var(--text-mid)",
+  },
+  scorersBall: { fontSize: 10, opacity: 0.6, minWidth: 44, textAlign: "center" },
   injuryRow: {
     fontSize: 14, padding: "4px 0 4px 8px", margin: "2px 0",
     borderLeft: "3px solid var(--danger)",
