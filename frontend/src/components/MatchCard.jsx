@@ -40,17 +40,23 @@ export default function MatchCard({ m }) {
         <TeamBadge code={m.home_code} name={m.home_name ?? m.home_slot} />
         <span className="score" style={styles.score}>
           {played ? `${m.home_goals} – ${m.away_goals}` : t("compare.vs")}
-          {played && m.home_pens != null && m.away_pens != null && (
-            <span style={styles.pens}>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</span>
-          )}
-          {played && m.home_xg != null && m.away_xg != null && (
-            <span style={styles.pens}>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</span>
-          )}
         </span>
         <span style={{ textAlign: "right" }}>
           <TeamBadge code={m.away_code} name={m.away_name ?? m.away_slot} />
         </span>
       </div>
+      {/* sub-lines sit under the row so they can't push the score off the
+          team-name line; equal side columns keep them centred under it */}
+      {played && (m.home_pens != null || m.home_xg != null) && (
+        <div style={styles.scoreSubs}>
+          {m.home_pens != null && m.away_pens != null && (
+            <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
+          )}
+          {m.home_xg != null && m.away_xg != null && (
+            <div>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</div>
+          )}
+        </div>
+      )}
       {!played && m.p_home != null && (
         <ProbBar
           pHome={m.p_home} pDraw={m.p_draw} pAway={m.p_away}
@@ -100,5 +106,13 @@ const styles = {
     fontSize: 15,
   },
   score: { fontSize: 20, textAlign: "center" },
-  pens: { display: "block", fontSize: 11, color: "var(--text-mid)", fontWeight: 500 },
+  scoreSubs: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "var(--text-mid)",
+    fontWeight: 500,
+    lineHeight: 1.5,
+    marginTop: -6,
+    marginBottom: 10,
+  },
 };

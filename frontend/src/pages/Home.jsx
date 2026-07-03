@@ -111,21 +111,21 @@ export default function Home() {
                   </span>
                   <span className="score" style={styles.resultScore}>
                     {m.home_goals} – {m.away_goals}
-                    {m.home_pens != null && m.away_pens != null && (
-                      <span style={styles.resultPens}>
-                        {t("match.pensShort", { h: m.home_pens, a: m.away_pens })}
-                      </span>
-                    )}
-                    {m.home_xg != null && m.away_xg != null && (
-                      <span style={styles.resultPens}>
-                        {t("match.xgLine", { h: m.home_xg, a: m.away_xg })}
-                      </span>
-                    )}
                   </span>
                   <span>
                     <TeamBadge code={m.away_code} name={m.away_name} />
                   </span>
                 </Link>
+                {(m.home_pens != null || m.home_xg != null) && (
+                  <div style={styles.resultSubs}>
+                    {m.home_pens != null && m.away_pens != null && (
+                      <div>{t("match.pensShort", { h: m.home_pens, a: m.away_pens })}</div>
+                    )}
+                    {m.home_xg != null && m.away_xg != null && (
+                      <div>{t("match.xgLine", { h: m.home_xg, a: m.away_xg })}</div>
+                    )}
+                  </div>
+                )}
                 {(m.goals ?? []).length > 0 && (
                   <div style={styles.scorers}>
                     <span style={{ textAlign: "right" }}>
@@ -287,7 +287,14 @@ const styles = {
   },
   resultHome: { display: "flex", justifyContent: "flex-end", textAlign: "right" },
   resultScore: { fontSize: 18, lineHeight: 1.1, textAlign: "center", minWidth: 44 },
-  resultPens: { display: "block", fontSize: 11, color: "var(--text-mid)", fontWeight: 500 },
+  resultSubs: {
+    textAlign: "center",
+    fontSize: 11,
+    color: "var(--text-mid)",
+    fontWeight: 500,
+    lineHeight: 1.5,
+    marginTop: 2,
+  },
   upset: {
     color: "var(--gold)", fontSize: 13, marginTop: 4,
     borderLeft: "3px solid var(--gold)", paddingLeft: 8,
