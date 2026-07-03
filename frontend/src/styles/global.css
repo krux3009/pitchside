@@ -276,6 +276,7 @@ a.card:active { transform: translateY(-1px); }
 
 /* ---- Match score header (MatchDetail) ---- */
 .score-row {
+  position: relative; /* stays above the hero-card pitch-line overlay */
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -529,6 +530,52 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
   text-transform: uppercase; font-size: 13px; color: var(--gold);
 }
 .bkt-champ-trophy { font-size: 22px; opacity: 0.8; }
+
+/* ---- ShotMap timeline scrubber ---- */
+input.scrub {
+  flex: 1;
+  min-width: 0;
+  height: 44px; /* generous touch target; the track is drawn thin */
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input.scrub::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+input.scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--bg-pitch);
+  box-shadow: var(--glow-gold);
+}
+input.scrub::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+}
+input.scrub::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--bg-pitch);
+  box-shadow: var(--glow-gold);
+}
+@media (max-width: 560px) {
+  /* full-width player picker under the chips */
+  .shot-select { margin-left: 0 !important; width: 100%; }
+}
 
 /* ---- Group tables ---- */
 /* fixed shared widths so all 12 group tables align vertically */

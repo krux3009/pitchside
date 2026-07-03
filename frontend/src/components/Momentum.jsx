@@ -9,7 +9,7 @@ const H = 140;
 // A single line tracing the home team's win probability over the match (0–100%),
 // against a 50% "even" reference. Draw and away odds aren't on the line — they're
 // in the readout bar above, which shows all three outcomes at the latest minute.
-export default function Momentum({ points, homeCode, awayCode }) {
+export default function Momentum({ points, homeCode, awayCode, pens = null }) {
   const { t, tTeam } = useLang();
   if (!points || points.length < 2) return null;
 
@@ -33,6 +33,11 @@ export default function Momentum({ points, homeCode, awayCode }) {
       <h2 className="section-title">{t("momentum.title")}</h2>
       <div className="card">
         <div style={styles.readout}>
+          {pens && (
+            <span style={{ ...styles.nowLabel, color: "var(--gold)", marginRight: "auto" }}>
+              {t("match.pens", { h: pens[0], a: pens[1] })}
+            </span>
+          )}
           <span style={styles.nowLabel}>{last.minute}' · {t("momentum.now")}</span>
         </div>
         <ProbBar pHome={last.p_home} pDraw={last.p_draw} pAway={last.p_away}
