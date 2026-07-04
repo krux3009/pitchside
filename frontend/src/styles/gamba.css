@@ -530,37 +530,6 @@
   flex-shrink: 0;
 }
 
-/* ---- onboarding modal ---- */
-.g-modal-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  background: rgba(46, 76, 140, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.g-modal {
-  background: var(--g-paper);
-  color: var(--g-ink);
-  font-family: var(--g-font-mono);
-  border: 2px solid var(--g-ink);
-  border-radius: 4px;
-  box-shadow: 6px 8px 0 rgba(46, 76, 140, 0.35);
-  max-width: 460px;
-  width: 100%;
-  padding: 22px 22px 18px;
-}
-.g-modal h2 {
-  margin: 0 0 12px;
-  font-size: 18px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-.g-modal p { font-size: 13px; line-height: 1.6; margin: 0 0 10px; }
-.g-modal .g-place { margin-top: 8px; }
-
 /* ---- responsive: slip becomes a bottom sheet ---- */
 @media (max-width: 900px) {
   /* header scrolls away on phones: content first, and it frees top: 0 for
@@ -683,4 +652,31 @@
   .g-price__sel { white-space: normal; line-height: 1.25; }
   .g-chipbtn { padding: 10px 0; }
   .g-stamp { font-size: 15px; right: 10px; }
+}
+
+/* ---- tour, re-inked for the paper theme (portal renders outside .gamba) ---- */
+.tour-root--gamba .tour-ring {
+  border-color: #fa2d1a;
+  border-radius: 4px;
+  box-shadow: 0 0 0 200vmax rgba(46, 76, 140, 0.55);
+}
+.tour-root--gamba .tour-tip {
+  background: #fff3e1;
+  border: 2px solid #2e4c8c;
+  border-radius: 4px;
+  box-shadow: 6px 8px 0 rgba(46, 76, 140, 0.35);
+  color: #2e4c8c;
+  font-family: "IBM Plex Mono", "Menlo", "Courier New", monospace;
+}
+.tour-root--gamba .tour-tip__title { color: #fa2d1a; letter-spacing: 2px; }
+.tour-root--gamba .tour-tip__body { color: #2e4c8c; }
+.tour-root--gamba .tour-tip__dots i { background: color-mix(in srgb, #2e4c8c 26%, #fff3e1); }
+.tour-root--gamba .tour-tip__dots i.on { background: #fa2d1a; }
+.tour-root--gamba .tour-tip__skip { color: color-mix(in srgb, #2e4c8c 78%, #fff3e1); }
+.tour-root--gamba .tour-tip__next {
+  background: #2e4c8c;
+  color: #fff3e1;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }

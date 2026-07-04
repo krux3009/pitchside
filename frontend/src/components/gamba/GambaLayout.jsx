@@ -4,7 +4,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { useLang } from "../../lib/i18n";
 import { useApi } from "../../lib/useApi";
 import { GambaProvider, useGamba } from "../../lib/gamba/GambaContext";
-import { fmtG, START_BALANCE } from "../../lib/gamba/engine";
+import { fmtG } from "../../lib/gamba/engine";
 import Disclaimer from "../Disclaimer";
 import "../../styles/gamba.css";
 
@@ -24,7 +24,7 @@ export default function GambaLayout() {
 
 function Shell() {
   const { lang, setLang, t } = useLang();
-  const { balance, settle, onboardingSeen, markOnboarded } = useGamba();
+  const { balance, settle } = useGamba();
   const [toasts, setToasts] = useState([]);
 
   // settlement heartbeat: poll the scores feed and stamp any decided tickets.
@@ -54,6 +54,7 @@ function Shell() {
           <nav className="gamba-header__nav" aria-label="Gamba">
             {tabs.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end}
+                data-tour={l.to === "/gamba/school" ? "gamba-school" : undefined}
                 className={({ isActive }) => `gamba-tab${isActive ? " active" : ""}`}>
                 {t(l.key)}
               </NavLink>
@@ -101,24 +102,6 @@ function Shell() {
         </div>
       )}
 
-      {!onboardingSeen && <Onboarding onDone={markOnboarded} t={t} />}
-    </div>
-  );
-}
-
-function Onboarding({ onDone, t }) {
-  return (
-    <div className="g-modal-scrim" role="dialog" aria-modal="true"
-         aria-label={t("gamba.onboard.title")}>
-      <div className="g-modal">
-        <h2>{t("gamba.onboard.title")}</h2>
-        <p>{t("gamba.onboard.p1")}</p>
-        <p>{t("gamba.onboard.p2")}</p>
-        <p>{t("gamba.onboard.p3")}</p>
-        <button className="g-place" onClick={onDone}>
-          {t("gamba.onboard.cta", { amount: fmtG(START_BALANCE) })}
-        </button>
-      </div>
     </div>
   );
 }

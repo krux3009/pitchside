@@ -723,3 +723,68 @@ input.scrub::-moz-range-thumb {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- spotlight onboarding tour (Tour.jsx portals to <body>) ---- */
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.tour-ring {
+  position: fixed;
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  /* one element both dims the page and cuts the spotlight hole */
+  box-shadow: 0 0 0 200vmax rgba(4, 10, 18, 0.72);
+  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
+  pointer-events: none;
+}
+.tour-tip {
+  position: fixed;
+  z-index: 81;
+  background: var(--bg-elevated, #10161f);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  padding: 14px 16px 12px;
+  color: var(--text-hi);
+}
+.tour-tip__title {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.tour-tip__body { font-size: 13.5px; line-height: 1.55; color: var(--text-mid); margin: 0 0 10px; }
+.tour-tip__foot { display: flex; align-items: center; gap: 10px; }
+.tour-tip__dots { display: flex; gap: 5px; margin-right: auto; }
+.tour-tip__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.tour-tip__dots i.on { background: var(--gold); }
+.tour-tip__skip,
+.tour-tip__next {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.tour-tip__skip {
+  background: none;
+  border: none;
+  color: var(--text-low);
+}
+.tour-tip__skip:hover { color: var(--text-hi); }
+.tour-tip__next {
+  background: var(--gold);
+  border: none;
+  color: #10161f;
+}

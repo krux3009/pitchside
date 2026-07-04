@@ -7,6 +7,7 @@ import { ColdStartLoader, ErrorState } from "../components/Loaders";
 import MatchCard from "../components/MatchCard";
 import ProbBar from "../components/ProbBar";
 import TeamBadge from "../components/TeamBadge";
+import Tour from "../components/Tour";
 import { getPublishedAt } from "../lib/api";
 import { localDateHeading, localDayKey, localKickoff, localTime, pct } from "../lib/format";
 import { useLang } from "../lib/i18n";
@@ -96,6 +97,7 @@ export default function Home() {
 
   return (
     <>
+      <Tour storageKey="pitchside.tour.main.v1" steps={MAIN_TOUR} />
       <h1 className="page-title">{t("home.title")}</h1>
       <p style={{ color: "var(--text-low)", marginTop: -8 }}>
         {localDateHeading(todayKey, dateLocale)} · {t("home.autogen")}
@@ -176,7 +178,7 @@ export default function Home() {
       )}
 
       <h2 className="section-title">{t("home.whoWins")}</h2>
-      <div className="card">
+      <div className="card" data-tour="whowins">
         {sim.loading && <p style={{ color: "var(--text-mid)" }}>{t("home.crunching")}</p>}
         {sim.data?.run && (
           <>
@@ -231,6 +233,14 @@ export default function Home() {
   );
 }
 
+// first-visit spotlight tour; a missing anchor (no hero match) auto-skips
+const MAIN_TOUR = [
+  { anchor: '[data-tour="hero"]', title: "tour.main.hero.t", body: "tour.main.hero.b" },
+  { anchor: '[data-tour="nav"]', title: "tour.main.nav.t", body: "tour.main.nav.b" },
+  { anchor: '[data-tour="whowins"]', title: "tour.main.sim.t", body: "tour.main.sim.b" },
+  { anchor: '[data-tour="gamba"]', title: "tour.main.gamba.t", body: "tour.main.gamba.b" },
+];
+
 // Broadcast scoreboard hero — floodlit card for the day's headline match.
 function HeroMatch({ m }) {
   const { t, dateLocale } = useLang();
@@ -248,7 +258,7 @@ function HeroMatch({ m }) {
     ? t("stage.group", { letter: m.group_letter })
     : t("stage." + m.stage);
   return (
-    <Link to={`/matches/${m.id}`}
+    <Link to={`/matches/${m.id}`} data-tour="hero"
           className={`card hero-card${live ? " card--live" : ""}`}>
       <p style={styles.heroMeta}>
         {stage} · {m.venue} ·{" "}

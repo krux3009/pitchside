@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { useGamba } from "../../lib/gamba/GambaContext";
 import { fmtG, impliedP, ledger, overround } from "../../lib/gamba/engine";
 import { useLang } from "../../lib/i18n";
@@ -123,6 +125,10 @@ export default function GambaSchool() {
       <h2 className="g-h">{t("gamba.school.takeaway")}</h2>
       <div className="g-prose">
         <p>{t("gamba.school.p3")}</p>
+        <Link to="/gamba" className="g-btn" style={{ display: "inline-block" }}
+              onClick={() => localStorage.removeItem("pitchside.tour.gamba.v1")}>
+          {t("tour.replay.gamba")}
+        </Link>
       </div>
     </>
   );

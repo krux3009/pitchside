@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import Disclaimer from "../components/Disclaimer";
 import { useLang } from "../lib/i18n";
 import { useApi } from "../lib/useApi";
@@ -98,6 +100,13 @@ export default function Methodology() {
       <div className="card" style={{ marginTop: 24 }}>
         <Disclaimer expanded />
       </div>
+
+      <p style={{ marginTop: 16 }}>
+        <Link to="/" style={styles.a}
+              onClick={() => localStorage.removeItem("pitchside.tour.main.v1")}>
+          {t("tour.replay.main")}
+        </Link>
+      </p>
     </div>
   );
 }

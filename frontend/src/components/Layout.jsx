@@ -23,7 +23,7 @@ export default function Layout() {
           <NavLink to="/" className="brand">
             <BrandMark /> PITCHSIDE<span className="brand-year">’26</span>
           </NavLink>
-          <div className="site-nav__links">
+          <div className="site-nav__links" data-tour="nav">
             {links.map((l) => (
               <NavLink
                 key={l.to}
@@ -34,7 +34,7 @@ export default function Layout() {
                 {t(l.key)}
               </NavLink>
             ))}
-            <NavLink to="/gamba" className="gamba-pill">🎲 {t("nav.gamba")}</NavLink>
+            <NavLink to="/gamba" className="gamba-pill" data-tour="gamba">🎲 {t("nav.gamba")}</NavLink>
             <button
               onClick={() => setLang(lang === "en" ? "zh" : "en")}
               aria-label="切换语言 / switch language"
