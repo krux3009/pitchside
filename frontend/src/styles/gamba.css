@@ -5,15 +5,20 @@
    tickets read as board-game money. */
 
 .gamba {
-  --g-paper: #f6f1e7;
-  --g-paper-dim: #ece4d3;
-  --g-ink: #1d2433;
-  --g-ink-soft: #5a5343;
-  --g-stamp: #d64533;
+  /* 3-color scheme: YInMn Blue #2E4C8C · Old Lace #FFF3E1 · Red #FA2D1A.
+     Ink prints blue, paper is old lace, stamps hit in red. Two functional
+     accents deliberately kept outside the palette: marker-yellow (strap +
+     balance chip) and win-green (WON stamps / positive EV) — win vs lose
+     must never share a hue with the decorative accent. */
+  --g-paper: #fff3e1;
+  --g-paper-dim: color-mix(in srgb, var(--g-ink) 7%, var(--g-paper));
+  --g-ink: #2e4c8c;
+  --g-ink-soft: color-mix(in srgb, var(--g-ink) 78%, var(--g-paper));
+  --g-stamp: #fa2d1a;
   --g-win: #1f7a4d;
-  --g-void: #8a8272;
+  --g-void: color-mix(in srgb, var(--g-ink) 55%, var(--g-paper));
   --g-marker: #ffd84d;
-  --g-line: #c9bda3;
+  --g-line: color-mix(in srgb, var(--g-ink) 26%, var(--g-paper));
   --g-font-mono: "IBM Plex Mono", "Menlo", "Courier New", monospace;
 
   /* redefine the dark-theme tokens reused components (Disclaimer) read,
@@ -116,11 +121,11 @@
 
 /* ---- receipt/paper cards ---- */
 .g-card {
-  background: #fffdf8;
+  background: #fffaf0;
   border: 1px solid var(--g-line);
   border-radius: 3px;
   padding: 14px;
-  box-shadow: 2px 3px 0 rgba(29, 36, 51, 0.08);
+  box-shadow: 2px 3px 0 rgba(46, 76, 140, 0.08);
 }
 .g-h {
   font-size: 12px;
@@ -208,7 +213,7 @@
   font: inherit;
   text-align: center;
   padding: 7px 6px 6px;
-  background: #fffdf8;
+  background: #fffaf0;
   border: 1px solid var(--g-line);
   border-radius: 3px;
   cursor: pointer;
@@ -217,7 +222,7 @@
 .g-price:hover { border-color: var(--g-ink-soft); transform: translateY(-1px); }
 .g-price.on {
   border: 2px solid var(--g-stamp);
-  background: color-mix(in srgb, var(--g-stamp) 7%, #fffdf8);
+  background: color-mix(in srgb, var(--g-stamp) 7%, #fffaf0);
 }
 .g-price__sel {
   display: block;
@@ -257,10 +262,10 @@
 
 /* ---- bet slip: sticky receipt ---- */
 .g-slip {
-  background: #fffdf8;
+  background: #fffaf0;
   border: 1px solid var(--g-line);
   border-radius: 3px 3px 0 0;
-  box-shadow: 2px 3px 0 rgba(29, 36, 51, 0.08);
+  box-shadow: 2px 3px 0 rgba(46, 76, 140, 0.08);
   padding: 14px 14px 10px;
 }
 .g-slip__title {
@@ -328,7 +333,7 @@
   cursor: pointer;
   position: relative;
 }
-.g-place:hover:not(:disabled) { background: #2a3450; }
+.g-place:hover:not(:disabled) { background: #253f75; }
 .g-place:disabled { opacity: 0.4; cursor: not-allowed; }
 /* perforation under the place button — tear here */
 .g-slip__perf {
@@ -361,7 +366,7 @@
 /* ---- ticket stubs (My bets) ---- */
 .g-ticket {
   position: relative;
-  background: #fffdf8;
+  background: #fffaf0;
   border: 1px solid var(--g-line);
   border-radius: 3px;
   padding: 12px 14px;
@@ -426,7 +431,7 @@
 }
 .g-stat {
   border: 1px solid var(--g-line);
-  background: #fffdf8;
+  background: #fffaf0;
   border-radius: 3px;
   padding: 10px 12px;
 }
@@ -496,10 +501,10 @@
   width: min(420px, calc(100vw - 24px));
 }
 .g-toast {
-  background: #fffdf8;
+  background: #fffaf0;
   border: 2px solid var(--g-ink);
   border-radius: 3px;
-  box-shadow: 3px 4px 0 rgba(29, 36, 51, 0.25);
+  box-shadow: 3px 4px 0 rgba(46, 76, 140, 0.25);
   padding: 10px 14px;
   font-size: 13px;
   display: flex;
@@ -525,7 +530,7 @@
   position: fixed;
   inset: 0;
   z-index: 70;
-  background: rgba(29, 36, 51, 0.55);
+  background: rgba(46, 76, 140, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -537,7 +542,7 @@
   font-family: var(--g-font-mono);
   border: 2px solid var(--g-ink);
   border-radius: 4px;
-  box-shadow: 6px 8px 0 rgba(29, 36, 51, 0.35);
+  box-shadow: 6px 8px 0 rgba(46, 76, 140, 0.35);
   max-width: 460px;
   width: 100%;
   padding: 22px 22px 18px;
@@ -563,7 +568,7 @@
     z-index: 50;
     max-height: 62dvh;
     overflow-y: auto;
-    box-shadow: 0 -8px 24px rgba(29, 36, 51, 0.25);
+    box-shadow: 0 -8px 24px rgba(46, 76, 140, 0.25);
   }
   .gamba-board__rail .g-slip { border-radius: 10px 10px 0 0; }
   .gamba-board__rail:empty { display: none; }
