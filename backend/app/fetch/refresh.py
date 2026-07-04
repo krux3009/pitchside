@@ -199,10 +199,20 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             )
             conn.commit()
 
+    # Fill knockout team ids whenever feeders are decided (group stage complete,
+    # or a knockout reached FT). Cheap + idempotent, so run every cycle: the group
+    # stage may have finished in an earlier cycle that had no new result THIS one,
+    # leaving an unresolved R32 backlog the model pass must still pick up. Folded
+    # into needs_model_pass so a fresh resolution triggers predictions + sim.
+    report["knockout_resolved"] = predictions.resolve_knockout(conn)
+
     # real bookmaker odds (The Odds API): time-gated like injuries — <=4 sweeps
     # a day no matter how often the 75s live loop or the 10-min cron fires.
     # The module is inert without ODDS_API_KEY and halts itself at the monthly
-    # credit floor; skip entirely once nothing is left to bet on.
+    # credit floor; skip entirely once nothing is left to bet on. MUST run after
+    # resolve_knockout: fixture matching joins on resolved team names, so on a
+    # cold boot a sweep placed earlier would find zero candidates and burn the
+    # 6h gate on an all-unmatched pass.
     if odds_api.enabled():
         last = conn.execute(
             "SELECT value FROM meta WHERE key='last_fetch:odds'"
@@ -219,13 +229,6 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
                 (_now(),),
             )
             conn.commit()
-
-    # Fill knockout team ids whenever feeders are decided (group stage complete,
-    # or a knockout reached FT). Cheap + idempotent, so run every cycle: the group
-    # stage may have finished in an earlier cycle that had no new result THIS one,
-    # leaving an unresolved R32 backlog the model pass must still pick up. Folded
-    # into needs_model_pass so a fresh resolution triggers predictions + sim.
-    report["knockout_resolved"] = predictions.resolve_knockout(conn)
 
     needs_model_pass = bool(
         newly_finished or report["summaries"] or report["knockout_resolved"]
