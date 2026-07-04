@@ -24,8 +24,10 @@ export default function BetSlip({ pick, onClear }) {
   }, [printed]);
 
   if (!pick) {
+    // on phones this renders as nothing at all — the sheet only docks in when
+    // it has something to say (printed flash) or offer (the daily drip)
     return (
-      <div className="g-slip">
+      <div className={`g-slip g-slip--empty${printed ? " is-printed" : ""}${canDrip ? " has-drip" : ""}`}>
         <div className="g-slip__title">{t("gamba.slip.title")}</div>
         <div className="g-slip__empty">
           {printed ? t("gamba.slip.printed") : t("gamba.slip.empty")}
@@ -35,7 +37,9 @@ export default function BetSlip({ pick, onClear }) {
             {t("gamba.drip")}
           </button>
         )}
-        <Disclaimer />
+        <div className="g-slip__fine">
+          <Disclaimer />
+        </div>
       </div>
     );
   }
@@ -57,6 +61,9 @@ export default function BetSlip({ pick, onClear }) {
 
   return (
     <div className="g-slip">
+      <div className="g-slip__grab" aria-hidden="true" />
+      <button className="g-slip__close" onClick={onClear}
+              aria-label={t("gamba.slip.close")}>×</button>
       <div className="g-slip__title">{t("gamba.slip.title")}</div>
 
       <div className="g-slip__pick">

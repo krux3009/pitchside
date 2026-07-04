@@ -262,12 +262,16 @@
 
 /* ---- bet slip: sticky receipt ---- */
 .g-slip {
+  position: relative;
   background: #fffaf0;
   border: 1px solid var(--g-line);
   border-radius: 3px 3px 0 0;
   box-shadow: 2px 3px 0 rgba(46, 76, 140, 0.08);
   padding: 14px 14px 10px;
 }
+/* sheet-only affordances; desktop rail hides them */
+.g-slip__grab { display: none; }
+.g-slip__close { display: none; }
 .g-slip__title {
   font-size: 12px;
   font-weight: 700;
@@ -558,6 +562,9 @@
 
 /* ---- responsive: slip becomes a bottom sheet ---- */
 @media (max-width: 900px) {
+  /* header scrolls away on phones: content first, and it frees top: 0 for
+     the sticky day headers below */
+  .gamba-header { position: static; }
   .gamba-board { grid-template-columns: 1fr; }
   .gamba-board__rail {
     position: fixed;
@@ -566,17 +573,82 @@
     bottom: 0;
     top: auto;
     z-index: 50;
+  }
+  .gamba-board__rail .g-slip {
     max-height: 62dvh;
     overflow-y: auto;
+    border-radius: 10px 10px 0 0;
     box-shadow: 0 -8px 24px rgba(46, 76, 140, 0.25);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    animation: g-sheet-up 200ms ease-out;
   }
-  .gamba-board__rail .g-slip { border-radius: 10px 10px 0 0; }
-  .gamba-board__rail:empty { display: none; }
+  /* empty slip stays out of the way; it only docks as a slim bar when it has
+     something to say (ticket-printed flash) or offer (the daily drip) */
+  .gamba-board__rail .g-slip--empty { display: none; }
+  .gamba-board__rail .g-slip--empty.is-printed,
+  .gamba-board__rail .g-slip--empty.has-drip { display: block; animation: none; }
+  .gamba-board__rail .g-slip--empty .g-slip__title,
+  .gamba-board__rail .g-slip--empty .g-slip__fine { display: none; }
+  .gamba-board__rail .g-slip--empty .g-slip__empty { padding: 8px 6px; }
+  .g-slip__grab {
+    display: block;
+    width: 44px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--g-line);
+    margin: -6px auto 8px;
+  }
+  .g-slip__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 40px;
+    height: 40px;
+    font: inherit;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--g-ink-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1;
+  }
+  /* day headers pin to the top while that day's cards scroll under them */
+  .gamba-board .g-h {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--g-paper);
+    margin-top: 18px;
+    padding: 8px 0;
+  }
+  /* toasts move up top so they never sit on the sheet's place button */
+  .g-toasts { bottom: auto; top: 12px; }
+}
+@keyframes g-sheet-up {
+  from { transform: translateY(24px); opacity: 0.6; }
+  to { transform: none; opacity: 1; }
 }
 @media (max-width: 560px) {
   .gamba-brand { font-size: 17px; letter-spacing: 3px; }
+  .gamba-header__inner { gap: 10px; min-height: 46px; }
   .gamba-header__nav { gap: 2px; }
-  .gamba-tab { padding: 5px 8px; font-size: 12px; }
-  .g-prices { grid-template-columns: repeat(3, 1fr); }
+  .gamba-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 10px;
+    font-size: 12.5px;
+  }
+  .gamba-back { padding: 12px 0; }
+  .gamba-strap { font-size: 10.5px; padding: 4px 10px; letter-spacing: 1px; }
+  /* 2 buttons -> 2 cols, 3 buttons -> 3 cols; no empty third track */
+  .g-prices { grid-template-columns: repeat(auto-fit, minmax(31%, 1fr)); gap: 8px; }
+  .g-price { padding: 10px 6px; min-height: 48px; }
+  .g-price__sel { white-space: normal; line-height: 1.25; }
+  .g-chipbtn { padding: 10px 0; }
   .g-stamp { font-size: 15px; right: 10px; }
 }

@@ -398,6 +398,7 @@ export const EN = {
 
   "gamba.slip.title": "Bet slip",
   "gamba.slip.empty": "Tap a price to start a ticket.",
+  "gamba.slip.close": "Dismiss bet slip",
   "gamba.slip.printed": "TICKET PRINTED ✓",
   "gamba.slip.stake": "Stake",
   "gamba.slip.returns": "Returns",
