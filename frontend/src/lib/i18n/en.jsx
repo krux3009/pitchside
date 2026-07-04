@@ -43,7 +43,10 @@ export const EN = {
   "match.live": "LIVE",
   "match.ft": "FT",
   "match.fullTime": "Full time",
-  "hero.countdown": ({ h, m }) => (h > 0 ? `Kicks off in ${h}h ${m}m` : `Kicks off in ${m}m`),
+  "hero.countdown": ({ d, h, m, s }) =>
+    d > 0 ? `Kicks off in ${d}d ${h}h ${m}m ${s}s`
+      : h > 0 ? `Kicks off in ${h}h ${m}m ${s}s`
+      : `Kicks off in ${m}m ${s}s`,
   "timetable.onNow": "On now",
   "event.ht": "Half-time",
   "event.et": "Extra time",
@@ -373,6 +376,7 @@ export const EN = {
   "gamba.board.error": "Couldn’t load the odds board.",
   "gamba.board.empty": "No open markets — the tournament is done.",
   "gamba.board.locked": "Teams not decided yet — market opens when the bracket resolves",
+  "gamba.board.noOdds": "Bookmakers haven't priced this one yet — check back closer to kickoff",
   "gamba.board.closed": "betting closed",
 
   "gamba.market.h2h": "1X2 · Match result (90')",
@@ -381,9 +385,7 @@ export const EN = {
   "gamba.market.correct_score": "Correct score",
   "gamba.market.modelBook": "Model book",
   "gamba.market.realBook": "Real books",
-  "gamba.market.csBadge": "model book only",
   "gamba.market.median": "med",
-  "gamba.market.showCS": "Show correct-score prices ▸",
 
   "gamba.sel.draw": "Draw",
   "gamba.sel.over": "Over",

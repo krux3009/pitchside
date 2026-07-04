@@ -20,15 +20,12 @@ export default function GambaBoard() {
     days.get(key).push(m);
   }
 
-  // the rake, live from the first priced match: real book when present
-  // (bookmakers vary), else the model book (always exactly the margin)
-  const first = matches.find((m) => m.real?.h2h || m.model);
-  const h2hPrices = first?.real?.h2h
+  // the rake, live from the first match carrying a full real 1X2
+  const first = matches.find((m) => m.real?.h2h);
+  const h2hPrices = first
     ? ["home", "draw", "away"].map((s) => first.real.h2h[s]?.median).filter(Boolean)
-    : first?.model
-      ? ["home", "draw", "away"].map((s) => first.model.h2h[s].price)
-      : null;
-  const rake = h2hPrices ? overround(h2hPrices) : null;
+    : null;
+  const rake = h2hPrices?.length === 3 ? overround(h2hPrices) : null;
 
   return (
     <>
@@ -41,8 +38,7 @@ export default function GambaBoard() {
           {t("gamba.board.overround", {
             sum: ((1 + rake) * 100).toFixed(1),
             edge: (rake * 100).toFixed(1),
-            book: first.real?.h2h
-              ? t("gamba.market.realBook") : t("gamba.market.modelBook"),
+            book: t("gamba.market.realBook"),
           })}
         </div>
       )}

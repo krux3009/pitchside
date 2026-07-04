@@ -82,10 +82,14 @@ export default function Home() {
   for (const c of [...(b.yesterday ?? []), ...(b.today ?? [])])
     if (c.upset || c.upset_note) upsetBy[c.match_id] = c;
 
-  // matchday hero: the single most relevant match — live beats upcoming beats done
+  // matchday hero: a live match, else the NEXT fixture on the calendar (any
+  // day, so a finished matchday points forward), else today's latest result
+  const nextUp = all
+    .filter((m) => m.status === "SCHEDULED")
+    .sort((x, y) => x.kickoff_utc.localeCompare(y.kickoff_utc))[0];
   const hero =
     todays.find((m) => m.status === "LIVE") ??
-    todays.find((m) => m.status === "SCHEDULED") ??
+    nextUp ??
     [...todays].reverse().find((m) => m.status === "FT") ??
     null;
   const rest = todays.filter((m) => m !== hero);
@@ -232,7 +236,14 @@ function HeroMatch({ m }) {
   const { t, dateLocale } = useLang();
   const live = m.status === "LIVE";
   const played = m.status !== "SCHEDULED";
-  const minsToKo = Math.max(0, Math.round((new Date(m.kickoff_utc) - Date.now()) / 60000));
+  // second-hand countdown — the 60s poll alone would leave the clock frozen
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (played) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [played]);
+  const secsToKo = Math.max(0, Math.floor((new Date(m.kickoff_utc) - now) / 1000));
   const stage = m.group_letter
     ? t("stage.group", { letter: m.group_letter })
     : t("stage." + m.stage);
@@ -272,7 +283,12 @@ function HeroMatch({ m }) {
       )}
       {!played && (
         <p style={styles.heroCountdown}>
-          {t("hero.countdown", { h: Math.floor(minsToKo / 60), m: minsToKo % 60 })}
+          {t("hero.countdown", {
+            d: Math.floor(secsToKo / 86400),
+            h: Math.floor((secsToKo % 86400) / 3600),
+            m: Math.floor((secsToKo % 3600) / 60),
+            s: secsToKo % 60,
+          })}
         </p>
       )}
       {!played && m.p_home != null && (

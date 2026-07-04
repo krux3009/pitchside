@@ -41,7 +41,10 @@ export const ZH = {
   "match.live": "直播中",
   "match.ft": "完场",
   "match.fullTime": "全场结束",
-  "hero.countdown": ({ h, m }) => (h > 0 ? `距开球 ${h} 小时 ${m} 分` : `距开球 ${m} 分钟`),
+  "hero.countdown": ({ d, h, m, s }) =>
+    d > 0 ? `距开球 ${d} 天 ${h} 小时 ${m} 分 ${s} 秒`
+      : h > 0 ? `距开球 ${h} 小时 ${m} 分 ${s} 秒`
+      : `距开球 ${m} 分 ${s} 秒`,
   "timetable.onNow": "正在进行",
   "event.ht": "中场休息",
   "event.et": "加时赛",
@@ -364,6 +367,7 @@ export const ZH = {
   "gamba.board.error": "盘口加载失败。",
   "gamba.board.empty": "没有可投注的比赛——本届赛事已结束。",
   "gamba.board.locked": "对阵尚未确定——晋级形势明朗后开盘",
+  "gamba.board.noOdds": "博彩公司尚未开出赔率——临近开球再来看看",
   "gamba.board.closed": "已封盘",
 
   "gamba.market.h2h": "胜平负 · 90分钟",
@@ -372,9 +376,7 @@ export const ZH = {
   "gamba.market.correct_score": "波胆（精确比分）",
   "gamba.market.modelBook": "模型盘口",
   "gamba.market.realBook": "真实赔率",
-  "gamba.market.csBadge": "仅模型盘口",
   "gamba.market.median": "中位",
-  "gamba.market.showCS": "展开波胆赔率 ▸",
 
   "gamba.sel.draw": "平局",
   "gamba.sel.over": "大",
