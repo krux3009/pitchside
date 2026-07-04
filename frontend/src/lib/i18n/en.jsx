@@ -431,10 +431,10 @@ export const EN = {
   "gamba.bets.open": "Open tickets",
   "gamba.bets.settled": "Settled",
   "gamba.reset": "Reset account",
-  "gamba.reset.confirm": "Wipe all tickets and restart at ₲1,000?",
+  "gamba.reset.confirm": "Wipe all tickets and restart at ₲500?",
 
   "gamba.onboard.title": "Welcome to Gamba Mode",
-  "gamba.onboard.p1": "You get ₲1,000 of play money. ₲ are fake credits: no deposits, no withdrawals, no purchases — ever.",
+  "gamba.onboard.p1": "You get ₲500 of play money. ₲ are fake credits: no deposits, no withdrawals, no purchases — ever.",
   "gamba.onboard.p2": "Every price on the board carries a hidden margin, just like a real sportsbook. Your job is to watch it drain your balance.",
   "gamba.onboard.p3": "The School page keeps score of what the margin cost you. Probabilities are not betting advice — this page is the proof.",
   "gamba.onboard.cta": ({ amount }) => `Deal me in — ${amount}`,

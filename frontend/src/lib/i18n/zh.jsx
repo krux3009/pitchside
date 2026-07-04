@@ -422,10 +422,10 @@ export const ZH = {
   "gamba.bets.open": "未结算",
   "gamba.bets.settled": "已结算",
   "gamba.reset": "重置账户",
-  "gamba.reset.confirm": "清空所有注单并重置为 ₲1,000？",
+  "gamba.reset.confirm": "清空所有注单并重置为 ₲500？",
 
   "gamba.onboard.title": "欢迎来到 Gamba 模拟投注",
-  "gamba.onboard.p1": "你有 ₲1,000 游戏币。₲ 是纯虚拟积分：不能充值、不能提现、买不到任何东西——永远如此。",
+  "gamba.onboard.p1": "你有 ₲500 游戏币。₲ 是纯虚拟积分：不能充值、不能提现、买不到任何东西——永远如此。",
   "gamba.onboard.p2": "盘口上的每个赔率都和真实博彩公司一样藏着抽水。你的任务，是亲眼看着它一点点抽干你的余额。",
   "gamba.onboard.p3": "「庄家课堂」会记录抽水到底花了你多少钱。概率不是投注建议——这个页面就是证明。",
   "gamba.onboard.cta": ({ amount }) => `发牌吧 — ${amount}`,

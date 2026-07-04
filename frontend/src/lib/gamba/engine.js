@@ -10,7 +10,7 @@
 //    pModel, homeName, awayName, homeId, awayId, listedScores?,
 //    status: 'open'|'won'|'lost'|'void', returns?, settledAt?, result?}
 
-export const START_BALANCE = 1000;
+export const START_BALANCE = 500;
 export const MIN_STAKE = 10;
 export const DRIP_AMOUNT = 200;
 export const DRIP_BELOW = 200;
