@@ -390,6 +390,7 @@ export const ZH = {
   "gamba.slip.title": "投注单",
   "gamba.slip.empty": "点选一个赔率开始下注。",
   "gamba.slip.close": "收起注单",
+  "gamba.slip.expand": "展开注单",
   "gamba.slip.printed": "已出票 ✓",
   "gamba.slip.stake": "本金",
   "gamba.slip.returns": "可得回报",

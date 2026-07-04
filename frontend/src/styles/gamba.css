@@ -271,7 +271,8 @@
 }
 /* sheet-only affordances; desktop rail hides them */
 .g-slip__grab { display: none; }
-.g-slip__close { display: none; }
+.g-slip__dragzone { display: none; }
+.g-slip--min { display: none; }
 .g-slip__title {
   font-size: 12px;
   font-weight: 700;
@@ -577,10 +578,15 @@
   .gamba-board__rail .g-slip {
     max-height: 62dvh;
     overflow-y: auto;
+    /* clip sideways: the perforation notches bleed past the padding box and
+       would otherwise give the sheet a loose horizontal pan */
+    overflow-x: hidden;
+    touch-action: pan-y;
     border-radius: 10px 10px 0 0;
     box-shadow: 0 -8px 24px rgba(46, 76, 140, 0.25);
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     animation: g-sheet-up 200ms ease-out;
+    transition: transform 200ms ease;
   }
   /* empty slip stays out of the way; it only docks as a slim bar when it has
      something to say (ticket-printed flash) or offer (the daily drip) */
@@ -596,25 +602,51 @@
     height: 4px;
     border-radius: 2px;
     background: var(--g-line);
-    margin: -6px auto 8px;
+    margin: 0 auto;
   }
-  .g-slip__close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 40px;
-    height: 40px;
-    font: inherit;
-    font-size: 22px;
-    line-height: 1;
-    color: var(--g-ink-soft);
+  /* generous drag strip around the grab bar: drag down (or tap) to minimize */
+  .g-slip__dragzone {
+    display: block;
+    width: calc(100% + 28px);
+    margin: -10px -14px 2px;
+    padding: 10px 0;
     background: none;
     border: none;
+    cursor: grab;
+    touch-action: none;
+  }
+  /* minimized sheet: a slim docked bar keeping the ticket alive */
+  .gamba-board__rail .g-slip--min {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font: inherit;
+    color: var(--g-ink);
+    text-align: left;
     cursor: pointer;
-    z-index: 1;
+    border: 1px solid var(--g-line);
+    padding: 16px 14px calc(12px + env(safe-area-inset-bottom));
+    animation: none;
+  }
+  .g-slip--min .g-slip__grab {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+  }
+  .g-slip__minpick {
+    font-size: 13px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .g-slip__mincue {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--g-ink-soft);
   }
   /* day headers pin to the top while that day's cards scroll under them */
   .gamba-board .g-h {

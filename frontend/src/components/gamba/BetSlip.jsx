@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useGamba } from "../../lib/gamba/GambaContext";
 import {
@@ -9,14 +9,19 @@ import Disclaimer from "../Disclaimer";
 
 // Sticky receipt (right rail desktop / bottom sheet mobile). The line items ARE
 // the lesson: RETURNS, the model's FAIR PRICE, IMPLIED P, and a (negative) EV.
+// On phones the sheet minimizes (never closes): drag the grab bar down or tap
+// it to dock the ticket as a slim bar; tap the bar to bring it back up.
 export default function BetSlip({ pick, onClear }) {
   const { t, tCountry } = useLang();
   const { balance, placeBet, canDrip, claimDrip } = useGamba();
   const [stake, setStake] = useState(50);
   const [err, setErr] = useState(null);
   const [printed, setPrinted] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const drag = useRef(null); // {startY} while the grab bar is held
 
-  useEffect(() => { setErr(null); }, [pick]);
+  useEffect(() => { setErr(null); setMinimized(false); setDragY(0); }, [pick]);
   useEffect(() => {
     if (!printed) return;
     const id = setTimeout(() => setPrinted(false), 2500);
@@ -59,11 +64,46 @@ export default function BetSlip({ pick, onClear }) {
     }
   };
 
+  // grab-bar gesture: follow the finger down; past the threshold it docks,
+  // otherwise it springs back. A no-move press counts as a tap-to-minimize.
+  const onGrabDown = (e) => {
+    drag.current = { startY: e.clientY };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ }
+  };
+  const onGrabMove = (e) => {
+    if (!drag.current) return;
+    drag.current.dy = Math.max(0, e.clientY - drag.current.startY);
+    setDragY(drag.current.dy);
+  };
+  const onGrabUp = () => {
+    if (!drag.current) return;
+    const dy = drag.current.dy ?? 0;
+    drag.current = null;
+    if (dy > 70 || dy < 5) setMinimized(true);
+    setDragY(0);
+  };
+
+  if (minimized) {
+    return (
+      <button className="g-slip g-slip--min" onClick={() => setMinimized(false)}
+              aria-label={t("gamba.slip.expand")}>
+        <div className="g-slip__grab" aria-hidden="true" />
+        <span className="g-slip__minpick">
+          {selectionText(pick, t, tCountry)} @ {pick.price.toFixed(2)}
+        </span>
+        <span className="g-slip__mincue" aria-hidden="true">▲</span>
+      </button>
+    );
+  }
+
   return (
-    <div className="g-slip">
-      <div className="g-slip__grab" aria-hidden="true" />
-      <button className="g-slip__close" onClick={onClear}
-              aria-label={t("gamba.slip.close")}>×</button>
+    <div className="g-slip"
+         style={dragY ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}>
+      <button type="button" className="g-slip__dragzone" aria-label={t("gamba.slip.close")}
+              onPointerDown={onGrabDown} onPointerMove={onGrabMove}
+              onPointerUp={onGrabUp} onPointerCancel={onGrabUp}>
+        <div className="g-slip__grab" aria-hidden="true" />
+      </button>
       <div className="g-slip__title">{t("gamba.slip.title")}</div>
 
       <div className="g-slip__pick">
