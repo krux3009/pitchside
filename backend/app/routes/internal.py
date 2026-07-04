@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from .. import archive, db
 from .. import publish as publisher
 from ..config import REFRESH_KEY
+from ..fetch import odds_api
 from ..fetch import refresh as refresh_orchestrator
 
 
@@ -70,6 +71,24 @@ def publish_now(key: str = ""):
     """Snapshot + FTP-push without a refresh (manual re-publish / first full run)."""
     _check(key)
     return publisher.run(datetime.now(timezone.utc).isoformat())
+
+
+@router.get("/api/internal/odds")
+def odds_sweep(key: str = ""):
+    """Manual odds sweep (first fill / testing). Bypasses the 6h refresh gate
+    but not the credit floor; stamps the gate so the next cron doesn't double-spend."""
+    _check(key)
+    conn = db.connect()
+    try:
+        report = odds_api.sweep(conn)
+        conn.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES ('last_fetch:odds', ?)",
+            (datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),),
+        )
+        conn.commit()
+        return report
+    finally:
+        conn.close()
 
 
 @router.get("/api/internal/archive")

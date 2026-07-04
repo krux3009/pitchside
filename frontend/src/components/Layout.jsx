@@ -34,6 +34,7 @@ export default function Layout() {
                 {t(l.key)}
               </NavLink>
             ))}
+            <NavLink to="/gamba" className="gamba-pill">🎲 {t("nav.gamba")}</NavLink>
             <button
               onClick={() => setLang(lang === "en" ? "zh" : "en")}
               aria-label="切换语言 / switch language"

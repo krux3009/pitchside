@@ -38,3 +38,10 @@ PUBLISH_CDN_URL = os.getenv("PUBLISH_CDN_URL", "https://kruxqlyz.com/data")
 # API-Football: free plan allows 100 requests/day. We stop at a soft cap so a
 # restart that wipes the ledger can never push the real total past 100.
 API_FOOTBALL_DAILY_SOFT_CAP = 80
+
+# The Odds API (real bookmaker odds for Gamba Mode). Free tier = 500 credits/
+# month; empty key => the odds module is inert (model-book-only, by design).
+ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")
+ODDS_REFRESH_HOURS = 6          # <=4 sweeps/day regardless of refresh cadence
+ODDS_BTTS_WINDOW_HOURS = 48     # per-event BTTS only this close to kickoff
+ODDS_API_CREDIT_FLOOR = 50      # refuse to spend below this many credits left

@@ -202,6 +202,28 @@ a.card:active { transform: translateY(-1px); }
   background: var(--gold);
   box-shadow: var(--glow-gold);
 }
+/* Gamba Mode entry: a paper ticket stub stapled onto the broadcast chrome —
+   deliberately off-theme so it reads as a doorway to a different room */
+.gamba-pill {
+  flex-shrink: 0;
+  font-family: "IBM Plex Mono", "Menlo", "Courier New", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1d2433;
+  background: #ffd84d;
+  border: 1px dashed #1d2433;
+  border-radius: 2px;
+  padding: 4px 9px;
+  white-space: nowrap;
+  transform: rotate(-2deg);
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.gamba-pill:hover {
+  transform: rotate(0deg) translateY(-1px);
+  box-shadow: 2px 2px 0 rgba(255, 216, 77, 0.35);
+}
+
 .lang-toggle {
   flex-shrink: 0;
   font-family: inherit;

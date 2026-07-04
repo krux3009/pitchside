@@ -33,6 +33,7 @@ FIXED = {
     "/api/sim/championship": "sim-championship.json",
     "/api/methodology/params": "methodology-params.json",
     "/api/bracket": "bracket.json",
+    "/api/odds": "odds.json",
 }
 
 

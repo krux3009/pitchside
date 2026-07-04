@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
 from .config import ALLOWED_ORIGINS
-from .routes import bracket, briefing, internal, matches, methodology, players, sim, standings
+from .routes import (bracket, briefing, internal, matches, methodology, odds,
+                     players, sim, standings)
 
 LIVE_TICK_SECONDS = 75    # refresh cadence while a match is in play
 IDLE_CHECK_SECONDS = 120  # how often to peek at the schedule otherwise
@@ -71,7 +72,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-for module in (bracket, briefing, internal, matches, methodology, players, sim, standings):
+for module in (bracket, briefing, internal, matches, methodology, odds, players,
+               sim, standings):
     app.include_router(module.router)
 
 

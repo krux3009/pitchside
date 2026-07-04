@@ -28,7 +28,8 @@ from .config import (
     HOSTINGER_FTP_USER,
     PUBLISH_CDN_URL,
 )
-from .routes import bracket, briefing, matches, methodology, players, sim, standings
+from .routes import (bracket, briefing, matches, methodology, odds, players,
+                     sim, standings)
 
 # meta-table key holding {relpath: sha1} from the last successful publish. Not in
 # the archive set, so a redeploy drops it and the next publish re-uploads once.
@@ -65,6 +66,7 @@ def snapshot(published_at: str) -> dict[str, bytes]:
         "sim-championship.json": _dumps(sim.championship()),
         "methodology-params.json": _dumps(methodology.params()),
         "bracket.json": _dumps(bracket.bracket()),
+        "odds.json": _dumps(odds.list_odds()),
     }
     for m in match_list:
         files[f"matches/{m['id']}.json"] = _dumps(_detail(matches.match_detail, m["id"]))

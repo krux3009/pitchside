@@ -24,6 +24,7 @@ const STATIC_FILE = {
   "/api/sim/championship": "sim-championship.json",
   "/api/methodology/params": "methodology-params.json",
   "/api/bracket": "bracket.json",
+  "/api/odds": "odds.json",
 };
 function staticPath(path) {
   const clean = path.split("?")[0]; // drop ?query — the frontend filters client-side

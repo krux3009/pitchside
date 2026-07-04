@@ -8,9 +8,10 @@ Order of operations:
 """
 from datetime import date, datetime, timedelta, timezone
 
+from ..config import ODDS_REFRESH_HOURS
 from ..model import simulate
 from ..services import backtest, briefing, predictions
-from . import espn, ingest
+from . import espn, ingest, odds_api
 
 
 def _now() -> str:
@@ -194,6 +195,27 @@ def run(conn, sim_iterations: int = 10_000) -> dict:
             report["injuries"] = ingest.espn_injuries(conn, payload)
             conn.execute(
                 "INSERT OR REPLACE INTO meta (key, value) VALUES ('last_fetch:injuries', ?)",
+                (_now(),),
+            )
+            conn.commit()
+
+    # real bookmaker odds (The Odds API): time-gated like injuries — <=4 sweeps
+    # a day no matter how often the 75s live loop or the 10-min cron fires.
+    # The module is inert without ODDS_API_KEY and halts itself at the monthly
+    # credit floor; skip entirely once nothing is left to bet on.
+    if odds_api.enabled():
+        last = conn.execute(
+            "SELECT value FROM meta WHERE key='last_fetch:odds'"
+        ).fetchone()
+        upcoming = conn.execute(
+            "SELECT 1 FROM matches WHERE status='SCHEDULED' LIMIT 1"
+        ).fetchone()
+        if upcoming and (not last or last["value"] < (
+            datetime.now(timezone.utc) - timedelta(hours=ODDS_REFRESH_HOURS)
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")):
+            report["odds"] = odds_api.sweep(conn)
+            conn.execute(
+                "INSERT OR REPLACE INTO meta (key, value) VALUES ('last_fetch:odds', ?)",
                 (_now(),),
             )
             conn.commit()

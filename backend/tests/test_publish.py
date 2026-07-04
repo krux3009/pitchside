@@ -25,10 +25,11 @@ def test_snapshot_tree_and_bytes(seeded):
 
     files = publish.snapshot("2026-06-17T03:30:00+00:00")
 
-    # six fixed endpoints + CORS rule + freshness beacon
+    # fixed endpoints + CORS rule + freshness beacon
     for name in ("matches.json", "players.json", "standings.json",
                  "briefing-today.json", "sim-championship.json",
-                 "methodology-params.json", "bracket.json", ".htaccess", "status.json"):
+                 "methodology-params.json", "bracket.json", "odds.json",
+                 ".htaccess", "status.json"):
         assert name in files
 
     # one detail file per match; per-PLAYER detail is intentionally NOT published

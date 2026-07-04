@@ -1,0 +1,577 @@
+/* Gamba Mode — "paper betting slip" aesthetic, scoped under .gamba.
+   Deliberately the anti-theme of the broadcast-dark site: warm paper stock,
+   ink-navy type, rubber-stamp red, monospace tabular numerals, dashed
+   tear-off borders. Neon-sportsbook is the forbidden casino look; paper
+   tickets read as board-game money. */
+
+.gamba {
+  --g-paper: #f6f1e7;
+  --g-paper-dim: #ece4d3;
+  --g-ink: #1d2433;
+  --g-ink-soft: #5a5343;
+  --g-stamp: #d64533;
+  --g-win: #1f7a4d;
+  --g-void: #8a8272;
+  --g-marker: #ffd84d;
+  --g-line: #c9bda3;
+  --g-font-mono: "IBM Plex Mono", "Menlo", "Courier New", monospace;
+
+  /* redefine the dark-theme tokens reused components (Disclaimer) read,
+     so they restyle to paper automatically */
+  --text-hi: var(--g-ink);
+  --text-mid: var(--g-ink-soft);
+  --text-low: var(--g-ink-soft);
+  --line: var(--g-line);
+  --bg-elevated: var(--g-paper-dim);
+  --gold: var(--g-stamp);
+
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1; /* over the global stadium-glow body layers */
+  background: var(--g-paper);
+  color: var(--g-ink);
+  font-family: var(--g-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- header: receipt masthead ---- */
+.gamba-header {
+  border-bottom: 2px dashed var(--g-line);
+  background: var(--g-paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.gamba-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  flex-wrap: wrap;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.gamba-brand {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 4px;
+  white-space: nowrap;
+}
+.gamba-brand .dice { font-size: 16px; }
+.gamba-back {
+  font-size: 12px;
+  color: var(--g-ink-soft);
+  white-space: nowrap;
+  border-bottom: 1px dotted var(--g-ink-soft);
+}
+.gamba-back:hover { color: var(--g-ink); }
+.gamba-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.gamba-tab {
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--g-ink-soft);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.gamba-tab:hover { color: var(--g-ink); }
+.gamba-tab.active {
+  color: var(--g-ink);
+  border: 1px dashed var(--g-ink);
+  background: var(--g-paper-dim);
+}
+.gamba-chip {
+  font-weight: 700;
+  font-size: 14px;
+  padding: 5px 12px;
+  border: 2px solid var(--g-ink);
+  border-radius: 3px;
+  background: var(--g-marker);
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--g-ink);
+}
+.gamba .lang-toggle { color: var(--g-ink-soft); border-color: var(--g-line); }
+.gamba .lang-toggle:hover { color: var(--g-ink); border-color: var(--g-ink-soft); }
+
+/* ---- permanent play-money strap ---- */
+.gamba-strap {
+  background: var(--g-marker);
+  border-bottom: 2px solid var(--g-ink);
+  color: var(--g-ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 6px 12px;
+}
+
+/* ---- receipt/paper cards ---- */
+.g-card {
+  background: #fffdf8;
+  border: 1px solid var(--g-line);
+  border-radius: 3px;
+  padding: 14px;
+  box-shadow: 2px 3px 0 rgba(29, 36, 51, 0.08);
+}
+.g-h {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+  margin: 26px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.g-h::after { content: ""; flex: 1; border-top: 2px dashed var(--g-line); }
+
+.gamba-page-title {
+  font-size: clamp(24px, 5vw, 32px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 26px 0 4px;
+  text-transform: uppercase;
+}
+.gamba-sub { color: var(--g-ink-soft); font-size: 13px; margin: 0 0 10px; }
+
+/* overround explainer strip */
+.g-overround {
+  border: 1px dashed var(--g-ink-soft);
+  background: var(--g-paper-dim);
+  font-size: 12.5px;
+  padding: 9px 12px;
+  margin: 12px 0;
+}
+
+/* ---- board layout: card list + sticky slip rail ---- */
+.gamba-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+.gamba-board__rail { position: sticky; top: 106px; }
+
+/* ---- market card ---- */
+.g-match { margin-bottom: 14px; }
+.g-match__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--g-line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.g-match__teams { font-size: 15px; font-weight: 700; }
+.g-match__meta { font-size: 11.5px; color: var(--g-ink-soft); }
+.g-market { margin: 10px 0 2px; }
+.g-market__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.g-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 1px solid var(--g-ink-soft);
+  border-radius: 2px;
+  padding: 1px 6px;
+  color: var(--g-ink-soft);
+  text-transform: uppercase;
+}
+.g-prices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 6px;
+}
+.g-price {
+  font: inherit;
+  text-align: center;
+  padding: 7px 6px 6px;
+  background: #fffdf8;
+  border: 1px solid var(--g-line);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.g-price:hover { border-color: var(--g-ink-soft); transform: translateY(-1px); }
+.g-price.on {
+  border: 2px solid var(--g-stamp);
+  background: color-mix(in srgb, var(--g-stamp) 7%, #fffdf8);
+}
+.g-price__sel {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-price__odds { display: block; font-size: 16px; font-weight: 700; }
+.g-price__real { display: block; font-size: 10px; color: var(--g-ink-soft); }
+.g-price:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.g-expand {
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--g-ink-soft);
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--g-ink-soft);
+  padding: 0;
+  margin-top: 8px;
+  cursor: pointer;
+}
+.g-locked {
+  color: var(--g-ink-soft);
+  font-size: 12.5px;
+  border: 1px dashed var(--g-line);
+  padding: 10px 12px;
+  text-align: center;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ---- bet slip: sticky receipt ---- */
+.g-slip {
+  background: #fffdf8;
+  border: 1px solid var(--g-line);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 2px 3px 0 rgba(29, 36, 51, 0.08);
+  padding: 14px 14px 10px;
+}
+.g-slip__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-align: center;
+  border-bottom: 2px dashed var(--g-line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.g-slip__pick { font-size: 13.5px; font-weight: 700; margin-bottom: 2px; }
+.g-slip__match { font-size: 11.5px; color: var(--g-ink-soft); margin-bottom: 10px; }
+.g-slip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.g-slip__row dt { color: var(--g-ink-soft); letter-spacing: 0.5px; }
+.g-slip__row dd { margin: 0; font-weight: 700; }
+.g-slip__row .neg { color: var(--g-stamp); }
+.g-slip__row .pos { color: var(--g-win); }
+.g-slip__rows { margin: 10px 0; border-top: 1px solid var(--g-line); padding-top: 8px; }
+.g-stake {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 8px 10px;
+  border: 1px solid var(--g-ink-soft);
+  border-radius: 3px;
+  background: var(--g-paper);
+  color: var(--g-ink);
+}
+.g-stake:focus { outline: 2px solid var(--g-stamp); }
+.g-chips { display: flex; gap: 6px; margin-top: 6px; }
+.g-chipbtn {
+  flex: 1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 0;
+  background: var(--g-paper-dim);
+  border: 1px solid var(--g-line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.g-chipbtn:hover { border-color: var(--g-ink-soft); }
+.g-place {
+  width: 100%;
+  margin-top: 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 11px 0;
+  color: var(--g-paper);
+  background: var(--g-ink);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+}
+.g-place:hover:not(:disabled) { background: #2a3450; }
+.g-place:disabled { opacity: 0.4; cursor: not-allowed; }
+/* perforation under the place button — tear here */
+.g-slip__perf {
+  margin: 12px -14px 0;
+  border-top: 2px dashed var(--g-line);
+  position: relative;
+  height: 10px;
+}
+.g-slip__perf::before,
+.g-slip__perf::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--g-paper);
+  border: 1px solid var(--g-line);
+}
+.g-slip__perf::before { left: -7px; }
+.g-slip__perf::after { right: -7px; }
+.g-slip__empty {
+  color: var(--g-ink-soft);
+  font-size: 12.5px;
+  text-align: center;
+  padding: 18px 6px;
+}
+.g-slip__err { color: var(--g-stamp); font-size: 12px; margin-top: 8px; }
+
+/* ---- ticket stubs (My bets) ---- */
+.g-ticket {
+  position: relative;
+  background: #fffdf8;
+  border: 1px solid var(--g-line);
+  border-radius: 3px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.g-ticket__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--g-ink-soft);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px dashed var(--g-line);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.g-ticket__pick { font-size: 14px; font-weight: 700; }
+.g-ticket__match { font-size: 12px; color: var(--g-ink-soft); margin: 2px 0 8px; }
+.g-ticket__nums {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.g-ticket__nums .lbl { color: var(--g-ink-soft); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; display: block; }
+.g-ticket__nums .val { font-weight: 700; }
+.g-ticket__foot {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--g-line);
+  font-size: 11.5px;
+  color: var(--g-ink-soft);
+}
+.g-stamp {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%) rotate(-12deg);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  padding: 3px 12px;
+  border: 3px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+.g-stamp--won { color: var(--g-win); }
+.g-stamp--lost { color: var(--g-stamp); }
+.g-stamp--void { color: var(--g-void); }
+.g-ticket--settled .g-ticket__pick,
+.g-ticket--settled .g-ticket__nums { opacity: 0.75; }
+
+/* ---- stats strip (My bets / School) ---- */
+.g-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.g-stat {
+  border: 1px solid var(--g-line);
+  background: #fffdf8;
+  border-radius: 3px;
+  padding: 10px 12px;
+}
+.g-stat .lbl {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+}
+.g-stat .val { font-size: 18px; font-weight: 700; }
+.g-stat .val.neg { color: var(--g-stamp); }
+.g-stat .val.pos { color: var(--g-win); }
+
+.g-btn {
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  background: var(--g-paper-dim);
+  border: 1px solid var(--g-ink-soft);
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--g-ink);
+}
+.g-btn:hover { background: var(--g-marker); }
+.g-btn--danger { border-color: var(--g-stamp); color: var(--g-stamp); }
+.g-btn--danger:hover { background: color-mix(in srgb, var(--g-stamp) 10%, var(--g-paper-dim)); }
+.g-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ---- school ---- */
+.g-prose { font-size: 13.5px; line-height: 1.65; max-width: 720px; }
+.g-prose p { margin: 0 0 12px; }
+.g-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.g-table th, .g-table td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--g-line);
+}
+.g-table th {
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+}
+.g-table .num { text-align: right; }
+
+/* ---- footer ---- */
+.gamba-footer {
+  border-top: 2px dashed var(--g-line);
+  margin-top: 40px;
+  padding: 16px 0 90px;
+  font-size: 12px;
+  color: var(--g-ink-soft);
+}
+
+/* ---- settlement toast: a stamp slams in ---- */
+.g-toasts {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(420px, calc(100vw - 24px));
+}
+.g-toast {
+  background: #fffdf8;
+  border: 2px solid var(--g-ink);
+  border-radius: 3px;
+  box-shadow: 3px 4px 0 rgba(29, 36, 51, 0.25);
+  padding: 10px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: g-slam 220ms ease-out;
+}
+@keyframes g-slam {
+  0% { transform: scale(1.2) rotate(-3deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.g-toast .g-stamp {
+  position: static;
+  transform: rotate(-8deg);
+  font-size: 13px;
+  padding: 1px 7px;
+  border-width: 2px;
+  flex-shrink: 0;
+}
+
+/* ---- onboarding modal ---- */
+.g-modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(29, 36, 51, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.g-modal {
+  background: var(--g-paper);
+  color: var(--g-ink);
+  font-family: var(--g-font-mono);
+  border: 2px solid var(--g-ink);
+  border-radius: 4px;
+  box-shadow: 6px 8px 0 rgba(29, 36, 51, 0.35);
+  max-width: 460px;
+  width: 100%;
+  padding: 22px 22px 18px;
+}
+.g-modal h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.g-modal p { font-size: 13px; line-height: 1.6; margin: 0 0 10px; }
+.g-modal .g-place { margin-top: 8px; }
+
+/* ---- responsive: slip becomes a bottom sheet ---- */
+@media (max-width: 900px) {
+  .gamba-board { grid-template-columns: 1fr; }
+  .gamba-board__rail {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 50;
+    max-height: 62dvh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 24px rgba(29, 36, 51, 0.25);
+  }
+  .gamba-board__rail .g-slip { border-radius: 10px 10px 0 0; }
+  .gamba-board__rail:empty { display: none; }
+}
+@media (max-width: 560px) {
+  .gamba-brand { font-size: 17px; letter-spacing: 3px; }
+  .gamba-header__nav { gap: 2px; }
+  .gamba-tab { padding: 5px 8px; font-size: 12px; }
+  .g-prices { grid-template-columns: repeat(3, 1fr); }
+  .g-stamp { font-size: 15px; right: 10px; }
+}

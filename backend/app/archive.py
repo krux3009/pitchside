@@ -12,9 +12,12 @@ from .config import DATA_DIR
 
 ARCHIVE_PATH = DATA_DIR / "results_archive.json"
 
-# tables fully reconstructable from the archive (seed covers the rest)
+# tables fully reconstructable from the archive (seed covers the rest).
+# market_odds/odds_event_map must be here: closing odds are NOT re-fetchable
+# after kickoff on the free tier (historical odds = paid).
 TABLES = ["players", "match_team_stats", "player_match_stats", "lineups",
-          "match_events", "match_shots", "injuries"]
+          "match_events", "match_shots", "injuries", "market_odds",
+          "odds_event_map"]
 
 MATCH_FIELDS = [
     "id", "status", "home_goals", "away_goals", "home_goals_90", "away_goals_90",

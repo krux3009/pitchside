@@ -249,6 +249,33 @@ CREATE TABLE IF NOT EXISTS fetch_log (
   status        INTEGER
 );
 
+-- Real bookmaker odds (The Odds API), consensus rows only — median/best across
+-- books, aggregated at ingest (~12 rows/match). Each sweep replaces a match's
+-- rows wholesale; the last pre-kickoff sweep is therefore the closing snapshot.
+-- Archived: closing odds are NOT re-fetchable (historical odds = paid tier).
+CREATE TABLE IF NOT EXISTS market_odds (
+  match_id      INTEGER NOT NULL REFERENCES matches(id),
+  market        TEXT NOT NULL,              -- 'h2h' | 'totals' | 'btts'
+  selection     TEXT NOT NULL,              -- 'home'|'draw'|'away'|'over'|'under'|'yes'|'no'
+  line          REAL NOT NULL DEFAULT 0,    -- totals point (2.5); 0 for h2h/btts
+  price_median  REAL,
+  price_best    REAL,
+  book_best     TEXT,
+  n_books       INTEGER,
+  fetched_at    TEXT,
+  PRIMARY KEY (match_id, market, selection, line)
+);
+
+-- Fixture <-> The Odds API event mapping, learned by name+kickoff matching.
+CREATE TABLE IF NOT EXISTS odds_event_map (
+  match_id      INTEGER PRIMARY KEY REFERENCES matches(id),
+  odds_event_id TEXT NOT NULL,
+  home_name     TEXT,
+  away_name     TEXT,
+  swapped       INTEGER DEFAULT 0,          -- provider home == our away
+  matched_at    TEXT
+);
+
 CREATE TABLE IF NOT EXISTS meta (
   key           TEXT PRIMARY KEY,
   value         TEXT
