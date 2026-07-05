@@ -25,3 +25,6 @@ services:
         sync: false
       - key: HOSTINGER_DATA_DIR
         sync: false
+      # Private (non-web-served) dir for gamba sync-account blobs (gamba_store.py)
+      - key: HOSTINGER_GAMBA_DIR
+        sync: false

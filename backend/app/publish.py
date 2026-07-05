@@ -98,8 +98,9 @@ def _detail(fn, item_id):
         return None
 
 
-def _connect():
-    """Explicit-TLS FTPS, falling back to plain FTP if the host won't negotiate."""
+def ftp_connect():
+    """Explicit-TLS FTPS, falling back to plain FTP if the host won't negotiate.
+    Shared with gamba_store.py — one FTP dialect for the whole app."""
     try:
         ftp = ftplib.FTP_TLS(timeout=30)
         ftp.connect(HOSTINGER_FTP_HOST, 21)
@@ -131,7 +132,7 @@ def ftp_upload(files: dict[str, bytes]) -> dict:
     prior = _load_hashes()
     merged = dict(prior)  # advance a file's hash only once it actually uploads
 
-    ftp = _connect()
+    ftp = ftp_connect()
     mode = "ftps" if isinstance(ftp, ftplib.FTP_TLS) else "ftp"
     uploaded, skipped, failed = 0, 0, []
     try:

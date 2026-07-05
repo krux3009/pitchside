@@ -30,6 +30,11 @@ HOSTINGER_FTP_PASSWORD = os.getenv("HOSTINGER_FTP_PASSWORD", "")
 HOSTINGER_DATA_DIR = os.getenv(
     "HOSTINGER_DATA_DIR", "domains/kruxqlyz.com/public_html/data/"
 )
+# Gamba sync-account blobs (gamba_store.py). Home-relative and deliberately
+# OUTSIDE domains/kruxqlyz.com/public_html — the FTP account chroots to its home
+# dir and only public_html is web-served, so account data is never reachable
+# over HTTP. Same creds as the CDN publish; empty creds => store is inert.
+HOSTINGER_GAMBA_DIR = os.getenv("HOSTINGER_GAMBA_DIR", "gamba_accounts")
 # Public CDN base for the same data dir — publish.py reseeds its hash manifest
 # from {PUBLISH_CDN_URL}/hashes.json after a redeploy wipes Render's meta table,
 # so a redeploy re-uploads only real changes instead of all ~1356 files.

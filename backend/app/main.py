@@ -5,10 +5,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import db
+from . import db, gamba_store
 from .config import ALLOWED_ORIGINS
-from .routes import (bracket, briefing, internal, matches, methodology, odds,
-                     players, sim, standings)
+from .routes import (bracket, briefing, gamba, internal, matches, methodology,
+                     odds, players, sim, standings)
 
 LIVE_TICK_SECONDS = 75    # refresh cadence while a match is in play
 IDLE_CHECK_SECONDS = 120  # how often to peek at the schedule otherwise
@@ -60,6 +60,9 @@ async def lifespan(app: FastAPI):
     if needs_catchup:
         threading.Thread(target=_catch_up, daemon=True).start()
     threading.Thread(target=_live_loop, daemon=True).start()
+    # re-insert gamba sync accounts the redeploy dropped (user data — the one
+    # table the seed/archive pair can't rebuild); never blocks serving
+    threading.Thread(target=gamba_store.restore, daemon=True).start()
     yield
 
 
@@ -68,12 +71,12 @@ app = FastAPI(title="Pitchside API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST", "PUT"],  # POST/PUT: gamba sync writes only
     allow_headers=["*"],
 )
 
-for module in (bracket, briefing, internal, matches, methodology, odds, players,
-               sim, standings):
+for module in (bracket, briefing, gamba, internal, matches, methodology, odds,
+               players, sim, standings):
     app.include_router(module.router)
 
 

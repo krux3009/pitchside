@@ -1,6 +1,7 @@
 -- Pitchside cache schema.
 -- SQLite here is a rebuildable cache: committed seed.db + nightly results archive +
 -- a catch-up refresh can reconstruct every table after a Render restart.
+-- (One exception: gamba_accounts is user data — see its comment at the bottom.)
 
 CREATE TABLE IF NOT EXISTS teams (
   id            INTEGER PRIMARY KEY,        -- canonical Pitchside id (1..48, seed-assigned)
@@ -279,4 +280,15 @@ CREATE TABLE IF NOT EXISTS odds_event_map (
 CREATE TABLE IF NOT EXISTS meta (
   key           TEXT PRIMARY KEY,
   value         TEXT
+);
+
+-- Gamba sync accounts: opaque client blobs keyed by an anonymous bearer code.
+-- Unlike every other table this is USER data, not a rebuildable cache — it is
+-- NOT in archive.py (that JSON is committed to the public repo). Durability
+-- comes from a private Hostinger FTP dir instead (gamba_store.py).
+CREATE TABLE IF NOT EXISTS gamba_accounts (
+  code          TEXT PRIMARY KEY,           -- compact sync code, e.g. 'GB7Q4KMXW2AB'
+  rev           INTEGER NOT NULL,           -- compare-and-swap revision
+  state         TEXT NOT NULL,              -- opaque JSON; the CLIENT owns the schema
+  updated_at    TEXT NOT NULL
 );
