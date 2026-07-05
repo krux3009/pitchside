@@ -452,6 +452,13 @@ table.stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }
     justify-content: space-between;
     gap: 10px;
     overflow-x: auto;
+    /* horizontal strip: clip the vertical axis and refuse vertical pans, or
+       finger drift wiggles the row (mirror of gamba.css's bet-sheet pan-y fix) */
+    overflow-y: hidden;
+    touch-action: pan-x;
+    /* headroom for the rotated gamba pill — rotate(-2deg) overshoots its box
+       ~2px top/bottom, which the new overflow-y clip would otherwise shave */
+    padding: 4px 0;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }

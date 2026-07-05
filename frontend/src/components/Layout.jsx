@@ -24,6 +24,9 @@ export default function Layout() {
             <BrandMark /> PITCHSIDE<span className="brand-year">’26</span>
           </NavLink>
           <div className="site-nav__links" data-tour="nav">
+            {/* headline feature goes first: on phones the strip scrolls, and
+                position 0 is the only one guaranteed visible without a swipe */}
+            <NavLink to="/gamba" className="gamba-pill" data-tour="gamba">🎲 {t("nav.gamba")}</NavLink>
             {links.map((l) => (
               <NavLink
                 key={l.to}
@@ -34,7 +37,6 @@ export default function Layout() {
                 {t(l.key)}
               </NavLink>
             ))}
-            <NavLink to="/gamba" className="gamba-pill" data-tour="gamba">🎲 {t("nav.gamba")}</NavLink>
             <button
               onClick={() => setLang(lang === "en" ? "zh" : "en")}
               aria-label="切换语言 / switch language"
