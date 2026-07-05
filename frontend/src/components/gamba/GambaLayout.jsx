@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 
 import { useLang } from "../../lib/i18n";
@@ -27,6 +27,20 @@ function Shell() {
   const { balance, settle } = useGamba();
   const [toasts, setToasts] = useState([]);
 
+  // The phone header is static (scrolls away — content first), which used to
+  // take the balance with it. Watch the masthead: once it leaves the viewport
+  // a small fixed twin of the chip takes over top-right. The desktop header is
+  // sticky, so it never leaves view and the twin never renders there.
+  const headerRef = useRef(null);
+  const [headerAway, setHeaderAway] = useState(false);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([e]) => setHeaderAway(!e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // settlement heartbeat: poll the scores feed and stamp any decided tickets.
   // Runs on load + every tick while the tab is open; a closed tab settles on
   // the next visit — fine for a toy.
@@ -47,7 +61,7 @@ function Shell() {
 
   return (
     <div className="gamba">
-      <header className="gamba-header">
+      <header className="gamba-header" ref={headerRef}>
         <div className="container gamba-header__inner">
           <span className="gamba-brand"><span className="dice">🎲</span> GAMBA</span>
           <Link className="gamba-back" to="/">← PITCHSIDE</Link>
@@ -72,6 +86,13 @@ function Shell() {
       </header>
 
       <div className="gamba-strap" role="note">{t("gamba.strap")}</div>
+
+      {headerAway && (
+        // duplicate of the header chip, so hide it from the accessibility tree
+        <span className="gamba-chip gamba-chip--float" aria-hidden="true">
+          {fmtG(balance)}
+        </span>
+      )}
 
       <main id="main" className="container">
         <Outlet />

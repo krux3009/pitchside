@@ -103,6 +103,22 @@
   white-space: nowrap;
   box-shadow: 2px 2px 0 var(--g-ink);
 }
+/* fixed twin of the balance chip (GambaLayout renders it only while the
+   masthead is scrolled out of view — phones only in practice, the desktop
+   header is sticky). z 55: above day headers and the bet sheet, under the
+   settlement toasts, which may briefly stamp over it. */
+.gamba-chip--float {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 55;
+  animation: g-chip-drop 160ms ease-out;
+}
+@keyframes g-chip-drop {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
 .gamba .lang-toggle { color: var(--g-ink-soft); border-color: var(--g-line); }
 .gamba .lang-toggle:hover { color: var(--g-ink); border-color: var(--g-ink-soft); }
 
