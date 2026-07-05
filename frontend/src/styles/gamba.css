@@ -467,6 +467,51 @@
 .g-btn--danger:hover { background: color-mix(in srgb, var(--g-stamp) 10%, var(--g-paper-dim)); }
 .g-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* ---- cross-device sync card (My bets) ---- */
+.g-sync {
+  border: 1px solid var(--g-line);
+  background: #fffaf0;
+  border-radius: 3px;
+  padding: 10px 12px;
+  margin: 10px 0 4px;
+}
+.g-sync__head { display: flex; align-items: center; gap: 8px; }
+.g-sync__head .lbl {
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--g-ink-soft);
+}
+.g-sync__dot { width: 8px; height: 8px; border-radius: 50%; }
+.g-sync__dot--ok { background: var(--g-win); }
+.g-sync__dot--pending { background: var(--g-marker); }
+.g-sync__dot--err { background: var(--g-stamp); }
+.g-sync__status { font-size: 12px; color: var(--g-ink-soft); }
+.g-sync__blurb { font-size: 12.5px; color: var(--g-ink-soft); margin: 6px 0 8px; }
+.g-sync__code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 6px 0 8px;
+  user-select: all;
+}
+.g-sync__row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.g-sync__or { font-size: 12.5px; color: var(--g-ink-soft); }
+.g-sync__input {
+  font: inherit;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--g-ink-soft);
+  border-radius: 3px;
+  background: var(--g-paper-dim);
+  color: var(--g-ink);
+  width: 172px;
+  text-transform: uppercase;
+}
+.g-sync__err { font-size: 12.5px; color: var(--g-stamp); margin: 6px 0 0; }
+
 /* ---- school ---- */
 .g-prose { font-size: 13.5px; line-height: 1.65; max-width: 720px; }
 .g-prose p { margin: 0 0 12px; }

@@ -6,7 +6,9 @@
 //    cold-start retry. Kept so the app still runs against a running API.
 
 const DATA_BASE = import.meta.env.VITE_DATA_URL;        // e.g. https://kruxqlyz.com/data
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// exported for gamba/sync.js: account writes are per-user and must always hit
+// the live API, never the CDN snapshots
+export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const cache = new Map(); // path -> { at, data }
 

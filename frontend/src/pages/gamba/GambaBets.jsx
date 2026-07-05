@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import SyncCard from "../../components/gamba/SyncCard";
 import Ticket from "../../components/gamba/Ticket";
 import { useGamba } from "../../lib/gamba/GambaContext";
 import { fmtG, ledger } from "../../lib/gamba/engine";
@@ -38,6 +39,8 @@ export default function GambaBets() {
           </span>
         </div>
       </div>
+
+      <SyncCard />
 
       <div style={{ display: "flex", gap: 8, margin: "10px 0 4px", flexWrap: "wrap" }}>
         {canDrip && (

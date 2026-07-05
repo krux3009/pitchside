@@ -129,6 +129,27 @@ export function selectionText(bet, t, tCountry) {
   }
 }
 
+// ---- balance (derived, never stored — the same rule as the ledger) -----------
+//
+// v2 state stops storing the balance: it's recomputed from what happened, so
+// storage can't drift and a cross-device merge can't double-credit. `carry` is
+// the one opaque number — the v1-migration residual (old drip history,
+// pre-launch ₲1000 starts) frozen at migration and zeroed by a reset.
+// Everything before the last reset is inert: bets by full timestamp, drips by
+// day — except the reset-day drip, which stays in the array so the once-a-day
+// guard holds, but pays nothing.
+export function deriveBalance({ bets, drips, resetAt, carry }) {
+  const resetDay = (resetAt || "").slice(0, 10);
+  const activeBets = bets.filter((b) => !resetAt || b.placedAt > resetAt);
+  const activeDrips = drips.filter((d) => !resetAt || d > resetDay);
+  const returned = activeBets.reduce(
+    (s, b) => s + (b.status !== "open" ? b.returns || 0 : 0), 0);
+  const staked = activeBets.reduce((s, b) => s + b.stake, 0);
+  return Math.round(
+    (START_BALANCE + carry + DRIP_AMOUNT * activeDrips.length + returned - staked)
+    * 100) / 100;
+}
+
 // ---- lifetime ledger (derived, never stored — storage can't drift) -----------
 
 export function ledger(bets) {
