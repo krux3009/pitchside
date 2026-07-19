@@ -95,6 +95,12 @@ export default function Home() {
     null;
   const rest = todays.filter((m) => m !== hero);
 
+  // championship bars scale to the current favourite, not a fixed multiplier:
+  // late in the tournament one team can pass 40% and a fixed scale overflows
+  // the track (favourite fills it, everyone else stays proportional)
+  const simTeams = (sim.data?.teams ?? []).slice(0, 12);
+  const simMax = Math.max(...simTeams.map((tm) => tm.p_champion), 0.001);
+
   return (
     <>
       <Tour storageKey="pitchside.tour.main.v1" steps={MAIN_TOUR} />
@@ -186,7 +192,7 @@ export default function Home() {
               {t("home.simNote", { n: Number(sim.data.run.n_iterations).toLocaleString() })}
               <Link to="/methodology" style={{ color: "var(--gold)" }}>{t("match.how")}</Link>
             </p>
-            {sim.data.teams.slice(0, 12).map((tm) => (
+            {simTeams.map((tm) => (
               <div key={tm.team_id} className="odds-row">
                 <span style={styles.oddsTeam}>
                   <TeamBadge code={tm.fifa_code} name={tm.name} />
@@ -194,7 +200,7 @@ export default function Home() {
                 <div style={styles.oddsTrack}>
                   <div
                     style={{
-                      width: `${Math.max(tm.p_champion * 100 * 2.5, 1)}%`,
+                      width: `${Math.max((tm.p_champion / simMax) * 100, 1)}%`,
                       background: teamColor(tm.fifa_code),
                       boxShadow: `0 0 10px color-mix(in srgb, ${teamColor(tm.fifa_code)} 50%, transparent)`,
                       height: 10,
